@@ -1,17 +1,19 @@
 
 declare namespace google {
   namespace maps {
-    class Autocomplete {
-      constructor(inputField: HTMLInputElement, options?: AutocompleteOptions);
-      addListener(event: string, handler: () => void): void;
-      getPlace(): Place;
-    }
+    namespace places {
+      class Autocomplete {
+        constructor(inputField: HTMLInputElement, options?: AutocompleteOptions);
+        addListener(event: string, handler: () => void): void;
+        getPlace(): Place;
+      }
 
-    interface AutocompleteOptions {
-      types?: string[];
-      componentRestrictions?: {
-        country: string | string[];
-      };
+      interface AutocompleteOptions {
+        types?: string[];
+        componentRestrictions?: {
+          country: string | string[];
+        };
+      }
     }
 
     interface Place {
