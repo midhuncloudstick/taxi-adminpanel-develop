@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -5,7 +6,7 @@ import { LucideMapPin } from 'lucide-react';
 import { useScript } from '@/hooks/useScript';
 import { toast } from 'sonner';
 import { getGoogleMapsKey } from '@/lib/supabase/edge-functions/get-google-maps-key';
-import { useClient } from '@supabase/auth-helpers-react';
+import { createClient } from '@supabase/supabase-js';
 
 interface LocationInputsProps {
   fromLocation: string;
@@ -24,11 +25,22 @@ const LocationInputs = ({
   const toInputRef = useRef<HTMLInputElement>(null);
   const [apiKey, setApiKey] = useState<string>('');
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = useClient();
-
+  
   useEffect(() => {
     const loadApiKey = async () => {
       try {
+        // Create a new Supabase client for this component
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+        const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+        
+        if (!supabaseUrl || !supabaseAnonKey) {
+          console.error('Supabase URL or Anon Key not found');
+          toast.error('Failed to initialize Supabase client');
+          setIsLoading(false);
+          return;
+        }
+        
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
         const key = await getGoogleMapsKey(supabase);
         setApiKey(key);
         setIsLoading(false);
@@ -40,7 +52,7 @@ const LocationInputs = ({
     };
 
     loadApiKey();
-  }, [supabase]);
+  }, []);
   
   const status = useScript(
     apiKey ? `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places` : ''
