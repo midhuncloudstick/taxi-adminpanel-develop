@@ -1,4 +1,6 @@
-import React, { useState, useNavigate } from 'react';
+
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -37,14 +39,16 @@ const BookingForm = () => {
   const [bookingType, setBookingType] = useState<BookingType>('instant');
   const [date, setDate] = useState<Date>();
   const [showVehicles, setShowVehicles] = useState(false);
+  const [fromLocation, setFromLocation] = useState('');
+  const [toLocation, setToLocation] = useState('');
   const navigate = useNavigate();
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     navigate('/search-results', { 
       state: {
-        from: document.getElementById('from')?.value,
-        to: document.getElementById('to')?.value
+        from: fromLocation,
+        to: toLocation
       }
     });
   };
@@ -71,6 +75,8 @@ const BookingForm = () => {
                   id="from" 
                   placeholder="Enter pickup location" 
                   className="pl-10"
+                  value={fromLocation}
+                  onChange={(e) => setFromLocation(e.target.value)}
                 />
               </div>
             </div>
@@ -84,6 +90,8 @@ const BookingForm = () => {
                   id="to" 
                   placeholder="Enter destination" 
                   className="pl-10"
+                  value={toLocation}
+                  onChange={(e) => setToLocation(e.target.value)}
                 />
               </div>
             </div>
