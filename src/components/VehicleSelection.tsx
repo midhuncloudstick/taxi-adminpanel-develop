@@ -12,6 +12,7 @@ const vehicles = [
     price: 89,
     passengers: 3,
     luggage: 3,
+    kilometers: 150,
     features: ['Free waiting time', 'Flight tracking', 'Meet & greet']
   },
   {
@@ -21,6 +22,7 @@ const vehicles = [
     price: 119,
     passengers: 5,
     luggage: 5,
+    kilometers: 200,
     features: ['Free waiting time', 'Flight tracking', 'Meet & greet', 'Child seat available']
   },
   {
@@ -30,6 +32,7 @@ const vehicles = [
     price: 149,
     passengers: 7,
     luggage: 7,
+    kilometers: 250,
     features: ['Free waiting time', 'Flight tracking', 'Meet & greet', 'WiFi', 'Refreshments']
   }
 ];

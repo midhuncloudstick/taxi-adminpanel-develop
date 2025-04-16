@@ -13,6 +13,7 @@ interface Vehicle {
   passengers: number;
   luggage: number;
   features: string[];
+  kilometers: number;
 }
 
 interface VehicleCardProps {
@@ -76,6 +77,9 @@ const VehicleCard = ({ vehicle }: VehicleCardProps) => {
             <div className="text-center mb-4">
               <div className="text-2xl font-bold text-primary">${vehicle.price}</div>
               <div className="text-sm text-muted-foreground">Total fare</div>
+              <div className="text-sm text-muted-foreground mt-1">
+                {vehicle.kilometers} km included
+              </div>
             </div>
             
             <Button className="w-full" onClick={handleBookNow}>
