@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent } from './ui/card';
 import { Button } from './ui/button';
 import { Check, Users, Briefcase } from 'lucide-react';
 import { Badge } from './ui/badge';
+import { useNavigate } from 'react-router-dom';
 
 interface Vehicle {
   id: number;
@@ -20,6 +20,12 @@ interface VehicleCardProps {
 }
 
 const VehicleCard = ({ vehicle }: VehicleCardProps) => {
+  const navigate = useNavigate();
+
+  const handleBookNow = () => {
+    navigate('/booking-details', { state: { vehicle } });
+  };
+
   return (
     <Card className="overflow-hidden border-border hover:border-primary/50 transition-colors">
       <CardContent className="p-0">
@@ -72,7 +78,7 @@ const VehicleCard = ({ vehicle }: VehicleCardProps) => {
               <div className="text-sm text-muted-foreground">Total fare</div>
             </div>
             
-            <Button className="w-full">
+            <Button className="w-full" onClick={handleBookNow}>
               Book Now
             </Button>
           </div>

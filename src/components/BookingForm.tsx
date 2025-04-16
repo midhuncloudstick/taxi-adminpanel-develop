@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useNavigate } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
@@ -38,10 +37,16 @@ const BookingForm = () => {
   const [bookingType, setBookingType] = useState<BookingType>('instant');
   const [date, setDate] = useState<Date>();
   const [showVehicles, setShowVehicles] = useState(false);
+  const navigate = useNavigate();
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setShowVehicles(true);
+    navigate('/search-results', { 
+      state: {
+        from: document.getElementById('from')?.value,
+        to: document.getElementById('to')?.value
+      }
+    });
   };
 
   return (
