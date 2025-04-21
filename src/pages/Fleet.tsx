@@ -3,6 +3,8 @@ import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Users, Luggage } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 
 // Sample vehicle data
 const vehicles = [
@@ -42,6 +44,13 @@ const vehicles = [
 ];
 
 const Fleet = () => {
+  const handleBookNow = (vehicleName: string) => {
+    toast({
+      title: "Booking feature coming soon!",
+      description: `Booking for ${vehicleName} is coming soon.`
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -99,7 +108,12 @@ const Fleet = () => {
                       {vehicle.kilometers} km included
                     </div>
                   </div>
-                  {/* Hide Book Now button as on Fleet page we only show vehicles */}
+                  <Button 
+                    className="mt-5 w-full"
+                    onClick={() => handleBookNow(vehicle.name)}
+                  >
+                    Book Now
+                  </Button>
                 </div>
               </div>
             ))}
@@ -112,3 +126,4 @@ const Fleet = () => {
 };
 
 export default Fleet;
+
