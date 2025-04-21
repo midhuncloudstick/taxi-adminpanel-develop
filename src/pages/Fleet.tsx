@@ -46,7 +46,7 @@ const Fleet = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
       <main className="flex-1 py-12 px-2">
-        <div className="mx-auto w-full max-w-[80rem]">
+        <div className="mx-auto w-full max-w-[75rem]">
           <h1 className="text-3xl md:text-4xl font-bold mb-3 text-center text-primary">
             Our Fleet
           </h1>
