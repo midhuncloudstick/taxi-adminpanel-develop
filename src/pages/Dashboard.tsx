@@ -23,7 +23,7 @@ function sortBookings(bookings, sortKey, sortDirection) {
 export default function Dashboard() {
   // FILTER & SORT state
   const [status, setStatus] = useState<"upcoming" | "completed" | "cancelled" | "all">("all");
-  const [driver, setDriver] = useState("");
+  const [driver, setDriver] = useState("all");
   const [location, setLocation] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [sortKey, setSortKey] = useState<null | string>(null);
@@ -43,7 +43,7 @@ export default function Dashboard() {
   const filteredBookings = useMemo(() => {
     let filtered = tableBookings;
     if (status !== "all") filtered = filtered.filter(b => b.status === status);
-    if (driver) filtered = filtered.filter(b => b.driver === driver);
+    if (driver !== "all") filtered = filtered.filter(b => b.driver === driver);
     if (location)
       filtered = filtered.filter(
         b =>
@@ -66,6 +66,11 @@ export default function Dashboard() {
     }
   };
 
+  // Type-safe setStatus handler
+  const handleSetStatus = (value: string) => {
+    setStatus(value as "upcoming" | "completed" | "cancelled" | "all");
+  };
+
   return (
     <PageContainer title="Dashboard">
       <div className="space-y-6">
@@ -77,7 +82,7 @@ export default function Dashboard() {
             driver={driver}
             location={location}
             customerId={customerId}
-            setStatus={setStatus}
+            setStatus={handleSetStatus}
             setDriver={setDriver}
             setLocation={setLocation}
             setCustomerId={setCustomerId}

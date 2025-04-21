@@ -8,8 +8,9 @@ import { Button } from "../ui/button";
 
 interface BookingsTableProps {
   bookings: Booking[];
-  drivers: Driver[];
+  drivers?: Driver[];
   showCustomer?: boolean;
+  showDriver?: boolean;
   showDriverSelect?: boolean;
   onUpdateDriver?: (bookingId: string, driverId: string) => void;
   onSort?: (col: string) => void;
@@ -19,8 +20,9 @@ interface BookingsTableProps {
 
 export function BookingsTable({
   bookings,
-  drivers,
+  drivers = [],
   showCustomer,
+  showDriver,
   showDriverSelect,
   onUpdateDriver,
   onSort,
@@ -35,20 +37,20 @@ export function BookingsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead onClick={() => onSort && onSort("id")} className="cursor-pointer">Booking ID {getSortSymbol("id")}</TableHead>
-            <TableHead onClick={() => onSort && onSort("date")} className="cursor-pointer">Date {getSortSymbol("date")}</TableHead>
-            <TableHead onClick={() => onSort && onSort("pickupTime")} className="cursor-pointer">Pickup Time {getSortSymbol("pickupTime")}</TableHead>
-            <TableHead onClick={() => onSort && onSort("kilometers")} className="cursor-pointer">KMs {getSortSymbol("kilometers")}</TableHead>
-            <TableHead onClick={() => onSort && onSort("pickupLocation")} className="cursor-pointer">Pickup {getSortSymbol("pickupLocation")}</TableHead>
-            <TableHead onClick={() => onSort && onSort("dropLocation")} className="cursor-pointer">Drop {getSortSymbol("dropLocation")}</TableHead>
+            <TableHead onClick={() => onSort && onSort("id")} className={onSort ? "cursor-pointer" : ""}>Booking ID {getSortSymbol("id")}</TableHead>
+            <TableHead onClick={() => onSort && onSort("date")} className={onSort ? "cursor-pointer" : ""}>Date {getSortSymbol("date")}</TableHead>
+            <TableHead onClick={() => onSort && onSort("pickupTime")} className={onSort ? "cursor-pointer" : ""}>Pickup Time {getSortSymbol("pickupTime")}</TableHead>
+            <TableHead onClick={() => onSort && onSort("kilometers")} className={onSort ? "cursor-pointer" : ""}>KMs {getSortSymbol("kilometers")}</TableHead>
+            <TableHead onClick={() => onSort && onSort("pickupLocation")} className={onSort ? "cursor-pointer" : ""}>Pickup {getSortSymbol("pickupLocation")}</TableHead>
+            <TableHead onClick={() => onSort && onSort("dropLocation")} className={onSort ? "cursor-pointer" : ""}>Drop {getSortSymbol("dropLocation")}</TableHead>
             {showCustomer && (
-              <TableHead onClick={() => onSort && onSort("customerId")} className="cursor-pointer">Customer</TableHead>
+              <TableHead onClick={() => onSort && onSort("customerId")} className={onSort ? "cursor-pointer" : ""}>Customer {getSortSymbol("customerId")}</TableHead>
             )}
-            {showDriverSelect && (
-              <TableHead onClick={() => onSort && onSort("driver")} className="cursor-pointer">Driver</TableHead>
+            {(showDriver || showDriverSelect) && (
+              <TableHead onClick={() => onSort && onSort("driver")} className={onSort ? "cursor-pointer" : ""}>Driver {getSortSymbol("driver")}</TableHead>
             )}
             <TableHead>Status</TableHead>
-            <TableHead onClick={() => onSort && onSort("amount")} className="cursor-pointer">Amount ($) {getSortSymbol("amount")}</TableHead>
+            <TableHead onClick={() => onSort && onSort("amount")} className={onSort ? "cursor-pointer" : ""}>Amount ($) {getSortSymbol("amount")}</TableHead>
             <TableHead>Contact</TableHead>
           </TableRow>
         </TableHeader>
@@ -62,6 +64,7 @@ export function BookingsTable({
           )}
           {bookings.map((b) => {
             const customer = getCustomerById(b.customerId);
+            const driver = getDriverById(b.driver);
             return (
               <TableRow key={b.id}>
                 <TableCell>{b.id}</TableCell>
@@ -92,6 +95,10 @@ export function BookingsTable({
                         ))}
                       </SelectContent>
                     </Select>
+                  </TableCell>
+                ) : showDriver ? (
+                  <TableCell>
+                    {driver ? driver.name : b.driver}
                   </TableCell>
                 ) : null}
                 <TableCell>

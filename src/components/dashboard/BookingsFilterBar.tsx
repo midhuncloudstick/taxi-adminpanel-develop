@@ -1,5 +1,4 @@
 
-
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Driver } from "@/data/mockData";
@@ -45,7 +44,7 @@ export function BookingsFilterBar({
           <SelectValue placeholder="Driver" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Drivers</SelectItem>
+          <SelectItem value="all">All Drivers</SelectItem>
           {drivers.map(d => (
             <SelectItem value={d.id} key={d.id}>{d.name}</SelectItem>
           ))}

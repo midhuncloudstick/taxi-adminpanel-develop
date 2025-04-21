@@ -29,7 +29,7 @@ export default function Drivers() {
             <h3 className="text-lg font-semibold text-taxi-blue mt-8 mb-2">
               Trip History for {drivers.find(d => d.id === selectedDriverId)?.name}
             </h3>
-            <BookingsTable bookings={selectedTrips} showCustomer />
+            <BookingsTable bookings={selectedTrips} showCustomer drivers={drivers} />
           </div>
         )}
       </div>
