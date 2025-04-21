@@ -3,7 +3,7 @@ import { useState, useMemo } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { StatsCards } from "@/components/dashboard/StatsCards";
 import { BookingsTable } from "@/components/shared/BookingsTable";
-import { bookings, drivers, getDriverById, getCustomerById } from "@/data/mockData";
+import { bookings, drivers } from "@/data/mockData";
 import { BookingsFilterBar } from "@/components/dashboard/BookingsFilterBar";
 
 // Utility: sort bookings
@@ -22,7 +22,7 @@ function sortBookings(bookings, sortKey, sortDirection) {
 
 export default function Dashboard() {
   // FILTER & SORT state
-  const [status, setStatus] = useState<"upcoming" | "completed" | "cancelled" | "all">("all");
+  const [status, setStatus] = useState<"pending" | "upcoming" | "completed" | "cancelled" | "all">("all");
   const [driver, setDriver] = useState("all");
   const [location, setLocation] = useState("");
   const [customerId, setCustomerId] = useState("");
@@ -35,6 +35,15 @@ export default function Dashboard() {
     setTableBookings(prev =>
       prev.map(b =>
         b.id === bookingId ? { ...b, driver: driverId } : b
+      )
+    );
+  };
+
+  // Handler to update status for a booking
+  const handleUpdateStatus = (bookingId: string, newStatus: "pending" | "upcoming" | "completed" | "cancelled") => {
+    setTableBookings(prev =>
+      prev.map(b =>
+        b.id === bookingId ? { ...b, status: newStatus } : b
       )
     );
   };
@@ -68,7 +77,7 @@ export default function Dashboard() {
 
   // Type-safe setStatus handler
   const handleSetStatus = (value: string) => {
-    setStatus(value as "upcoming" | "completed" | "cancelled" | "all");
+    setStatus(value as "pending" | "upcoming" | "completed" | "cancelled" | "all");
   };
 
   return (
@@ -87,6 +96,7 @@ export default function Dashboard() {
             setLocation={setLocation}
             setCustomerId={setCustomerId}
             drivers={drivers}
+            showPending
           />
           <BookingsTable
             bookings={filteredBookings}
@@ -94,6 +104,7 @@ export default function Dashboard() {
             showCustomer
             showDriverSelect
             onUpdateDriver={handleUpdateDriver}
+            onUpdateStatus={handleUpdateStatus}
             onSort={handleSort}
             sortKey={sortKey}
             sortDirection={sortDirection}

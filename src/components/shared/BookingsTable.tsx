@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Booking, Driver, getDriverById, getCustomerById } from "@/data/mockData";
 import { PhoneCall } from "lucide-react";
 import { Button } from "../ui/button";
+import { BookingStatusDropdown } from "./BookingStatusDropdown";
 
 interface BookingsTableProps {
   bookings: Booking[];
@@ -13,6 +14,7 @@ interface BookingsTableProps {
   showDriver?: boolean;
   showDriverSelect?: boolean;
   onUpdateDriver?: (bookingId: string, driverId: string) => void;
+  onUpdateStatus?: (bookingId: string, newStatus: Booking["status"]) => void;
   onSort?: (col: string) => void;
   sortKey?: string | null;
   sortDirection?: "asc" | "desc";
@@ -25,6 +27,7 @@ export function BookingsTable({
   showDriver,
   showDriverSelect,
   onUpdateDriver,
+  onUpdateStatus,
   onSort,
   sortKey,
   sortDirection
@@ -102,15 +105,23 @@ export function BookingsTable({
                   </TableCell>
                 ) : null}
                 <TableCell>
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    b.status === "upcoming"
-                      ? "bg-taxi-teal/20 text-taxi-teal"
-                      : b.status === "completed"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
-                  }`}>
-                    {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
-                  </span>
+                  <BookingStatusDropdown
+                    status={b.status}
+                    onApprove={
+                      onUpdateStatus
+                        ? () => onUpdateStatus(b.id, "upcoming")
+                        : undefined
+                    }
+                    onCancel={
+                      onUpdateStatus
+                        ? () =>
+                            onUpdateStatus(
+                              b.id,
+                              b.status === "pending" ? "cancelled" : "cancelled"
+                            )
+                        : undefined
+                    }
+                  />
                 </TableCell>
                 <TableCell>${b.amount.toFixed(2)}</TableCell>
                 <TableCell>

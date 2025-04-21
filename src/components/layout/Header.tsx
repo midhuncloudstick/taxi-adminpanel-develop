@@ -4,6 +4,7 @@ import { Bell, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { UpcomingTripsDropdown } from "./UpcomingTripsDropdown";
 
 interface HeaderProps {
   title: string;
@@ -11,9 +12,10 @@ interface HeaderProps {
 
 export function Header({ title }: HeaderProps) {
   const [searchValue, setSearchValue] = useState("");
+  const [notifOpen, setNotifOpen] = useState(false);
 
   return (
-    <div className="py-4 px-6 border-b border-gray-200 bg-white flex flex-col sm:flex-row justify-between gap-4">
+    <div className="py-4 px-6 border-b border-gray-200 bg-white flex flex-col sm:flex-row justify-between gap-4 relative">
       <h1 className="text-2xl font-bold text-taxi-blue">{title}</h1>
       
       <div className="flex items-center gap-4">
@@ -28,12 +30,20 @@ export function Header({ title }: HeaderProps) {
           />
         </div>
         
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell size={20} />
-          <span className="absolute -top-1 -right-1 bg-taxi-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-            3
-          </span>
-        </Button>
+        <div className="relative">
+          <Button variant="ghost" size="icon" className="relative"
+            onClick={() => setNotifOpen(open => !open)}
+          >
+            <Bell size={20} />
+            <span className="absolute -top-1 -right-1 bg-taxi-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+              3
+            </span>
+          </Button>
+          <UpcomingTripsDropdown open={notifOpen} />
+          {notifOpen && (
+            <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
+          )}
+        </div>
       </div>
     </div>
   );

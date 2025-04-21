@@ -13,6 +13,7 @@ interface BookingsFilterBarProps {
   setLocation: (val: string) => void;
   setCustomerId: (val: string) => void;
   drivers: Driver[];
+  showPending?: boolean;
 }
 
 export function BookingsFilterBar({
@@ -25,6 +26,7 @@ export function BookingsFilterBar({
   setLocation,
   setCustomerId,
   drivers,
+  showPending,
 }: BookingsFilterBarProps) {
   return (
     <div className="flex flex-col md:flex-row gap-2 mb-4">
@@ -34,6 +36,7 @@ export function BookingsFilterBar({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Statuses</SelectItem>
+          {showPending && <SelectItem value="pending">Pending</SelectItem>}
           <SelectItem value="upcoming">Upcoming</SelectItem>
           <SelectItem value="completed">Completed</SelectItem>
           <SelectItem value="cancelled">Cancelled</SelectItem>

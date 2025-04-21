@@ -1,9 +1,8 @@
-
 export interface Booking {
   id: string;
   date: string;
   pickupTime: string;
-  status: 'upcoming' | 'completed' | 'cancelled';
+  status: 'pending' | 'upcoming' | 'completed' | 'cancelled';
   kilometers: number;
   pickupLocation: string;
   dropLocation: string;
@@ -54,7 +53,7 @@ export const bookings: Booking[] = [
     id: 'BK-1001',
     date: '2025-04-22',
     pickupTime: '08:30',
-    status: 'upcoming',
+    status: 'pending',
     kilometers: 25,
     pickupLocation: 'Brisbane Airport Terminal 1',
     dropLocation: 'Marriott Hotel, Brisbane CBD',
@@ -114,7 +113,7 @@ export const bookings: Booking[] = [
     id: 'BK-1006',
     date: '2025-04-23',
     pickupTime: '11:45',
-    status: 'upcoming',
+    status: 'pending',
     kilometers: 28,
     pickupLocation: 'Brisbane Airport Terminal 1',
     dropLocation: 'University of Queensland',
@@ -348,4 +347,9 @@ export const getBookingsByCustomerId = (customerId: string): Booking[] => {
 // Helper function to get bookings by driver ID
 export const getBookingsByDriverId = (driverId: string): Booking[] => {
   return bookings.filter(booking => booking.driver === driverId);
+};
+
+// Helper function to get pending bookings
+export const getPendingBookings = (): Booking[] => {
+  return bookings.filter(booking => booking.status === 'pending');
 };
