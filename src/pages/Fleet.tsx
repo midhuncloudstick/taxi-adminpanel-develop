@@ -2,9 +2,9 @@
 import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import VehicleCard from "@/components/VehicleCard";
+import { Users, Luggage } from "lucide-react";
 
-// Use the same sample data and vehicle structure as /search-results & VehicleSelection.
+// Sample vehicle data
 const vehicles = [
   {
     id: 1,
@@ -45,23 +45,70 @@ const Fleet = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="container-custom flex-1 py-12 max-w-[90rem] mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold mb-3 text-center text-primary">
-          Our Fleet
-        </h1>
-        <p className="max-w-3xl mx-auto mb-8 text-center text-muted-foreground">
-          Discover our exclusive fleet. Every vehicle is selected for comfort, luxury, and convenience.
-        </p>
-        <div className="space-y-6">
-          {vehicles.map((vehicle) => (
-            <VehicleCard key={vehicle.id} vehicle={vehicle} />
-          ))}
+      <main className="flex-1 py-12 px-2">
+        <div className="mx-auto w-full max-w-[80rem]">
+          <h1 className="text-3xl md:text-4xl font-bold mb-3 text-center text-primary">
+            Our Fleet
+          </h1>
+          <p className="max-w-3xl mx-auto mb-8 text-center text-muted-foreground">
+            Discover our exclusive fleet. Every vehicle is selected for comfort, luxury, and convenience.
+          </p>
+          <div className="space-y-6">
+            {vehicles.map((vehicle) => (
+              <div
+                key={vehicle.id}
+                className="flex flex-col md:flex-row bg-card rounded-lg border border-border overflow-hidden shadow-sm 
+                           md:items-stretch"
+              >
+                {/* Vehicle image */}
+                <div className="md:w-1/4 w-full h-56 md:h-auto flex-shrink-0">
+                  <img
+                    src={vehicle.image}
+                    alt={vehicle.name}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+                {/* Vehicle info */}
+                <div className="flex-1 p-6 flex flex-col justify-between">
+                  <div>
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-2">
+                      <span className="text-lg font-semibold">{vehicle.name}</span>
+                      <span className="text-sm text-primary bg-primary/10 px-3 py-1 rounded font-medium border border-primary/20">Available Now</span>
+                    </div>
+                    <p className="text-muted-foreground text-sm mb-3">{vehicle.description}</p>
+                    <div className="flex gap-8 text-muted-foreground mb-2">
+                      <div className="flex items-center gap-1 text-sm">
+                        <Users className="w-4 h-4 mr-1 text-primary" />
+                        {vehicle.passengers} Passengers
+                      </div>
+                      <div className="flex items-center gap-1 text-sm">
+                        <Luggage className="w-4 h-4 mr-1 text-primary" />
+                        {vehicle.luggage} Luggage
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Price/Book */}
+                <div className="md:w-52 bg-muted/40 flex flex-col items-center justify-center px-6 py-8 md:py-0 border-t md:border-t-0 md:border-l border-border">
+                  <div>
+                    <div className="text-2xl font-bold text-primary text-center mb-1">
+                      ${vehicle.price}
+                    </div>
+                    <div className="text-xs text-muted-foreground text-center">Starting Fare</div>
+                    <div className="text-xs text-muted-foreground text-center mt-1">
+                      {vehicle.kilometers} km included
+                    </div>
+                  </div>
+                  {/* Hide Book Now button as on Fleet page we only show vehicles */}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </main>
       <Footer />
     </div>
-  );
+  )
 };
 
 export default Fleet;
-
