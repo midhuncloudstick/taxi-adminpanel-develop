@@ -15,7 +15,7 @@ interface AddCarFormProps {
 
 export function AddCarForm({ onAddCar }: AddCarFormProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<Car, "id">>({
     model: "",
     plate: "",
     type: "sedan",
@@ -88,7 +88,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
             <Label htmlFor="type">Car Type</Label>
             <Select 
               value={formData.type} 
-              onValueChange={(value) => setFormData({...formData, type: value as "sedan" | "suv" | "luxury"})}
+              onValueChange={(value: "sedan" | "suv" | "luxury") => setFormData({...formData, type: value})}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select car type" />
@@ -119,7 +119,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
             <Label htmlFor="status">Status</Label>
             <Select 
               value={formData.status} 
-              onValueChange={(value) => setFormData({...formData, status: value as "available" | "in-use" | "maintenance"})}
+              onValueChange={(value: "available" | "in-use" | "maintenance") => setFormData({...formData, status: value as "available" | "in-use" | "maintenance"})}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
