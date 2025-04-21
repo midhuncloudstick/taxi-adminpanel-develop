@@ -45,15 +45,15 @@ const Fleet = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
-      <main className="container-custom flex-1 py-12">
+      <main className="container-custom flex-1 py-12 max-w-[90rem] mx-auto">
         <h1 className="text-3xl md:text-4xl font-bold mb-3 text-center text-primary">
           Our Fleet
         </h1>
-        <p className="max-w-2xl mx-auto mb-8 text-center text-muted-foreground">
+        <p className="max-w-3xl mx-auto mb-8 text-center text-muted-foreground">
           Discover our exclusive fleet. Every vehicle is selected for comfort, luxury, and convenience.
         </p>
-        <div className="space-y-6 max-w-4xl mx-auto">
-          {vehicles.map((vehicle, idx) => (
+        <div className="space-y-6">
+          {vehicles.map((vehicle) => (
             <VehicleCard key={vehicle.id} vehicle={vehicle} />
           ))}
         </div>
