@@ -82,7 +82,7 @@ export default function Dashboard() {
 
   return (
     <PageContainer title="Dashboard">
-      <div className="space-y-6">
+      <div className="space-y-0">
         <StatsCards />
         <div>
           <h3 className="text-lg font-semibold mb-2 text-taxi-blue">Bookings</h3>

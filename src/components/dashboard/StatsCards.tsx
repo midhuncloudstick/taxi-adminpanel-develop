@@ -12,8 +12,8 @@ export function StatsCards() {
   const activeDriversCount = drivers.filter(d => d.status === "active").length;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card className="animate-fade-in">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
+      {/* <Card className="animate-fade-in">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-gray-500">Upcoming Bookings</CardTitle>
           <Calendar className="h-4 w-4 text-taxi-teal" />
@@ -65,7 +65,7 @@ export function StatsCards() {
             {((activeDriversCount / drivers.length) * 100).toFixed(0)}% of drivers active
           </p>
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 }
