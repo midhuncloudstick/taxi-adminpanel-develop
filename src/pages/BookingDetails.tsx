@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -55,8 +54,7 @@ const BookingDetails = () => {
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     console.log(values);
     toast.success("Booking submitted successfully!");
-    // Here you would typically submit to your backend
-    navigate('/');
+    navigate('/booking-confirmation');
   }
 
   if (!vehicle) {
