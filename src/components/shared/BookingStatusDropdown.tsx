@@ -23,7 +23,7 @@ export function BookingStatusDropdown({
       case "pending":
         return "bg-yellow-50 text-yellow-800";
       case "waiting for confirmation":
-        return "bg-orange-50 text-orange-800";
+        return "bg-blue-50 text-blue-800";
       case "upcoming":
         return "bg-taxi-teal/20 text-taxi-teal";
       case "completed":
@@ -37,7 +37,34 @@ export function BookingStatusDropdown({
 
   // Dropdown content for each relevant status
   let dropdownContent = null;
-  if (status === "pending" || status === "waiting for confirmation") {
+  if (status === "pending") {
+    dropdownContent = (
+      <div className="absolute z-20 mt-2 min-w-[190px] right-0 bg-white border shadow rounded [&>*]:flex [&>*]:px-4 [&>*]:py-2">
+        <button
+          className="hover:bg-blue-50 w-full flex items-center gap-2"
+          onClick={() => {
+            setOpen(false);
+            // Here we would typically update the status to "waiting for confirmation"
+            // For now just call the approve handler as that's what the existing code expects
+            onApprove?.();
+          }}
+        >
+          <Check size={16} className="text-blue-600" />
+          Set to Waiting for Confirmation
+        </button>
+        <button
+          className="hover:bg-red-50 w-full flex items-center gap-2"
+          onClick={() => {
+            setOpen(false);
+            onCancel?.();
+          }}
+        >
+          <X size={16} className="text-taxi-red" />
+          Cancel Booking
+        </button>
+      </div>
+    );
+  } else if (status === "waiting for confirmation") {
     dropdownContent = (
       <div className="absolute z-20 mt-2 min-w-[140px] right-0 bg-white border shadow rounded [&>*]:flex [&>*]:px-4 [&>*]:py-2">
         <button

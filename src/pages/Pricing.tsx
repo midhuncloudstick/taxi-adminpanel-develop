@@ -30,6 +30,7 @@ export default function Pricing() {
   const [peakSurcharge, setPeakSurcharge] = useState(pricingRules[0].peakHoursSurcharge);
   const [airportFee, setAirportFee] = useState(pricingRules[0].airportFee);
   const [peakDays, setPeakDays] = useState<Date[]>([]);
+  const [peakDayCharge, setPeakDayCharge] = useState<number>(25); // Default peak day charge
   
   // Convert existing ranges to categorized ranges
   const categorizeRange = (range: PriceRange): CategorizedPriceRange => {
@@ -604,6 +605,18 @@ export default function Pricing() {
                 />
               </div>
 
+              <div className="grid gap-2">
+                <Label htmlFor="peak-day-charge">Peak Day Charge ($)</Label>
+                <Input 
+                  id="peak-day-charge" 
+                  type="number" 
+                  step="0.01" 
+                  min="0"
+                  value={peakDayCharge} 
+                  onChange={(e) => setPeakDayCharge(parseFloat(e.target.value))} 
+                />
+              </div>
+
               <div className="pt-4 space-y-2">
                 <Label>Peak Days</Label>
                 <Popover>
@@ -635,7 +648,7 @@ export default function Pricing() {
                   )}
                   
                   {peakDays.map((date, index) => (
-                    <Badge key={index} variant="warning" className="flex items-center gap-1">
+                    <Badge key={index} variant="peakday" className="flex items-center gap-1">
                       {format(date, "MMM d, yyyy")}
                       <Button
                         variant="ghost"
@@ -653,6 +666,7 @@ export default function Pricing() {
               <div className="pt-4">
                 <p className="text-sm text-gray-500 mb-4">
                   Peak hours are defined as 7:00 AM - 9:00 AM and 4:00 PM - 7:00 PM on weekdays.
+                  Peak days will have an additional flat fee applied to all bookings.
                 </p>
               </div>
             </CardContent>
