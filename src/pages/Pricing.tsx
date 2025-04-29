@@ -7,6 +7,17 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { pricingRules } from "@/data/mockData";
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const weekdays = [
+  { id: "monday", label: "Monday" },
+  { id: "tuesday", label: "Tuesday" },
+  { id: "wednesday", label: "Wednesday" },
+  { id: "thursday", label: "Thursday" },
+  { id: "friday", label: "Friday" },
+  { id: "saturday", label: "Saturday" },
+  { id: "sunday", label: "Sunday" },
+];
 
 export default function Pricing() {
   const [standardRate, setStandardRate] = useState(pricingRules[0].perKilometer);
@@ -14,10 +25,19 @@ export default function Pricing() {
   const [luxuryRate, setLuxuryRate] = useState(pricingRules[2].perKilometer);
   const [peakSurcharge, setPeakSurcharge] = useState(pricingRules[0].peakHoursSurcharge);
   const [airportFee, setAirportFee] = useState(pricingRules[0].airportFee);
+  const [peakDays, setPeakDays] = useState<string[]>(["monday", "friday"]);
 
   const handleSave = () => {
     // In a real app, this would make an API call to update pricing
     toast.success("Pricing updated successfully");
+  };
+
+  const togglePeakDay = (day: string) => {
+    setPeakDays(current => 
+      current.includes(day)
+        ? current.filter(d => d !== day)
+        : [...current, day]
+    );
   };
 
   return (
@@ -99,6 +119,27 @@ export default function Pricing() {
                   value={airportFee} 
                   onChange={(e) => setAirportFee(parseFloat(e.target.value))} 
                 />
+              </div>
+
+              <div className="pt-4 space-y-2">
+                <Label>Peak Days</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {weekdays.map((day) => (
+                    <div key={day.id} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={day.id}
+                        checked={peakDays.includes(day.id)}
+                        onCheckedChange={() => togglePeakDay(day.id)}
+                      />
+                      <Label 
+                        htmlFor={day.id} 
+                        className="text-sm cursor-pointer"
+                      >
+                        {day.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="pt-4">

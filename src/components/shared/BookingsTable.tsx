@@ -1,11 +1,12 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Booking, Driver, getDriverById, getCustomerById } from "@/data/mockData";
-import { PhoneCall } from "lucide-react";
+import { PhoneCall, ChevronDown, ChevronUp, MapPin, Calendar, Clock } from "lucide-react";
 import { Button } from "../ui/button";
 import { BookingStatusDropdown } from "./BookingStatusDropdown";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 interface BookingsTableProps {
   bookings: Booking[];
@@ -34,12 +35,22 @@ export function BookingsTable({
 }: BookingsTableProps) {
   const getSortSymbol = (col: string) =>
     sortKey === col ? (sortDirection === "asc" ? "▲" : "▼") : "";
+    
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+
+  const toggleRow = (bookingId: string) => {
+    setExpandedRows(prev => ({
+      ...prev,
+      [bookingId]: !prev[bookingId]
+    }));
+  };
 
   return (
     <div className="overflow-auto rounded-lg shadow bg-white">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-10"></TableHead>
             <TableHead onClick={() => onSort && onSort("id")} className={onSort ? "cursor-pointer" : ""}>Booking ID {getSortSymbol("id")}</TableHead>
             <TableHead onClick={() => onSort && onSort("date")} className={onSort ? "cursor-pointer" : ""}>Date {getSortSymbol("date")}</TableHead>
             <TableHead onClick={() => onSort && onSort("pickupTime")} className={onSort ? "cursor-pointer" : ""}>Pickup Time {getSortSymbol("pickupTime")}</TableHead>
@@ -60,7 +71,7 @@ export function BookingsTable({
         <TableBody>
           {bookings.length === 0 && (
             <TableRow>
-              <TableCell colSpan={11} className="text-center text-gray-400 py-8">
+              <TableCell colSpan={12} className="text-center text-gray-400 py-8">
                 No bookings found
               </TableCell>
             </TableRow>
@@ -69,76 +80,147 @@ export function BookingsTable({
             const customer = getCustomerById(b.customerId);
             const driver = getDriverById(b.driver);
             return (
-              <TableRow key={b.id}>
-                <TableCell>{b.id}</TableCell>
-                <TableCell>{b.date}</TableCell>
-                <TableCell>{b.pickupTime}</TableCell>
-                <TableCell>{b.kilometers}</TableCell>
-                <TableCell>{b.pickupLocation}</TableCell>
-                <TableCell>{b.dropLocation}</TableCell>
-                {showCustomer && (
-                  <TableCell>
-                    {customer ? `${customer.name} (${b.customerId})` : b.customerId}
-                  </TableCell>
-                )}
-                {showDriverSelect ? (
-                  <TableCell>
-                    <Select
-                      value={b.driver}
-                      onValueChange={val => onUpdateDriver && onUpdateDriver(b.id, val)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Driver" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {drivers.map(d => (
-                          <SelectItem key={d.id} value={d.id}>
-                            {d.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                ) : showDriver ? (
-                  <TableCell>
-                    {driver ? driver.name : b.driver}
-                  </TableCell>
-                ) : null}
-                <TableCell>
-                  <BookingStatusDropdown
-                    status={b.status}
-                    onApprove={
-                      onUpdateStatus
-                        ? () => onUpdateStatus(b.id, "upcoming")
-                        : undefined
-                    }
-                    onCancel={
-                      onUpdateStatus
-                        ? () =>
-                            onUpdateStatus(
-                              b.id,
-                              b.status === "pending" ? "cancelled" : "cancelled"
-                            )
-                        : undefined
-                    }
-                  />
-                </TableCell>
-                <TableCell>${b.amount.toFixed(2)}</TableCell>
-                <TableCell>
-                  {customer && customer.phone ? (
+              <React.Fragment key={b.id}>
+                <TableRow className={expandedRows[b.id] ? "border-b-0" : ""}>
+                  <TableCell className="p-2 text-center">
                     <Button
                       variant="ghost"
-                      className="p-2 hover:bg-taxi-teal/20"
-                      onClick={() => window.open(`tel:${customer.phone.replace(/\s+/g, "")}`)}
-                      title={`Call ${customer.name}`}
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => toggleRow(b.id)}
                     >
-                      <PhoneCall size={18} className="text-taxi-blue" />
+                      {expandedRows[b.id] ? (
+                        <ChevronUp size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
                     </Button>
-                  ) : (
-                    <span className="text-gray-400">N/A</span>
+                  </TableCell>
+                  <TableCell className="font-medium">{b.id}</TableCell>
+                  <TableCell>{b.date}</TableCell>
+                  <TableCell>{b.pickupTime}</TableCell>
+                  <TableCell>{b.kilometers}</TableCell>
+                  <TableCell>{b.pickupLocation}</TableCell>
+                  <TableCell>{b.dropLocation}</TableCell>
+                  {showCustomer && (
+                    <TableCell>
+                      {customer ? `${customer.name} (${b.customerId})` : b.customerId}
+                    </TableCell>
                   )}
-                </TableCell>
-              </TableRow>
+                  {showDriverSelect ? (
+                    <TableCell>
+                      <Select
+                        value={b.driver}
+                        onValueChange={val => onUpdateDriver && onUpdateDriver(b.id, val)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Driver" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {drivers.map(d => (
+                            <SelectItem key={d.id} value={d.id}>
+                              {d.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  ) : showDriver ? (
+                    <TableCell>
+                      {driver ? driver.name : b.driver}
+                    </TableCell>
+                  ) : null}
+                  <TableCell>
+                    <BookingStatusDropdown
+                      status={b.status}
+                      onApprove={
+                        onUpdateStatus
+                          ? () => onUpdateStatus(b.id, "upcoming")
+                          : undefined
+                      }
+                      onCancel={
+                        onUpdateStatus
+                          ? () =>
+                              onUpdateStatus(
+                                b.id,
+                                b.status === "pending" ? "cancelled" : "cancelled"
+                              )
+                          : undefined
+                      }
+                    />
+                  </TableCell>
+                  <TableCell>${b.amount.toFixed(2)}</TableCell>
+                  <TableCell>
+                    {customer && customer.phone ? (
+                      <Button
+                        variant="ghost"
+                        className="p-2 hover:bg-taxi-teal/20"
+                        onClick={() => window.open(`tel:${customer.phone.replace(/\s+/g, "")}`)}
+                        title={`Call ${customer.name}`}
+                      >
+                        <PhoneCall size={18} className="text-taxi-blue" />
+                      </Button>
+                    ) : (
+                      <span className="text-gray-400">N/A</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+                {expandedRows[b.id] && (
+                  <TableRow>
+                    <TableCell colSpan={12} className="bg-gray-50 p-0">
+                      <div className="p-4 space-y-4">
+                        <h4 className="font-medium text-lg">Booking Details</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Calendar size={16} className="text-taxi-blue" />
+                              <span className="font-medium">Date:</span> {b.date}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Clock size={16} className="text-taxi-blue" />
+                              <span className="font-medium">Time:</span> {b.pickupTime}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin size={16} className="text-taxi-blue" />
+                              <span className="font-medium">Pickup:</span> {b.pickupLocation}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin size={16} className="text-taxi-blue" />
+                              <span className="font-medium">Destination:</span> {b.dropLocation}
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            {customer && (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">Customer:</span> {customer.name}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">Phone:</span> {customer.phone}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">Email:</span> {customer.email}
+                                </div>
+                              </>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">Distance:</span> {b.kilometers} km
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">Fare:</span> ${b.amount.toFixed(2)}
+                            </div>
+                          </div>
+                        </div>
+                        {b.notes && (
+                          <div className="mt-2">
+                            <span className="font-medium">Notes:</span> {b.notes}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
             );
           })}
         </TableBody>
