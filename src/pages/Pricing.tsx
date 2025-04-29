@@ -5,14 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { pricingRules } from "@/data/mockData";
+import { pricingRules, PriceRange } from "@/data/mockData";
 import { useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, isEqual } from "date-fns";
-import { CalendarIcon, X } from "lucide-react";
+import { CalendarIcon, Plus, Trash, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function Pricing() {
   const [standardRate, setStandardRate] = useState(pricingRules[0].perKilometer);
@@ -21,7 +22,12 @@ export default function Pricing() {
   const [peakSurcharge, setPeakSurcharge] = useState(pricingRules[0].peakHoursSurcharge);
   const [airportFee, setAirportFee] = useState(pricingRules[0].airportFee);
   const [peakDays, setPeakDays] = useState<Date[]>([]);
-
+  
+  // Range-based pricing states
+  const [sedanRanges, setSedanRanges] = useState<PriceRange[]>(pricingRules[0].rangeBasedPricing);
+  const [suvRanges, setSuvRanges] = useState<PriceRange[]>(pricingRules[1].rangeBasedPricing);
+  const [luxuryRanges, setLuxuryRanges] = useState<PriceRange[]>(pricingRules[2].rangeBasedPricing);
+  
   const handleSave = () => {
     // In a real app, this would make an API call to update pricing
     toast.success("Pricing updated successfully");
@@ -39,6 +45,30 @@ export default function Pricing() {
     setPeakDays(prev => prev.filter(date => !isEqual(date, dateToRemove)));
   };
 
+  const updateRange = (
+    rangeId: string,
+    field: keyof PriceRange,
+    value: any,
+    vehicleType: 'sedan' | 'suv' | 'luxury'
+  ) => {
+    const updateRanges = (ranges: PriceRange[]) => {
+      return ranges.map(range => {
+        if (range.id === rangeId) {
+          return { ...range, [field]: field === 'price' || field === 'minKm' || field === 'maxKm' ? parseFloat(value) : value };
+        }
+        return range;
+      });
+    };
+
+    if (vehicleType === 'sedan') {
+      setSedanRanges(updateRanges(sedanRanges));
+    } else if (vehicleType === 'suv') {
+      setSuvRanges(updateRanges(suvRanges));
+    } else {
+      setLuxuryRanges(updateRanges(luxuryRanges));
+    }
+  };
+
   return (
     <PageContainer title="Pricing Management">
       <div className="space-y-6">
@@ -46,6 +76,179 @@ export default function Pricing() {
           <h2 className="text-xl font-semibold text-taxi-blue">Price Configuration</h2>
           <p className="text-sm text-gray-500">Manage rates and fees for your taxi service</p>
         </div>
+
+        {/* Range-based pricing section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Range-based Pricing</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="text-md font-semibold mb-3">Sedan Pricing</h3>
+              <div className="space-y-4">
+                {sedanRanges.map((range, index) => (
+                  <div key={range.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 border rounded-md">
+                    <div>
+                      <Label htmlFor={`sedan-min-${index}`}>Min KM</Label>
+                      <Input
+                        id={`sedan-min-${index}`}
+                        type="number"
+                        min="0"
+                        value={range.minKm}
+                        onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'sedan')}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`sedan-max-${index}`}>Max KM (empty for unlimited)</Label>
+                      <Input
+                        id={`sedan-max-${index}`}
+                        type="number"
+                        min={range.minKm + 1}
+                        value={range.maxKm || ''}
+                        onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'sedan')}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`sedan-price-${index}`}>
+                        {range.priceType === 'fixed' ? 'Fixed Price ($)' : 'Price per KM ($)'}
+                      </Label>
+                      <Input
+                        id={`sedan-price-${index}`}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={range.price}
+                        onChange={(e) => updateRange(range.id, 'price', e.target.value, 'sedan')}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`sedan-type-${index}`}>Type</Label>
+                      <select
+                        id={`sedan-type-${index}`}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                        value={range.priceType}
+                        onChange={(e) => updateRange(range.id, 'priceType', e.target.value, 'sedan')}
+                      >
+                        <option value="fixed">Fixed Price</option>
+                        <option value="per_km">Price per KM</option>
+                      </select>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-md font-semibold mb-3">SUV Pricing</h3>
+              <div className="space-y-4">
+                {suvRanges.map((range, index) => (
+                  <div key={range.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 border rounded-md">
+                    <div>
+                      <Label htmlFor={`suv-min-${index}`}>Min KM</Label>
+                      <Input
+                        id={`suv-min-${index}`}
+                        type="number"
+                        min="0"
+                        value={range.minKm}
+                        onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'suv')}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`suv-max-${index}`}>Max KM (empty for unlimited)</Label>
+                      <Input
+                        id={`suv-max-${index}`}
+                        type="number"
+                        min={range.minKm + 1}
+                        value={range.maxKm || ''}
+                        onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'suv')}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`suv-price-${index}`}>
+                        {range.priceType === 'fixed' ? 'Fixed Price ($)' : 'Price per KM ($)'}
+                      </Label>
+                      <Input
+                        id={`suv-price-${index}`}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={range.price}
+                        onChange={(e) => updateRange(range.id, 'price', e.target.value, 'suv')}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`suv-type-${index}`}>Type</Label>
+                      <select
+                        id={`suv-type-${index}`}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                        value={range.priceType}
+                        onChange={(e) => updateRange(range.id, 'priceType', e.target.value, 'suv')}
+                      >
+                        <option value="fixed">Fixed Price</option>
+                        <option value="per_km">Price per KM</option>
+                      </select>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-md font-semibold mb-3">Luxury Pricing</h3>
+              <div className="space-y-4">
+                {luxuryRanges.map((range, index) => (
+                  <div key={range.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 border rounded-md">
+                    <div>
+                      <Label htmlFor={`luxury-min-${index}`}>Min KM</Label>
+                      <Input
+                        id={`luxury-min-${index}`}
+                        type="number"
+                        min="0"
+                        value={range.minKm}
+                        onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'luxury')}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`luxury-max-${index}`}>Max KM (empty for unlimited)</Label>
+                      <Input
+                        id={`luxury-max-${index}`}
+                        type="number"
+                        min={range.minKm + 1}
+                        value={range.maxKm || ''}
+                        onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'luxury')}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`luxury-price-${index}`}>
+                        {range.priceType === 'fixed' ? 'Fixed Price ($)' : 'Price per KM ($)'}
+                      </Label>
+                      <Input
+                        id={`luxury-price-${index}`}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={range.price}
+                        onChange={(e) => updateRange(range.id, 'price', e.target.value, 'luxury')}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor={`luxury-type-${index}`}>Type</Label>
+                      <select
+                        id={`luxury-type-${index}`}
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                        value={range.priceType}
+                        onChange={(e) => updateRange(range.id, 'priceType', e.target.value, 'luxury')}
+                      >
+                        <option value="fixed">Fixed Price</option>
+                        <option value="per_km">Price per KM</option>
+                      </select>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card>

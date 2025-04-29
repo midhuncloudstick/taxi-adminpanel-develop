@@ -76,6 +76,7 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
             <TableHead>Plate Number</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>Capacity</TableHead>
+            <TableHead>Price/KM</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
@@ -88,6 +89,9 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
               <TableCell>{car.plate}</TableCell>
               <TableCell>{getCarTypeBadge(car.type)}</TableCell>
               <TableCell>{car.capacity}</TableCell>
+              <TableCell>
+                {car.pricePerKm ? `$${car.pricePerKm.toFixed(2)}` : 'N/A'}
+              </TableCell>
               <TableCell>{getStatusBadge(car.status)}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">

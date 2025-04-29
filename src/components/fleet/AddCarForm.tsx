@@ -20,15 +20,21 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
     plate: "",
     type: "sedan",
     capacity: 4,
-    status: "available"
+    status: "available",
+    pricePerKm: 0
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: name === "capacity" ? parseInt(value) : value
-    });
+    
+    // Handle different input types
+    if (name === "capacity") {
+      setFormData({ ...formData, [name]: parseInt(value) });
+    } else if (name === "pricePerKm") {
+      setFormData({ ...formData, [name]: parseFloat(value) });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -40,7 +46,8 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
       plate: "",
       type: "sedan",
       capacity: 4,
-      status: "available"
+      status: "available",
+      pricePerKm: 0
     });
     setIsOpen(false);
   };
@@ -110,6 +117,20 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
               min="1"
               max="12"
               value={formData.capacity}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="pricePerKm">Price Per Kilometer ($)</Label>
+            <Input
+              id="pricePerKm"
+              name="pricePerKm"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.pricePerKm || 0}
               onChange={handleInputChange}
               required
             />
