@@ -5,7 +5,7 @@ import { ArrowDown, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BookingStatusDropdownProps {
-  status: "pending" | "upcoming" | "completed" | "cancelled";
+  status: "pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled";
   onApprove?: () => void;
   onCancel?: () => void;
 }
@@ -22,6 +22,8 @@ export function BookingStatusDropdown({
     switch (s) {
       case "pending":
         return "bg-yellow-50 text-yellow-800";
+      case "waiting for confirmation":
+        return "bg-orange-50 text-orange-800";
       case "upcoming":
         return "bg-taxi-teal/20 text-taxi-teal";
       case "completed":
@@ -35,7 +37,7 @@ export function BookingStatusDropdown({
 
   // Dropdown content for each relevant status
   let dropdownContent = null;
-  if (status === "pending") {
+  if (status === "pending" || status === "waiting for confirmation") {
     dropdownContent = (
       <div className="absolute z-20 mt-2 min-w-[140px] right-0 bg-white border shadow rounded [&>*]:flex [&>*]:px-4 [&>*]:py-2">
         <button
@@ -77,7 +79,7 @@ export function BookingStatusDropdown({
     );
   }
 
-  const showDropdown = status === "pending" || status === "upcoming";
+  const showDropdown = status === "pending" || status === "waiting for confirmation" || status === "upcoming";
   const displayText = status.charAt(0).toUpperCase() + status.slice(1);
 
   return (

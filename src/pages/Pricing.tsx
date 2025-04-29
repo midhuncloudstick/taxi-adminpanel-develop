@@ -13,7 +13,15 @@ import { format, isEqual } from "date-fns";
 import { CalendarIcon, Plus, Trash, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Categorized range types
+type RangeCategory = 'local' | 'regional' | 'distance';
+
+// Extended price range with category
+interface CategorizedPriceRange extends PriceRange {
+  category: RangeCategory;
+}
 
 export default function Pricing() {
   const [standardRate, setStandardRate] = useState(pricingRules[0].perKilometer);
@@ -23,10 +31,28 @@ export default function Pricing() {
   const [airportFee, setAirportFee] = useState(pricingRules[0].airportFee);
   const [peakDays, setPeakDays] = useState<Date[]>([]);
   
-  // Range-based pricing states
-  const [sedanRanges, setSedanRanges] = useState<PriceRange[]>(pricingRules[0].rangeBasedPricing);
-  const [suvRanges, setSuvRanges] = useState<PriceRange[]>(pricingRules[1].rangeBasedPricing);
-  const [luxuryRanges, setLuxuryRanges] = useState<PriceRange[]>(pricingRules[2].rangeBasedPricing);
+  // Convert existing ranges to categorized ranges
+  const categorizeRange = (range: PriceRange): CategorizedPriceRange => {
+    // Determine category based on distance range
+    let category: RangeCategory = 'local';
+    if (range.minKm >= 25 && range.maxKm && range.maxKm <= 80) {
+      category = 'regional';
+    } else if (range.minKm >= 80 || !range.maxKm) {
+      category = 'distance';
+    }
+    return { ...range, category };
+  };
+  
+  // Range-based pricing states with categories
+  const [sedanRanges, setSedanRanges] = useState<CategorizedPriceRange[]>(
+    pricingRules[0].rangeBasedPricing.map(categorizeRange)
+  );
+  const [suvRanges, setSuvRanges] = useState<CategorizedPriceRange[]>(
+    pricingRules[1].rangeBasedPricing.map(categorizeRange)
+  );
+  const [luxuryRanges, setLuxuryRanges] = useState<CategorizedPriceRange[]>(
+    pricingRules[2].rangeBasedPricing.map(categorizeRange)
+  );
   
   const handleSave = () => {
     // In a real app, this would make an API call to update pricing
@@ -47,11 +73,11 @@ export default function Pricing() {
 
   const updateRange = (
     rangeId: string,
-    field: keyof PriceRange,
+    field: keyof CategorizedPriceRange,
     value: any,
     vehicleType: 'sedan' | 'suv' | 'luxury'
   ) => {
-    const updateRanges = (ranges: PriceRange[]) => {
+    const updateRanges = (ranges: CategorizedPriceRange[]) => {
       return ranges.map(range => {
         if (range.id === rangeId) {
           return { ...range, [field]: field === 'price' || field === 'minKm' || field === 'maxKm' ? parseFloat(value) : value };
@@ -69,6 +95,14 @@ export default function Pricing() {
     }
   };
 
+  // Filter ranges by category
+  const getRangesByCategory = (
+    ranges: CategorizedPriceRange[],
+    category: RangeCategory
+  ) => {
+    return ranges.filter(range => range.category === category);
+  };
+
   return (
     <PageContainer title="Pricing Management">
       <div className="space-y-6">
@@ -82,171 +116,418 @@ export default function Pricing() {
           <CardHeader>
             <CardTitle className="text-lg">Range-based Pricing</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h3 className="text-md font-semibold mb-3">Sedan Pricing</h3>
-              <div className="space-y-4">
-                {sedanRanges.map((range, index) => (
-                  <div key={range.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 border rounded-md">
-                    <div>
-                      <Label htmlFor={`sedan-min-${index}`}>Min KM</Label>
-                      <Input
-                        id={`sedan-min-${index}`}
-                        type="number"
-                        min="0"
-                        value={range.minKm}
-                        onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'sedan')}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`sedan-max-${index}`}>Max KM (empty for unlimited)</Label>
-                      <Input
-                        id={`sedan-max-${index}`}
-                        type="number"
-                        min={range.minKm + 1}
-                        value={range.maxKm || ''}
-                        onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'sedan')}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`sedan-price-${index}`}>
-                        {range.priceType === 'fixed' ? 'Fixed Price ($)' : 'Price per KM ($)'}
-                      </Label>
-                      <Input
-                        id={`sedan-price-${index}`}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={range.price}
-                        onChange={(e) => updateRange(range.id, 'price', e.target.value, 'sedan')}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`sedan-type-${index}`}>Type</Label>
-                      <select
-                        id={`sedan-type-${index}`}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                        value={range.priceType}
-                        onChange={(e) => updateRange(range.id, 'priceType', e.target.value, 'sedan')}
-                      >
-                        <option value="fixed">Fixed Price</option>
-                        <option value="per_km">Price per KM</option>
-                      </select>
-                    </div>
+          <CardContent>
+            <Tabs defaultValue="sedan" className="w-full">
+              <TabsList className="mb-6">
+                <TabsTrigger value="sedan">Sedan</TabsTrigger>
+                <TabsTrigger value="suv">SUV</TabsTrigger>
+                <TabsTrigger value="luxury">Luxury</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="sedan" className="space-y-6">
+                <div className="border p-4 rounded-md bg-gray-50">
+                  <h3 className="text-md font-semibold mb-3 text-taxi-blue">Local Trips (0-25 KM)</h3>
+                  <div className="space-y-4">
+                    {getRangesByCategory(sedanRanges, 'local').map((range, index) => (
+                      <div key={range.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-md bg-white">
+                        <div>
+                          <Label htmlFor={`sedan-min-${index}`}>Min KM</Label>
+                          <Input
+                            id={`sedan-min-${index}`}
+                            type="number"
+                            min="0"
+                            value={range.minKm}
+                            onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'sedan')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`sedan-max-${index}`}>Max KM</Label>
+                          <Input
+                            id={`sedan-max-${index}`}
+                            type="number"
+                            min={range.minKm + 1}
+                            value={range.maxKm || ''}
+                            onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'sedan')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`sedan-price-${index}`}>
+                            Fixed Price ($)
+                          </Label>
+                          <Input
+                            id={`sedan-price-${index}`}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={range.price}
+                            onChange={(e) => updateRange(range.id, 'price', e.target.value, 'sedan')}
+                          />
+                          <Badge variant="outline" className="mt-2">Fixed Price</Badge>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-md font-semibold mb-3">SUV Pricing</h3>
-              <div className="space-y-4">
-                {suvRanges.map((range, index) => (
-                  <div key={range.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 border rounded-md">
-                    <div>
-                      <Label htmlFor={`suv-min-${index}`}>Min KM</Label>
-                      <Input
-                        id={`suv-min-${index}`}
-                        type="number"
-                        min="0"
-                        value={range.minKm}
-                        onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'suv')}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`suv-max-${index}`}>Max KM (empty for unlimited)</Label>
-                      <Input
-                        id={`suv-max-${index}`}
-                        type="number"
-                        min={range.minKm + 1}
-                        value={range.maxKm || ''}
-                        onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'suv')}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`suv-price-${index}`}>
-                        {range.priceType === 'fixed' ? 'Fixed Price ($)' : 'Price per KM ($)'}
-                      </Label>
-                      <Input
-                        id={`suv-price-${index}`}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={range.price}
-                        onChange={(e) => updateRange(range.id, 'price', e.target.value, 'suv')}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`suv-type-${index}`}>Type</Label>
-                      <select
-                        id={`suv-type-${index}`}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                        value={range.priceType}
-                        onChange={(e) => updateRange(range.id, 'priceType', e.target.value, 'suv')}
-                      >
-                        <option value="fixed">Fixed Price</option>
-                        <option value="per_km">Price per KM</option>
-                      </select>
-                    </div>
+                </div>
+                
+                <div className="border p-4 rounded-md bg-gray-50">
+                  <h3 className="text-md font-semibold mb-3 text-taxi-blue">Regional Trips (25-80 KM)</h3>
+                  <div className="space-y-4">
+                    {getRangesByCategory(sedanRanges, 'regional').map((range, index) => (
+                      <div key={range.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-md bg-white">
+                        <div>
+                          <Label htmlFor={`sedan-regional-min-${index}`}>Min KM</Label>
+                          <Input
+                            id={`sedan-regional-min-${index}`}
+                            type="number"
+                            min="0"
+                            value={range.minKm}
+                            onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'sedan')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`sedan-regional-max-${index}`}>Max KM</Label>
+                          <Input
+                            id={`sedan-regional-max-${index}`}
+                            type="number"
+                            min={range.minKm + 1}
+                            value={range.maxKm || ''}
+                            onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'sedan')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`sedan-regional-price-${index}`}>
+                            Price per KM ($)
+                          </Label>
+                          <Input
+                            id={`sedan-regional-price-${index}`}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={range.price}
+                            onChange={(e) => updateRange(range.id, 'price', e.target.value, 'sedan')}
+                          />
+                          <Badge variant="outline" className="mt-2">Per KM Rate</Badge>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h3 className="text-md font-semibold mb-3">Luxury Pricing</h3>
-              <div className="space-y-4">
-                {luxuryRanges.map((range, index) => (
-                  <div key={range.id} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 border rounded-md">
-                    <div>
-                      <Label htmlFor={`luxury-min-${index}`}>Min KM</Label>
-                      <Input
-                        id={`luxury-min-${index}`}
-                        type="number"
-                        min="0"
-                        value={range.minKm}
-                        onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'luxury')}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`luxury-max-${index}`}>Max KM (empty for unlimited)</Label>
-                      <Input
-                        id={`luxury-max-${index}`}
-                        type="number"
-                        min={range.minKm + 1}
-                        value={range.maxKm || ''}
-                        onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'luxury')}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`luxury-price-${index}`}>
-                        {range.priceType === 'fixed' ? 'Fixed Price ($)' : 'Price per KM ($)'}
-                      </Label>
-                      <Input
-                        id={`luxury-price-${index}`}
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={range.price}
-                        onChange={(e) => updateRange(range.id, 'price', e.target.value, 'luxury')}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor={`luxury-type-${index}`}>Type</Label>
-                      <select
-                        id={`luxury-type-${index}`}
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-                        value={range.priceType}
-                        onChange={(e) => updateRange(range.id, 'priceType', e.target.value, 'luxury')}
-                      >
-                        <option value="fixed">Fixed Price</option>
-                        <option value="per_km">Price per KM</option>
-                      </select>
-                    </div>
+                </div>
+                
+                <div className="border p-4 rounded-md bg-gray-50">
+                  <h3 className="text-md font-semibold mb-3 text-taxi-blue">Distance Trips (80+ KM)</h3>
+                  <div className="space-y-4">
+                    {getRangesByCategory(sedanRanges, 'distance').map((range, index) => (
+                      <div key={range.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-md bg-white">
+                        <div>
+                          <Label htmlFor={`sedan-distance-min-${index}`}>Min KM</Label>
+                          <Input
+                            id={`sedan-distance-min-${index}`}
+                            type="number"
+                            min="0"
+                            value={range.minKm}
+                            onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'sedan')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`sedan-distance-max-${index}`}>Max KM (empty for unlimited)</Label>
+                          <Input
+                            id={`sedan-distance-max-${index}`}
+                            type="number"
+                            min={range.minKm + 1}
+                            value={range.maxKm || ''}
+                            onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'sedan')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`sedan-distance-price-${index}`}>
+                            Price per KM ($)
+                          </Label>
+                          <Input
+                            id={`sedan-distance-price-${index}`}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={range.price}
+                            onChange={(e) => updateRange(range.id, 'price', e.target.value, 'sedan')}
+                          />
+                          <Badge variant="outline" className="mt-2">Per KM Rate</Badge>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
+              </TabsContent>
+              
+              {/* SUV Tab Content */}
+              <TabsContent value="suv" className="space-y-6">
+                <div className="border p-4 rounded-md bg-gray-50">
+                  <h3 className="text-md font-semibold mb-3 text-taxi-blue">Local Trips (0-25 KM)</h3>
+                  <div className="space-y-4">
+                    {getRangesByCategory(suvRanges, 'local').map((range, index) => (
+                      <div key={range.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-md bg-white">
+                        <div>
+                          <Label htmlFor={`suv-min-${index}`}>Min KM</Label>
+                          <Input
+                            id={`suv-min-${index}`}
+                            type="number"
+                            min="0"
+                            value={range.minKm}
+                            onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'suv')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`suv-max-${index}`}>Max KM</Label>
+                          <Input
+                            id={`suv-max-${index}`}
+                            type="number"
+                            min={range.minKm + 1}
+                            value={range.maxKm || ''}
+                            onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'suv')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`suv-price-${index}`}>
+                            Fixed Price ($)
+                          </Label>
+                          <Input
+                            id={`suv-price-${index}`}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={range.price}
+                            onChange={(e) => updateRange(range.id, 'price', e.target.value, 'suv')}
+                          />
+                          <Badge variant="outline" className="mt-2">Fixed Price</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="border p-4 rounded-md bg-gray-50">
+                  <h3 className="text-md font-semibold mb-3 text-taxi-blue">Regional Trips (25-80 KM)</h3>
+                  <div className="space-y-4">
+                    {getRangesByCategory(suvRanges, 'regional').map((range, index) => (
+                      <div key={range.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-md bg-white">
+                        <div>
+                          <Label htmlFor={`suv-regional-min-${index}`}>Min KM</Label>
+                          <Input
+                            id={`suv-regional-min-${index}`}
+                            type="number"
+                            min="0"
+                            value={range.minKm}
+                            onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'suv')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`suv-regional-max-${index}`}>Max KM</Label>
+                          <Input
+                            id={`suv-regional-max-${index}`}
+                            type="number"
+                            min={range.minKm + 1}
+                            value={range.maxKm || ''}
+                            onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'suv')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`suv-regional-price-${index}`}>
+                            Price per KM ($)
+                          </Label>
+                          <Input
+                            id={`suv-regional-price-${index}`}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={range.price}
+                            onChange={(e) => updateRange(range.id, 'price', e.target.value, 'suv')}
+                          />
+                          <Badge variant="outline" className="mt-2">Per KM Rate</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="border p-4 rounded-md bg-gray-50">
+                  <h3 className="text-md font-semibold mb-3 text-taxi-blue">Distance Trips (80+ KM)</h3>
+                  <div className="space-y-4">
+                    {getRangesByCategory(suvRanges, 'distance').map((range, index) => (
+                      <div key={range.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-md bg-white">
+                        <div>
+                          <Label htmlFor={`suv-distance-min-${index}`}>Min KM</Label>
+                          <Input
+                            id={`suv-distance-min-${index}`}
+                            type="number"
+                            min="0"
+                            value={range.minKm}
+                            onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'suv')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`suv-distance-max-${index}`}>Max KM (empty for unlimited)</Label>
+                          <Input
+                            id={`suv-distance-max-${index}`}
+                            type="number"
+                            min={range.minKm + 1}
+                            value={range.maxKm || ''}
+                            onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'suv')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`suv-distance-price-${index}`}>
+                            Price per KM ($)
+                          </Label>
+                          <Input
+                            id={`suv-distance-price-${index}`}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={range.price}
+                            onChange={(e) => updateRange(range.id, 'price', e.target.value, 'suv')}
+                          />
+                          <Badge variant="outline" className="mt-2">Per KM Rate</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+              
+              {/* Luxury Tab Content */}
+              <TabsContent value="luxury" className="space-y-6">
+                <div className="border p-4 rounded-md bg-gray-50">
+                  <h3 className="text-md font-semibold mb-3 text-taxi-blue">Local Trips (0-25 KM)</h3>
+                  <div className="space-y-4">
+                    {getRangesByCategory(luxuryRanges, 'local').map((range, index) => (
+                      <div key={range.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-md bg-white">
+                        <div>
+                          <Label htmlFor={`luxury-min-${index}`}>Min KM</Label>
+                          <Input
+                            id={`luxury-min-${index}`}
+                            type="number"
+                            min="0"
+                            value={range.minKm}
+                            onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'luxury')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`luxury-max-${index}`}>Max KM</Label>
+                          <Input
+                            id={`luxury-max-${index}`}
+                            type="number"
+                            min={range.minKm + 1}
+                            value={range.maxKm || ''}
+                            onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'luxury')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`luxury-price-${index}`}>
+                            Fixed Price ($)
+                          </Label>
+                          <Input
+                            id={`luxury-price-${index}`}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={range.price}
+                            onChange={(e) => updateRange(range.id, 'price', e.target.value, 'luxury')}
+                          />
+                          <Badge variant="outline" className="mt-2">Fixed Price</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="border p-4 rounded-md bg-gray-50">
+                  <h3 className="text-md font-semibold mb-3 text-taxi-blue">Regional Trips (25-80 KM)</h3>
+                  <div className="space-y-4">
+                    {getRangesByCategory(luxuryRanges, 'regional').map((range, index) => (
+                      <div key={range.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-md bg-white">
+                        <div>
+                          <Label htmlFor={`luxury-regional-min-${index}`}>Min KM</Label>
+                          <Input
+                            id={`luxury-regional-min-${index}`}
+                            type="number"
+                            min="0"
+                            value={range.minKm}
+                            onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'luxury')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`luxury-regional-max-${index}`}>Max KM</Label>
+                          <Input
+                            id={`luxury-regional-max-${index}`}
+                            type="number"
+                            min={range.minKm + 1}
+                            value={range.maxKm || ''}
+                            onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'luxury')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`luxury-regional-price-${index}`}>
+                            Price per KM ($)
+                          </Label>
+                          <Input
+                            id={`luxury-regional-price-${index}`}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={range.price}
+                            onChange={(e) => updateRange(range.id, 'price', e.target.value, 'luxury')}
+                          />
+                          <Badge variant="outline" className="mt-2">Per KM Rate</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="border p-4 rounded-md bg-gray-50">
+                  <h3 className="text-md font-semibold mb-3 text-taxi-blue">Distance Trips (80+ KM)</h3>
+                  <div className="space-y-4">
+                    {getRangesByCategory(luxuryRanges, 'distance').map((range, index) => (
+                      <div key={range.id} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 border rounded-md bg-white">
+                        <div>
+                          <Label htmlFor={`luxury-distance-min-${index}`}>Min KM</Label>
+                          <Input
+                            id={`luxury-distance-min-${index}`}
+                            type="number"
+                            min="0"
+                            value={range.minKm}
+                            onChange={(e) => updateRange(range.id, 'minKm', e.target.value, 'luxury')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`luxury-distance-max-${index}`}>Max KM (empty for unlimited)</Label>
+                          <Input
+                            id={`luxury-distance-max-${index}`}
+                            type="number"
+                            min={range.minKm + 1}
+                            value={range.maxKm || ''}
+                            onChange={(e) => updateRange(range.id, 'maxKm', e.target.value === '' ? null : e.target.value, 'luxury')}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor={`luxury-distance-price-${index}`}>
+                            Price per KM ($)
+                          </Label>
+                          <Input
+                            id={`luxury-distance-price-${index}`}
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={range.price}
+                            onChange={(e) => updateRange(range.id, 'price', e.target.value, 'luxury')}
+                          />
+                          <Badge variant="outline" className="mt-2">Per KM Rate</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
           </CardContent>
         </Card>
 
@@ -354,7 +635,7 @@ export default function Pricing() {
                   )}
                   
                   {peakDays.map((date, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                    <Badge key={index} variant="warning" className="flex items-center gap-1">
                       {format(date, "MMM d, yyyy")}
                       <Button
                         variant="ghost"
