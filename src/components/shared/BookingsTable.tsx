@@ -213,7 +213,7 @@ export function BookingsTable({
                         </div>
                         {b.notes && (
                           <div className="mt-2">
-                            <span className="font-medium">Notes:</span> {b.notes}
+                            <span className="font-medium">Notes:</span> {b.notes || "No notes available"}
                           </div>
                         )}
                       </div>

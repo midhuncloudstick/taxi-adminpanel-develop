@@ -7,17 +7,12 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { pricingRules } from "@/data/mockData";
 import { useState } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-
-const weekdays = [
-  { id: "monday", label: "Monday" },
-  { id: "tuesday", label: "Tuesday" },
-  { id: "wednesday", label: "Wednesday" },
-  { id: "thursday", label: "Thursday" },
-  { id: "friday", label: "Friday" },
-  { id: "saturday", label: "Saturday" },
-  { id: "sunday", label: "Sunday" },
-];
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, isEqual } from "date-fns";
+import { CalendarIcon, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export default function Pricing() {
   const [standardRate, setStandardRate] = useState(pricingRules[0].perKilometer);
@@ -25,19 +20,23 @@ export default function Pricing() {
   const [luxuryRate, setLuxuryRate] = useState(pricingRules[2].perKilometer);
   const [peakSurcharge, setPeakSurcharge] = useState(pricingRules[0].peakHoursSurcharge);
   const [airportFee, setAirportFee] = useState(pricingRules[0].airportFee);
-  const [peakDays, setPeakDays] = useState<string[]>(["monday", "friday"]);
+  const [peakDays, setPeakDays] = useState<Date[]>([]);
 
   const handleSave = () => {
     // In a real app, this would make an API call to update pricing
     toast.success("Pricing updated successfully");
   };
 
-  const togglePeakDay = (day: string) => {
-    setPeakDays(current => 
-      current.includes(day)
-        ? current.filter(d => d !== day)
-        : [...current, day]
-    );
+  const addPeakDay = (date: Date) => {
+    // Check if the date already exists in our array
+    const exists = peakDays.some(d => isEqual(d, date));
+    if (!exists) {
+      setPeakDays(prev => [...prev, date]);
+    }
+  };
+
+  const removePeakDay = (dateToRemove: Date) => {
+    setPeakDays(prev => prev.filter(date => !isEqual(date, dateToRemove)));
   };
 
   return (
@@ -123,21 +122,46 @@ export default function Pricing() {
 
               <div className="pt-4 space-y-2">
                 <Label>Peak Days</Label>
-                <div className="grid grid-cols-2 gap-2">
-                  {weekdays.map((day) => (
-                    <div key={day.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={day.id}
-                        checked={peakDays.includes(day.id)}
-                        onCheckedChange={() => togglePeakDay(day.id)}
-                      />
-                      <Label 
-                        htmlFor={day.id} 
-                        className="text-sm cursor-pointer"
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <span>Select Peak Days</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar 
+                      mode="single"
+                      onSelect={(date) => {
+                        if (date) {
+                          addPeakDay(date);
+                        }
+                      }}
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {peakDays.length === 0 && (
+                    <p className="text-sm text-gray-500">No peak days selected</p>
+                  )}
+                  
+                  {peakDays.map((date, index) => (
+                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                      {format(date, "MMM d, yyyy")}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 p-0 ml-1"
+                        onClick={() => removePeakDay(date)}
                       >
-                        {day.label}
-                      </Label>
-                    </div>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </Badge>
                   ))}
                 </div>
               </div>

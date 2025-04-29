@@ -2,6 +2,8 @@
 import React from "react";
 import { Driver, getCarById } from "@/data/mockData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
+import { User } from "lucide-react";
 
 interface DriversTableProps {
   drivers: Driver[];
@@ -15,6 +17,7 @@ export function DriversTable({ drivers, selectedId, onSelect }: DriversTableProp
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>Photo</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Phone</TableHead>
@@ -30,6 +33,17 @@ export function DriversTable({ drivers, selectedId, onSelect }: DriversTableProp
               onClick={() => onSelect(d.id)}
               className={`cursor-pointer ${selectedId === d.id ? "bg-blue-50" : ""}`}
             >
+              <TableCell>
+                <Avatar className="h-10 w-10">
+                  {d.photo ? (
+                    <AvatarImage src={d.photo} alt={d.name} />
+                  ) : (
+                    <AvatarFallback className="bg-taxi-blue text-white">
+                      <User size={16} />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+              </TableCell>
               <TableCell>{d.name}</TableCell>
               <TableCell>{d.email}</TableCell>
               <TableCell>{d.phone}</TableCell>
