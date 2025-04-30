@@ -49,7 +49,7 @@ export function DriversTable({ drivers, selectedId, onSelect }: DriversTableProp
               <TableCell>{d.phone}</TableCell>
               <TableCell>{getCarById(d.carId)?.model || d.carId}</TableCell>
               <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs ${d.status === "active"
+                <span className={`px-2 py-1 rounded-full text-xs ${d.status === "available"
                   ? "bg-green-100 text-green-700"
                   : "bg-red-100 text-red-700"
                   }`}>

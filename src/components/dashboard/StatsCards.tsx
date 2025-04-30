@@ -9,11 +9,11 @@ export function StatsCards() {
   const totalRevenue = bookings
     .filter(booking => booking.status !== "cancelled")
     .reduce((sum, booking) => sum + booking.amount, 0);
-  const activeDriversCount = drivers.filter(d => d.status === "active").length;
+  const availableDriversCount = drivers.filter(d => d.status === "available").length;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-0">
-      {/* <Card className="animate-fade-in">
+      <Card className="animate-fade-in">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-sm font-medium text-gray-500">Upcoming Bookings</CardTitle>
           <Calendar className="h-4 w-4 text-taxi-teal" />
@@ -56,16 +56,16 @@ export function StatsCards() {
       
       <Card className="animate-fade-in [animation-delay:450ms]">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-sm font-medium text-gray-500">Active Drivers</CardTitle>
+          <CardTitle className="text-sm font-medium text-gray-500">Available Drivers</CardTitle>
           <Users className="h-4 w-4 text-taxi-teal" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{activeDriversCount}</div>
+          <div className="text-2xl font-bold">{availableDriversCount}</div>
           <p className="text-xs text-gray-500">
-            {((activeDriversCount / drivers.length) * 100).toFixed(0)}% of drivers active
+            {((availableDriversCount / drivers.length) * 100).toFixed(0)}% of drivers available
           </p>
         </CardContent>
-      </Card> */}
+      </Card>
     </div>
   );
 }
