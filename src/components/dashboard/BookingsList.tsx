@@ -7,6 +7,8 @@ import { Booking, bookings } from "@/data/mockData";
 export function BookingsList() {
   const [bookingsData, setBookingsData] = useState<Booking[]>(bookings);
   
+  const pendingBookings = bookingsData.filter(booking => booking.status === "pending");
+  const waitingBookings = bookingsData.filter(booking => booking.status === "waiting for confirmation");
   const upcomingBookings = bookingsData.filter(booking => booking.status === "upcoming");
   const completedBookings = bookingsData.filter(booking => booking.status === "completed");
   const cancelledBookings = bookingsData.filter(booking => booking.status === "cancelled");
@@ -32,7 +34,13 @@ export function BookingsList() {
       <h2 className="text-xl font-semibold text-taxi-blue">Bookings</h2>
       
       <Tabs defaultValue="upcoming" className="w-full">
-        <TabsList className="grid grid-cols-3 mb-4">
+        <TabsList className="grid grid-cols-5 mb-4">
+          <TabsTrigger value="pending" className="data-[state=active]:bg-taxi-teal data-[state=active]:text-white">
+            Pending ({pendingBookings.length})
+          </TabsTrigger>
+          <TabsTrigger value="waiting" className="data-[state=active]:bg-taxi-teal data-[state=active]:text-white">
+            Waiting ({waitingBookings.length})
+          </TabsTrigger>
           <TabsTrigger value="upcoming" className="data-[state=active]:bg-taxi-teal data-[state=active]:text-white">
             Upcoming ({upcomingBookings.length})
           </TabsTrigger>
@@ -43,6 +51,32 @@ export function BookingsList() {
             Cancelled ({cancelledBookings.length})
           </TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="pending" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {pendingBookings.map(booking => (
+              <BookingCard 
+                key={booking.id} 
+                booking={booking} 
+                onUpdateDriver={handleUpdateDriver}
+                onCancelBooking={handleCancelBooking}
+              />
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="waiting" className="mt-0">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {waitingBookings.map(booking => (
+              <BookingCard 
+                key={booking.id} 
+                booking={booking} 
+                onUpdateDriver={handleUpdateDriver}
+                onCancelBooking={handleCancelBooking}
+              />
+            ))}
+          </div>
+        </TabsContent>
         
         <TabsContent value="upcoming" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">

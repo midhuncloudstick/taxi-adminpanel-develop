@@ -1,19 +1,21 @@
 
 import { useState } from "react";
 import { Button } from "../ui/button";
-import { ArrowDown, Check, X } from "lucide-react";
+import { ArrowDown, Check, X, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BookingStatusDropdownProps {
   status: "pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled";
   onApprove?: () => void;
   onCancel?: () => void;
+  onSetWaiting?: () => void;
 }
 
 export function BookingStatusDropdown({
   status,
   onApprove,
   onCancel,
+  onSetWaiting,
 }: BookingStatusDropdownProps) {
   const [open, setOpen] = useState(false);
 
@@ -44,9 +46,7 @@ export function BookingStatusDropdown({
           className="hover:bg-blue-50 w-full flex items-center gap-2"
           onClick={() => {
             setOpen(false);
-            // Here we would typically update the status to "waiting for confirmation"
-            // For now just call the approve handler as that's what the existing code expects
-            onApprove?.();
+            onSetWaiting?.();
           }}
         >
           <Check size={16} className="text-blue-600" />

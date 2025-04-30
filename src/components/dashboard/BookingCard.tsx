@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Booking } from "@/data/mockData";
 import { drivers } from "@/data/mockData";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { MessageCircle } from "lucide-react";
+import { ChatDialog } from "@/components/shared/ChatDialog";
 
 interface BookingCardProps {
   booking: Booking;
@@ -16,11 +17,16 @@ interface BookingCardProps {
 
 export function BookingCard({ booking, onUpdateDriver, onCancelBooking }: BookingCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "upcoming":
+      case "pending":
         return "bg-yellow-100 text-yellow-800";
+      case "waiting for confirmation":
+        return "bg-blue-100 text-blue-800";
+      case "upcoming":
+        return "bg-taxi-teal/20 text-taxi-teal";
       case "completed":
         return "bg-green-100 text-green-800";
       case "cancelled":
@@ -96,7 +102,7 @@ export function BookingCard({ booking, onUpdateDriver, onCancelBooking }: Bookin
             <Select
               value={booking.driver}
               onValueChange={handleDriverChange}
-              disabled={booking.status !== "upcoming"}
+              disabled={booking.status !== "upcoming" && booking.status !== "waiting for confirmation"}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select driver" />
@@ -110,15 +116,26 @@ export function BookingCard({ booking, onUpdateDriver, onCancelBooking }: Bookin
               </SelectContent>
             </Select>
           </div>
-          {booking.status === "upcoming" && (
-            <Button 
-              variant="outline" 
-              className="w-full text-taxi-red border-taxi-red hover:bg-red-50"
-              onClick={handleCancelClick}
+          <div className="flex w-full gap-2">
+            {(booking.status === "upcoming" || booking.status === "waiting for confirmation") && (
+              <Button 
+                variant="outline" 
+                className="flex-1 text-taxi-red border-taxi-red hover:bg-red-50"
+                onClick={handleCancelClick}
+              >
+                Cancel Booking
+              </Button>
+            )}
+            
+            <Button
+              variant="outline"
+              className="flex-1 text-taxi-blue border-taxi-blue hover:bg-blue-50"
+              onClick={() => setIsChatOpen(true)}
             >
-              Cancel Booking
+              <MessageCircle size={16} className="mr-2" />
+              Chat
             </Button>
-          )}
+          </div>
         </CardFooter>
       </Card>
 
@@ -131,6 +148,14 @@ export function BookingCard({ booking, onUpdateDriver, onCancelBooking }: Bookin
         confirmText="Yes, Cancel Booking"
         cancelText="No, Keep Booking"
       />
+      
+      {isChatOpen && (
+        <ChatDialog
+          bookingId={booking.id}
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+        />
+      )}
     </>
   );
 }

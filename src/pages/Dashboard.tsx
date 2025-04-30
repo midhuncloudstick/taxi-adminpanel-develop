@@ -22,7 +22,7 @@ function sortBookings(bookings, sortKey, sortDirection) {
 
 export default function Dashboard() {
   // FILTER & SORT state
-  const [status, setStatus] = useState<"pending" | "upcoming" | "completed" | "cancelled" | "all">("all");
+  const [status, setStatus] = useState<"pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled" | "all">("all");
   const [driver, setDriver] = useState("all");
   const [location, setLocation] = useState("");
   const [customerId, setCustomerId] = useState("");
@@ -40,7 +40,7 @@ export default function Dashboard() {
   };
 
   // Handler to update status for a booking
-  const handleUpdateStatus = (bookingId: string, newStatus: "pending" | "upcoming" | "completed" | "cancelled") => {
+  const handleUpdateStatus = (bookingId: string, newStatus: "pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled") => {
     setTableBookings(prev =>
       prev.map(b =>
         b.id === bookingId ? { ...b, status: newStatus } : b
@@ -77,7 +77,7 @@ export default function Dashboard() {
 
   // Type-safe setStatus handler
   const handleSetStatus = (value: string) => {
-    setStatus(value as "pending" | "upcoming" | "completed" | "cancelled" | "all");
+    setStatus(value as "pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled" | "all");
   };
 
   return (

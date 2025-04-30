@@ -1,10 +1,9 @@
-
 // Define types
 export interface Booking {
   id: string;
   date: string;
   pickupTime: string;
-  status: 'pending' | 'upcoming' | 'completed' | 'cancelled';
+  status: 'pending' | 'waiting for confirmation' | 'upcoming' | 'completed' | 'cancelled';
   kilometers: number;
   pickupLocation: string;
   dropLocation: string;
@@ -83,7 +82,7 @@ export const bookings: Booking[] = [
     id: 'BK-1002',
     date: '2025-04-22',
     pickupTime: '10:15',
-    status: 'upcoming',
+    status: 'waiting for confirmation',
     kilometers: 32,
     pickupLocation: 'Brisbane Airport Terminal 2',
     dropLocation: 'South Bank Parklands',
@@ -412,6 +411,10 @@ export const getCustomerById = (id: string): Customer | undefined => {
 
 export const getCarById = (id: string): Car | undefined => {
   return cars.find(car => car.id === id);
+};
+
+export const getBookingById = (id: string): Booking | undefined => {
+  return bookings.find(booking => booking.id === id);
 };
 
 export const getBookingsByDriverId = (driverId: string): Booking[] => {

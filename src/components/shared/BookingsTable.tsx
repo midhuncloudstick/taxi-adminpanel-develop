@@ -3,10 +3,11 @@ import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 import { Booking, Driver, getDriverById, getCustomerById } from "@/data/mockData";
-import { PhoneCall, ChevronDown, ChevronUp, MapPin, Calendar, Clock } from "lucide-react";
+import { ChevronDown, ChevronUp, MapPin, Calendar, Clock, MessageCircle } from "lucide-react";
 import { Button } from "../ui/button";
 import { BookingStatusDropdown } from "./BookingStatusDropdown";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { ChatDialog } from "./ChatDialog";
 
 interface BookingsTableProps {
   bookings: Booking[];
@@ -37,6 +38,7 @@ export function BookingsTable({
     sortKey === col ? (sortDirection === "asc" ? "▲" : "▼") : "";
     
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  const [activeChatBooking, setActiveChatBooking] = useState<string | null>(null);
 
   const toggleRow = (bookingId: string) => {
     setExpandedRows(prev => ({
@@ -65,7 +67,7 @@ export function BookingsTable({
             )}
             <TableHead>Status</TableHead>
             <TableHead onClick={() => onSort && onSort("amount")} className={onSort ? "cursor-pointer" : ""}>Amount ($) {getSortSymbol("amount")}</TableHead>
-            <TableHead>Contact</TableHead>
+            <TableHead>Chat</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -133,36 +135,33 @@ export function BookingsTable({
                   <TableCell>
                     <BookingStatusDropdown
                       status={b.status}
+                      onSetWaiting={
+                        onUpdateStatus && b.status === "pending"
+                          ? () => onUpdateStatus(b.id, "waiting for confirmation")
+                          : undefined
+                      }
                       onApprove={
-                        onUpdateStatus
+                        onUpdateStatus && b.status === "waiting for confirmation"
                           ? () => onUpdateStatus(b.id, "upcoming")
                           : undefined
                       }
                       onCancel={
                         onUpdateStatus
-                          ? () =>
-                              onUpdateStatus(
-                                b.id,
-                                b.status === "pending" ? "cancelled" : "cancelled"
-                              )
+                          ? () => onUpdateStatus(b.id, "cancelled")
                           : undefined
                       }
                     />
                   </TableCell>
                   <TableCell>${b.amount.toFixed(2)}</TableCell>
                   <TableCell>
-                    {customer && customer.phone ? (
-                      <Button
-                        variant="ghost"
-                        className="p-2 hover:bg-taxi-teal/20"
-                        onClick={() => window.open(`tel:${customer.phone.replace(/\s+/g, "")}`)}
-                        title={`Call ${customer.name}`}
-                      >
-                        <PhoneCall size={18} className="text-taxi-blue" />
-                      </Button>
-                    ) : (
-                      <span className="text-gray-400">N/A</span>
-                    )}
+                    <Button
+                      variant="ghost"
+                      className="p-2 hover:bg-taxi-teal/20"
+                      onClick={() => setActiveChatBooking(b.id)}
+                      title="Chat"
+                    >
+                      <MessageCircle size={18} className="text-taxi-blue" />
+                    </Button>
                   </TableCell>
                 </TableRow>
                 {expandedRows[b.id] && (
@@ -225,6 +224,14 @@ export function BookingsTable({
           })}
         </TableBody>
       </Table>
+
+      {activeChatBooking && (
+        <ChatDialog
+          bookingId={activeChatBooking}
+          isOpen={!!activeChatBooking}
+          onClose={() => setActiveChatBooking(null)}
+        />
+      )}
     </div>
   );
 }
