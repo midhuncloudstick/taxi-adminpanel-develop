@@ -113,7 +113,7 @@ export default function Pricing() {
         </div>
 
         {/* Range-based pricing section */}
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle className="text-lg">Range-based Pricing</CardTitle>
           </CardHeader>
@@ -259,7 +259,6 @@ export default function Pricing() {
                 </div>
               </TabsContent>
               
-              {/* SUV Tab Content */}
               <TabsContent value="suv" className="space-y-6">
                 <div className="border p-4 rounded-md bg-gray-50">
                   <h3 className="text-md font-semibold mb-3 text-taxi-blue">Local Trips (0-25 KM)</h3>
@@ -394,7 +393,6 @@ export default function Pricing() {
                 </div>
               </TabsContent>
               
-              {/* Luxury Tab Content */}
               <TabsContent value="luxury" className="space-y-6">
                 <div className="border p-4 rounded-md bg-gray-50">
                   <h3 className="text-md font-semibold mb-3 text-taxi-blue">Local Trips (0-25 KM)</h3>
@@ -530,7 +528,7 @@ export default function Pricing() {
               </TabsContent>
             </Tabs>
           </CardContent>
-        </Card>
+        </Card> */}
 
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
@@ -664,10 +662,10 @@ export default function Pricing() {
               </div>
 
               <div className="pt-4">
-                <p className="text-sm text-gray-500 mb-4">
+                {/* <p className="text-sm text-gray-500 mb-4">
                   Peak hours are defined as 7:00 AM - 9:00 AM and 4:00 PM - 7:00 PM on weekdays.
                   Peak days will have an additional flat fee applied to all bookings.
-                </p>
+                </p> */}
               </div>
             </CardContent>
           </Card>
