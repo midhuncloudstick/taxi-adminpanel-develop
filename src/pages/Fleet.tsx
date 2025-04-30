@@ -1,28 +1,40 @@
 
 import { useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { FleetTable } from "@/components/fleet/FleetTable";
 import { AddCarForm } from "@/components/fleet/AddCarForm";
-import { Car } from "@/data/mockData";
+import { EditCarForm } from "@/components/fleet/EditCarForm";
+import { Car, cars } from "@/data/mockData";
 import { toast } from "sonner";
 
 export default function Fleet() {
+  const [carsData, setCarsData] = useState<Car[]>(cars);
+  const [carToEdit, setCarToEdit] = useState<Car | null>(null);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+
   const handleAddCar = (car: Omit<Car, "id">) => {
-    // In a real app, this would make an API call to add the car
-    console.log("Adding new car:", car);
+    // Generate a new ID for the car
+    const newCarId = `CAR-${String(carsData.length + 1).padStart(3, '0')}`;
+    const newCar = { ...car, id: newCarId };
+    
+    // Update the cars data state with the new car
+    setCarsData([...carsData, newCar]);
+    toast.success("New car added to fleet successfully");
   };
 
   const handleEditCar = (car: Car) => {
-    // In a real app, this would open an edit form
-    toast.info(`Editing car ${car.id}`);
-    console.log("Editing car:", car);
+    setCarToEdit(car);
+    setIsEditFormOpen(true);
+  };
+
+  const handleSaveEditedCar = (editedCar: Car) => {
+    setCarsData(carsData.map(car => car.id === editedCar.id ? editedCar : car));
   };
 
   const handleDeleteCar = (carId: string) => {
-    // In a real app, this would make an API call to delete the car
+    setCarsData(carsData.filter(car => car.id !== carId));
     toast.success(`Car ${carId} deleted successfully`);
-    console.log("Deleting car:", carId);
   };
 
   return (
@@ -41,6 +53,13 @@ export default function Fleet() {
             <FleetTable onEdit={handleEditCar} onDelete={handleDeleteCar} />
           </CardContent>
         </Card>
+        
+        <EditCarForm
+          car={carToEdit}
+          isOpen={isEditFormOpen}
+          onClose={() => setIsEditFormOpen(false)}
+          onSave={handleSaveEditedCar}
+        />
       </div>
     </PageContainer>
   );

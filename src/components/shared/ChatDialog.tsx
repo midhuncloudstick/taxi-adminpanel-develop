@@ -1,199 +1,175 @@
 
-import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { MessageCircle, Send } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Booking, getBookingById, getDriverById, getCustomerById } from "@/data/mockData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "../ui/badge";
-import { Send } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+interface ChatDialogProps {
+  bookingId: string;
+  customerId: string;
+  driverId: string;
+}
 
 interface Message {
   id: string;
-  bookingId: string;
-  sender: "admin" | "customer" | "driver";
+  sender: "customer" | "driver" | "admin";
   recipient: "customer" | "driver" | "both";
   content: string;
   timestamp: Date;
 }
 
-interface ChatDialogProps {
-  bookingId: string;
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-export function ChatDialog({ bookingId, isOpen, onClose }: ChatDialogProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [messageInput, setMessageInput] = useState("");
+export function ChatDialog({ bookingId, customerId, driverId }: ChatDialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const [recipient, setRecipient] = useState<"customer" | "driver" | "both">("both");
-  
-  const booking = getBookingById(bookingId);
-  const customer = booking ? getCustomerById(booking.customerId) : null;
-  const driver = booking ? getDriverById(booking.driver) : null;
-
-  // Initialize with mock messages
-  useEffect(() => {
-    if (isOpen && booking) {
-      // Simulate loading messages for this booking
-      setMessages([
-        {
-          id: "msg-1",
-          bookingId: booking.id,
-          sender: "admin",
-          recipient: "both",
-          content: "Your booking has been received.",
-          timestamp: new Date(Date.now() - 86400000), // yesterday
-        },
-        {
-          id: "msg-2",
-          bookingId: booking.id,
-          sender: "customer",
-          recipient: "admin",
-          content: "Thank you for the confirmation.",
-          timestamp: new Date(Date.now() - 82800000), // a bit later
-        },
-        {
-          id: "msg-3",
-          bookingId: booking.id,
-          sender: "driver",
-          recipient: "admin",
-          content: "I'll be there on time.",
-          timestamp: new Date(Date.now() - 43200000), // 12 hours ago
-        }
-      ]);
-    }
-  }, [isOpen, bookingId, booking]);
-
-  const sendMessage = () => {
-    if (!messageInput.trim() || !booking) return;
-
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      bookingId: booking.id,
+  const [messageContent, setMessageContent] = useState('');
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      sender: "customer", 
+      recipient: "both",
+      content: "Hi, I'm at the airport. Where should I meet you?",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60)
+    },
+    {
+      id: '2',
+      sender: "driver",
+      recipient: "both",
+      content: "I'm on my way, will be there in 10 minutes. Please wait at the pickup zone B.",
+      timestamp: new Date(Date.now() - 1000 * 60 * 40)
+    },
+    {
+      id: '3',
       sender: "admin",
-      recipient,
-      content: messageInput,
+      recipient: "customer",
+      content: "Your driver is on the way. Please wait at pickup zone B.",
+      timestamp: new Date(Date.now() - 1000 * 60 * 38)
+    },
+    {
+      id: '4',
+      sender: "admin",
+      recipient: "driver",
+      content: "Please make sure to help the customer with their luggage.",
+      timestamp: new Date(Date.now() - 1000 * 60 * 35)
+    }
+  ]);
+
+  const handleSendMessage = () => {
+    if (!messageContent.trim()) return;
+    
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      sender: "admin",
+      recipient: recipient,
+      content: messageContent,
       timestamp: new Date()
     };
-
+    
     setMessages([...messages, newMessage]);
-    setMessageInput("");
+    setMessageContent('');
   };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const getSenderLabel = (sender: Message["sender"]) => {
-    switch (sender) {
-      case "admin": return "Admin";
-      case "customer": return customer?.name || "Customer";
-      case "driver": return driver?.name || "Driver";
-      default: return sender;
-    }
-  };
-
-  const getRecipientLabel = (recipient: Message["recipient"]) => {
-    switch (recipient) {
-      case "customer": return "To Customer";
-      case "driver": return "To Driver";
-      case "both": return "To Both";
-      default: return recipient;
-    }
-  };
-
-  if (!booking) return null;
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Chat - Booking {bookingId}</DialogTitle>
-        </DialogHeader>
-        
-        <div className="flex flex-col space-y-2 h-[400px] overflow-y-auto mb-4 p-2 border rounded-md">
-          {messages.map((message) => (
-            <div 
-              key={message.id}
-              className={`flex flex-col ${
-                message.sender === "admin" 
-                  ? "items-end" 
-                  : "items-start"
-              }`}
-            >
-              <div className="flex items-center mb-1">
-                <span className="text-xs text-gray-500">
-                  {getSenderLabel(message.sender)} • {formatTime(message.timestamp)}
-                </span>
-                {message.sender === "admin" && (
-                  <Badge variant="outline" className="ml-2 text-xs">
-                    {getRecipientLabel(message.recipient)}
-                  </Badge>
-                )}
-              </div>
-              <div
-                className={`px-3 py-2 rounded-lg max-w-[80%] ${
-                  message.sender === "admin"
-                    ? "bg-taxi-blue text-white"
-                    : message.sender === "customer"
-                    ? "bg-yellow-100"
-                    : "bg-green-100"
-                }`}
-              >
-                {message.content}
-              </div>
-            </div>
-          ))}
-          {messages.length === 0 && (
-            <div className="flex items-center justify-center h-full text-gray-400">
-              No messages yet
-            </div>
-          )}
-        </div>
-
-        <DialogFooter className="flex flex-col sm:flex-row gap-2">
-          <Select value={recipient} onValueChange={(val) => setRecipient(val as "customer" | "driver" | "both")}>
-            <SelectTrigger className="w-full sm:w-[180px]">
-              <SelectValue placeholder="Select recipient" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="both">Both Customer & Driver</SelectItem>
-              <SelectItem value="customer">Customer Only</SelectItem>
-              <SelectItem value="driver">Driver Only</SelectItem>
-            </SelectContent>
-          </Select>
+    <>
+      <Button 
+        variant="ghost"
+        size="icon"
+        onClick={() => setIsOpen(true)}
+        className="h-8 w-8 text-taxi-blue hover:text-taxi-blue hover:bg-taxi-blue/10"
+      >
+        <MessageCircle size={16} />
+      </Button>
+      
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[500px] h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Booking Chat - {bookingId}</DialogTitle>
+          </DialogHeader>
           
-          <div className="flex w-full">
-            <Input
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1"
+          <div className="mb-4">
+            <Label htmlFor="recipient">Send message to:</Label>
+            <Select 
+              value={recipient} 
+              onValueChange={(value: "customer" | "driver" | "both") => setRecipient(value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select recipient" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="customer">Customer</SelectItem>
+                <SelectItem value="driver">Driver</SelectItem>
+                <SelectItem value="both">Both</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <div 
+                  key={message.id}
+                  className={`p-3 rounded-lg max-w-[80%] ${
+                    message.sender === "admin" 
+                      ? "ml-auto bg-taxi-blue text-white" 
+                      : message.sender === "driver"
+                      ? "bg-taxi-teal text-white"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  <div className="text-xs mb-1">
+                    {message.sender === "admin" 
+                      ? "You" 
+                      : message.sender === "driver" ? "Driver" : "Customer"} 
+                    {message.sender === "admin" && 
+                      <span className="text-xs opacity-80">
+                        {" → "}
+                        {message.recipient === "both" 
+                          ? "Both" 
+                          : message.recipient === "driver" ? "Driver" : "Customer"}
+                      </span>
+                    }
+                  </div>
+                  <p>{message.content}</p>
+                  <div className="text-xs mt-1 opacity-75 text-right">
+                    {formatTime(message.timestamp)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          
+          <div className="mt-4 flex gap-2">
+            <Textarea
+              placeholder="Type your message here..."
+              value={messageContent}
+              onChange={(e) => setMessageContent(e.target.value)}
+              className="resize-none flex-1"
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  sendMessage();
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage();
                 }
               }}
             />
-            <Button
-              type="button"
-              size="icon"
-              onClick={sendMessage}
-              className="ml-2 bg-taxi-teal hover:bg-taxi-teal/90"
-              disabled={!messageInput.trim()}
+            <Button 
+              type="submit" 
+              size="icon" 
+              onClick={handleSendMessage}
+              className="bg-taxi-blue hover:bg-taxi-blue/90"
             >
-              <Send size={18} />
+              <Send className="h-4 w-4" />
             </Button>
           </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

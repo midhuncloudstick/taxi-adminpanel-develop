@@ -43,6 +43,7 @@ export interface Car {
   capacity: number;
   status: 'available' | 'in-use' | 'maintenance';
   pricePerKm?: number;
+  fixedCost?: number;
 }
 
 export interface PricingRule {
@@ -214,7 +215,8 @@ export const cars: Car[] = [
     type: 'sedan',
     capacity: 4,
     status: 'available',
-    pricePerKm: 2.50
+    pricePerKm: 2.50,
+    fixedCost: 20.00
   },
   {
     id: 'CAR-002',
@@ -223,7 +225,8 @@ export const cars: Car[] = [
     type: 'suv',
     capacity: 5,
     status: 'in-use',
-    pricePerKm: 3.20
+    pricePerKm: 3.20,
+    fixedCost: 25.00
   },
   {
     id: 'CAR-003',
@@ -232,7 +235,8 @@ export const cars: Car[] = [
     type: 'luxury',
     capacity: 4,
     status: 'available',
-    pricePerKm: 4.50
+    pricePerKm: 4.50,
+    fixedCost: 40.00
   },
   {
     id: 'CAR-004',
@@ -241,7 +245,8 @@ export const cars: Car[] = [
     type: 'suv',
     capacity: 5,
     status: 'maintenance',
-    pricePerKm: 3.00
+    pricePerKm: 3.00,
+    fixedCost: 22.00
   },
   {
     id: 'CAR-005',
@@ -250,7 +255,8 @@ export const cars: Car[] = [
     type: 'luxury',
     capacity: 4,
     status: 'available',
-    pricePerKm: 4.75
+    pricePerKm: 4.75,
+    fixedCost: 45.00
   }
 ];
 

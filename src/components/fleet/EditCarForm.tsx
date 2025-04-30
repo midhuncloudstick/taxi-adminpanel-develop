@@ -1,21 +1,24 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Car } from "@/data/mockData";
-import { Car as CarIcon, Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Car as CarIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
-interface AddCarFormProps {
-  onAddCar: (car: Omit<Car, "id">) => void;
+interface EditCarFormProps {
+  car: Car | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (car: Car) => void;
 }
 
-export function AddCarForm({ onAddCar }: AddCarFormProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState<Omit<Car, "id">>({
+export function EditCarForm({ car, isOpen, onClose, onSave }: EditCarFormProps) {
+  const [formData, setFormData] = useState<Car>({
+    id: "",
     model: "",
     plate: "",
     type: "sedan",
@@ -24,6 +27,17 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
     pricePerKm: 0,
     fixedCost: 0
   });
+
+  // Set form data when car changes
+  useEffect(() => {
+    if (car) {
+      setFormData({
+        ...car,
+        pricePerKm: car.pricePerKm || 0,
+        fixedCost: car.fixedCost || 0
+      });
+    }
+  }, [car]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -40,32 +54,18 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onAddCar(formData);
-    toast.success("New car added to fleet successfully");
-    setFormData({
-      model: "",
-      plate: "",
-      type: "sedan",
-      capacity: 4,
-      status: "available",
-      pricePerKm: 0,
-      fixedCost: 0
-    });
-    setIsOpen(false);
+    onSave(formData);
+    toast.success(`Car ${formData.id} updated successfully`);
+    onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-taxi-teal hover:bg-taxi-teal/90">
-          <Plus className="mr-2 h-4 w-4" /> Add New Car
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CarIcon className="h-5 w-5" />
-            Add New Car to Fleet
+            Edit Car Details
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
@@ -169,9 +169,10 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
             </Select>
           </div>
           
-          <Button type="submit" className="mt-2 bg-taxi-teal hover:bg-taxi-teal/90">
-            Add Car to Fleet
-          </Button>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" className="bg-taxi-teal hover:bg-taxi-teal/90">Save Changes</Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
