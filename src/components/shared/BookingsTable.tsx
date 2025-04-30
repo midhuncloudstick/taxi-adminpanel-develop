@@ -6,7 +6,6 @@ import { Booking, Driver, getDriverById, getCustomerById } from "@/data/mockData
 import { ChevronDown, ChevronUp, MapPin, Calendar, Clock, MessageCircle } from "lucide-react";
 import { Button } from "../ui/button";
 import { BookingStatusDropdown } from "./BookingStatusDropdown";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ChatDialog } from "./ChatDialog";
 
 interface BookingsTableProps {
@@ -38,7 +37,6 @@ export function BookingsTable({
     sortKey === col ? (sortDirection === "asc" ? "▲" : "▼") : "";
     
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-  const [activeChatBooking, setActiveChatBooking] = useState<string | null>(null);
 
   const toggleRow = (bookingId: string) => {
     setExpandedRows(prev => ({
@@ -154,14 +152,7 @@ export function BookingsTable({
                   </TableCell>
                   <TableCell>${b.amount.toFixed(2)}</TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      className="p-2 hover:bg-taxi-teal/20"
-                      onClick={() => setActiveChatBooking(b.id)}
-                      title="Chat"
-                    >
-                      <MessageCircle size={18} className="text-taxi-blue" />
-                    </Button>
+                    <ChatDialog bookingId={b.id} />
                   </TableCell>
                 </TableRow>
                 {expandedRows[b.id] && (
@@ -224,14 +215,6 @@ export function BookingsTable({
           })}
         </TableBody>
       </Table>
-
-      {activeChatBooking && (
-        <ChatDialog
-          bookingId={activeChatBooking}
-          isOpen={!!activeChatBooking}
-          onClose={() => setActiveChatBooking(null)}
-        />
-      )}
     </div>
   );
 }

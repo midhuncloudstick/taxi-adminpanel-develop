@@ -11,8 +11,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ChatDialogProps {
   bookingId: string;
-  customerId: string;
-  driverId: string;
+  customerId?: string;
+  driverId?: string;
 }
 
 interface Message {

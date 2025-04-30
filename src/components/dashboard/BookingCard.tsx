@@ -152,8 +152,6 @@ export function BookingCard({ booking, onUpdateDriver, onCancelBooking }: Bookin
       {isChatOpen && (
         <ChatDialog
           bookingId={booking.id}
-          isOpen={isChatOpen}
-          onClose={() => setIsChatOpen(false)}
         />
       )}
     </>
