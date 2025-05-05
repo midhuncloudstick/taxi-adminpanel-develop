@@ -16,30 +16,9 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
-import { useState, useEffect } from "react";
+import { AuthProvider, useAuth } from "./hooks/useAuth";
 
 const queryClient = new QueryClient();
-
-// Mock authentication state
-const useAuth = () => {
-  // In a real app, this would check localStorage, cookies, or a context
-  const [isAuthenticated, setIsAuthenticated] = useState(false); // Set to false by default
-  
-  // For development, allow toggle with keyboard shortcut (Ctrl+Alt+L)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.altKey && e.key === 'l') {
-        setIsAuthenticated(prev => !prev);
-        console.log('Authentication toggled:', !isAuthenticated);
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAuthenticated]);
-
-  return { isAuthenticated, setIsAuthenticated };
-};
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -52,39 +31,49 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const App = () => {
+const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
 
   return (
+    <>
+      {isAuthenticated ? (
+        <div className="flex">
+          <Sidebar />
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/fleet" element={<Fleet />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/customers" element={<Customers />} />
+            <Route path="/drivers" element={<Drivers />} />
+            <Route path="/history" element={<History />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
+      ) : (
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      )}
+    </>
+  );
+};
+
+const App = () => {
+  return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          {isAuthenticated ? (
-            <div className="flex">
-              <Sidebar />
-              <Routes>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/fleet" element={<Fleet />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/customers" element={<Customers />} />
-                <Route path="/drivers" element={<Drivers />} />
-                <Route path="/history" element={<History />} />
-                <Route path="/search" element={<Search />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
-          ) : (
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="*" element={<Navigate to="/login" replace />} />
-            </Routes>
-          )}
-        </BrowserRouter>
-      </TooltipProvider>
+      <AuthProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
