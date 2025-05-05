@@ -28,13 +28,13 @@ export function ChatDialog({ bookingId, customerId, driverId }: ChatDialogProps)
   const [recipient, setRecipient] = useState<"customer" | "driver" | "both">("both");
   const [messageContent, setMessageContent] = useState('');
   const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      sender: "customer", 
-      recipient: "both",
-      content: "Hi, I'm at the airport. Where should I meet you?",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60)
-    },
+    // {
+    //   id: '1',
+    //   sender: "customer", 
+    //   recipient: "both",
+    //   content: "Hi, I'm at the airport. Where should I meet you?",
+    //   timestamp: new Date(Date.now() - 1000 * 60 * 60)
+    // },
     {
       id: '2',
       sender: "driver",
@@ -95,8 +95,8 @@ export function ChatDialog({ bookingId, customerId, driverId }: ChatDialogProps)
           </DialogHeader>
           
           <div className="mb-4">
-            <Label htmlFor="recipient">Send message to:</Label>
-            <Select 
+            <Label htmlFor="recipient">Send message to Customer</Label>
+            {/* <Select 
               value={recipient} 
               onValueChange={(value: "customer" | "driver" | "both") => setRecipient(value)}
             >
@@ -108,7 +108,7 @@ export function ChatDialog({ bookingId, customerId, driverId }: ChatDialogProps)
                 <SelectItem value="driver">Driver</SelectItem>
                 <SelectItem value="both">Both</SelectItem>
               </SelectContent>
-            </Select>
+            </Select> */}
           </div>
           
           <ScrollArea className="flex-1 pr-4">
@@ -116,24 +116,22 @@ export function ChatDialog({ bookingId, customerId, driverId }: ChatDialogProps)
               {messages.map((message) => (
                 <div 
                   key={message.id}
-                  className={`p-3 rounded-lg max-w-[80%] ${
+                  className={`p-3 bg-taxi-blue text-white rounded-lg max-w-[80%] ${
                     message.sender === "admin" 
-                      ? "ml-auto bg-taxi-blue text-white" 
-                      : message.sender === "driver"
-                      ? "bg-taxi-teal text-white"
-                      : "bg-gray-100 text-gray-800"
+
+                      
+                   
+                   
                   }`}
                 >
                   <div className="text-xs mb-1">
-                    {message.sender === "admin" 
-                      ? "You" 
-                      : message.sender === "driver" ? "Driver" : "Customer"} 
+                    {/* {message.sender ==   "You" 
+                      }  */}
                     {message.sender === "admin" && 
                       <span className="text-xs opacity-80">
                         {" → "}
-                        {message.recipient === "both" 
-                          ? "Both" 
-                          : message.recipient === "driver" ? "Driver" : "Customer"}
+                        {/* { 
+                           message.recipient ==   "Customer"} */}
                       </span>
                     }
                   </div>
