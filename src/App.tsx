@@ -23,7 +23,7 @@ const queryClient = new QueryClient();
 // Mock authentication state
 const useAuth = () => {
   // In a real app, this would check localStorage, cookies, or a context
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Set to true for development ease
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Set to false by default
   
   // For development, allow toggle with keyboard shortcut (Ctrl+Alt+L)
   useEffect(() => {
@@ -38,7 +38,7 @@ const useAuth = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isAuthenticated]);
 
-  return { isAuthenticated };
+  return { isAuthenticated, setIsAuthenticated };
 };
 
 // Protected route component
