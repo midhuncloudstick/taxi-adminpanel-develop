@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Upload } from "lucide-react";
+import { Car, cars } from "@/data/mockData";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -47,6 +48,13 @@ interface AddDriverFormProps {
 
 export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [availableCars, setAvailableCars] = useState<Car[]>([]);
+  
+  // Load cars when component mounts
+  useEffect(() => {
+    // Get cars from mockData
+    setAvailableCars(cars);
+  }, []);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -186,11 +194,11 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="car-001">Toyota Camry (Standard)</SelectItem>
-                    <SelectItem value="car-002">Honda CR-V (SUV)</SelectItem>
-                    <SelectItem value="car-003">BMW 5 Series (Luxury)</SelectItem>
-                    <SelectItem value="car-004">Ford Escape (SUV)</SelectItem>
-                    <SelectItem value="car-005">Mercedes S-Class (Luxury)</SelectItem>
+                    {availableCars.map((car) => (
+                      <SelectItem key={car.id} value={car.id}>
+                        {car.model} ({car.plate}) - {car.type.charAt(0).toUpperCase() + car.type.slice(1)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -233,3 +241,4 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
     </Form>
   );
 }
+
