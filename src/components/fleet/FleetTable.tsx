@@ -1,19 +1,24 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Car, cars } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCaption, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import { Edit, Trash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { Deletecars, getCars } from "@/redux/Slice/fleetSlice";
+import { useAppSelector } from "@/redux/hook";
+import { toast } from "sonner";
 
 interface FleetTableProps {
   onEdit: (car: Car) => void;
@@ -21,9 +26,11 @@ interface FleetTableProps {
 }
 
 export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
+  const dispatch = useDispatch<AppDispatch>()
   const [carsData, setCarsData] = useState<Car[]>(cars);
   const [carToDelete, setCarToDelete] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const Vehicle = useAppSelector((state) => state.fleet.cars)
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -51,19 +58,41 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
     }
   };
 
+
+  
+  useEffect(() => {
+    console.log("reached the listing")
+    dispatch(getCars())
+  }, [dispatch]);
+
+
+
+
   const handleDelete = (carId: string) => {
     setCarToDelete(carId);
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (carToDelete) {
-      setCarsData(carsData.filter(car => car.id !== carToDelete));
-      onDelete(carToDelete);
-      setCarToDelete(null);
-      setIsDeleteDialogOpen(false);
-    }
-  };
+  const confirmDelete = async () => {
+  if (!carToDelete) return;
+
+  try {
+    console.log("deletedddddd")
+    await dispatch(Deletecars({ carId: carToDelete })).unwrap();
+    await dispatch(getCars());
+
+    setCarsData(carsData.filter((car) => car.id !== carToDelete));
+    onDelete(carToDelete);
+    toast.success("Car deleted successfully");
+  } catch (error) {
+    toast.error("Failed to delete car");
+    console.error("Delete error:", error); 
+  } finally {
+    setCarToDelete(null);
+    setIsDeleteDialogOpen(false);
+  }
+};
+
 
   return (
     <>
@@ -83,43 +112,45 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {carsData.map((car) => (
-            <TableRow key={car.id}>
-              <TableCell className="font-medium">{car.id}</TableCell>
-              <TableCell>{car.model}</TableCell>
-              <TableCell>{car.plate}</TableCell>
-              <TableCell>{getCarTypeBadge(car.type)}</TableCell>
-              <TableCell>{car.capacity}</TableCell>
-              <TableCell>
-                {car.pricePerKm ? `$${car.pricePerKm.toFixed(2)}` : 'N/A'}
-              </TableCell>
-              <TableCell>
-                {car.fixedCost ? `$${car.fixedCost.toFixed(2)}` : 'N/A'}
-              </TableCell>
-              <TableCell>{getStatusBadge(car.status)}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-taxi-teal hover:text-taxi-teal hover:bg-taxi-teal/10"
-                    onClick={() => onEdit(car)}
-                  >
-                    <Edit size={16} />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-taxi-red hover:text-taxi-red hover:bg-taxi-red/10"
-                    onClick={() => handleDelete(car.id)}
-                  >
-                    <Trash size={16} />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+          {Array.isArray(Vehicle) &&
+            Vehicle.map((car) => (
+              <TableRow key={car.id}>
+                <TableCell className="font-medium">{car.id}</TableCell>
+                <TableCell>{car.model}</TableCell>
+                <TableCell>{car.plate}</TableCell>
+                <TableCell>{getCarTypeBadge(car.type)}</TableCell>
+                <TableCell>{car.capacity}</TableCell>
+                <TableCell>
+                  {car.pricePerKm ? `$${car.pricePerKm.toFixed(2)}` : 'N/A'}
+                </TableCell>
+                <TableCell>
+                  {car.fixedCost ? `$${car.fixedCost.toFixed(2)}` : 'N/A'}
+                </TableCell>
+                <TableCell>{getStatusBadge(car.status)}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-taxi-teal hover:text-taxi-teal hover:bg-taxi-teal/10"
+                      onClick={() => onEdit(car)}
+                    >
+                      <Edit size={16} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-taxi-red hover:text-taxi-red hover:bg-taxi-red/10"
+                      onClick={() => handleDelete(car.id)}
+                    >
+                      <Trash size={16} />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
         </TableBody>
+
       </Table>
 
       <ConfirmDialog

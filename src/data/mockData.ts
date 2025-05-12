@@ -36,7 +36,7 @@ export interface Customer {
 }
 
 export interface Car {
-  id: string;
+  id: any;
   model: string;
   plate: string;
   type: 'sedan' | 'suv' | 'luxury';

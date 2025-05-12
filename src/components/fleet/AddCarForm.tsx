@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,11 @@ import { Car } from "@/data/mockData";
 import { Car as CarIcon, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Cars } from "@/types/fleet";
+import { CreateCars, getCars } from "@/redux/Slice/fleetSlice";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { Textarea } from "../ui/textarea";
 
 interface AddCarFormProps {
   onAddCar: (car: Omit<Car, "id">) => void;
@@ -15,43 +19,86 @@ interface AddCarFormProps {
 
 export function AddCarForm({ onAddCar }: AddCarFormProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [formData, setFormData] = useState<Omit<Car, "id">>({
+  const [CarForm, setCarForm] = useState<Cars>({
+
+    id: "",
     model: "",
     plate: "",
     type: "sedan",
     capacity: 4,
     status: "available",
     pricePerKm: 0,
-    fixedCost: 0
+    fixedCost: 0,
+    description: "",
+    small_bags: 0,
+    large_bags: 0,
+    add_trailer: false,
+    created_at: new Date().toISOString(),
   });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    
-    // Handle different input types
+
     if (name === "capacity") {
-      setFormData({ ...formData, [name]: parseInt(value) });
+      setCarForm({ ...CarForm, [name]: parseInt(value) });
     } else if (name === "pricePerKm" || name === "fixedCost") {
-      setFormData({ ...formData, [name]: parseFloat(value) });
+      setCarForm({ ...CarForm, [name]: parseFloat(value) });
     } else {
-      setFormData({ ...formData, [name]: value });
+      setCarForm({ ...CarForm, [name]: value });
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+
+
+  const dispatch = useDispatch<AppDispatch>()
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onAddCar(formData);
-    toast.success("New car added to fleet successfully");
-    setFormData({
-      model: "",
-      plate: "",
-      type: "sedan",
-      capacity: 4,
-      status: "available",
-      pricePerKm: 0,
-      fixedCost: 0
-    });
-    setIsOpen(false);
+
+    const formData = new FormData();
+    formData.append("data", JSON.stringify(CarForm));
+
+    try {
+      console.log("carsss", CarForm)
+      await dispatch(CreateCars({ data: formData })).unwrap();
+      await dispatch(getCars())
+      toast.success("Car created successfully");
+
+      onAddCar(CarForm);
+      toast.success("New car added to fleet successfully");
+
+      setCarForm({
+        id: "",
+        model: "",
+        plate: "",
+        type: "sedan",
+        capacity: 4,
+        status: "available",
+        pricePerKm: 0,
+        fixedCost: 0,
+        description: "",
+        small_bags: 0,
+        large_bags: 0,
+        add_trailer: false,
+        created_at: new Date().toISOString(),
+      });
+
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Create Car Error:", error);
+
+      let errorMessage = "Failed to create Car";
+      if (typeof error === "object" && error && "error" in error) {
+        errorMessage = (error as any).error;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
+      toast.error(errorMessage);
+    }
   };
 
   return (
@@ -75,29 +122,31 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
               id="model"
               name="model"
               placeholder="e.g. Toyota Camry 2023"
-              value={formData.model}
+              value={CarForm.model}
               onChange={handleInputChange}
               required
             />
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="plate">License Plate</Label>
             <Input
               id="plate"
               name="plate"
               placeholder="e.g. ABC-123"
-              value={formData.plate}
+              value={CarForm.plate}
               onChange={handleInputChange}
               required
             />
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="type">Car Type</Label>
-            <Select 
-              value={formData.type} 
-              onValueChange={(value: "sedan" | "suv" | "luxury") => setFormData({...formData, type: value})}
+            <Select
+              value={CarForm.type}
+              onValueChange={(value: "sedan" | "suv" | "luxury") =>
+                setCarForm({ ...CarForm, type: value })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select car type" />
@@ -109,7 +158,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="capacity">Passenger Capacity</Label>
             <Input
@@ -118,12 +167,12 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
               type="number"
               min="1"
               max="12"
-              value={formData.capacity}
+              value={CarForm.capacity}
               onChange={handleInputChange}
               required
             />
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="pricePerKm">Price Per Kilometer ($)</Label>
             <Input
@@ -132,31 +181,48 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
               type="number"
               step="0.01"
               min="0"
-              value={formData.pricePerKm || 0}
+              value={CarForm.pricePerKm || 0}
               onChange={handleInputChange}
               required
             />
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="fixedCost">Fixed Cost ($)</Label>
             <Input
               id="fixedCost"
               name="fixedCost"
               type="number"
-              step="0.01"
+              step="1"
               min="0"
-              value={formData.fixedCost || 0}
+              value={CarForm.fixedCost || 0}
               onChange={handleInputChange}
               required
             />
           </div>
-          
+
+          <div className="grid gap-2">
+            <Label htmlFor="fixedCost">Description</Label>
+            <Textarea
+              name="description"
+              value={CarForm.description}
+              onChange={handleInputChange}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <label className="text-sm font-medium">Date</label>
+            <Input
+              type="date"
+            />
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="status">Status</Label>
-            <Select 
-              value={formData.status} 
-              onValueChange={(value: "available" | "in-use" | "maintenance") => setFormData({...formData, status: value as "available" | "in-use" | "maintenance"})}
+            <Select
+              value={CarForm.status}
+              onValueChange={(value: "available" | "in-use" | "maintenance") =>
+                setCarForm({ ...CarForm, status: value })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
@@ -168,7 +234,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
               </SelectContent>
             </Select>
           </div>
-          
+
           <Button type="submit" className="mt-2 bg-taxi-teal hover:bg-taxi-teal/90">
             Add Car to Fleet
           </Button>

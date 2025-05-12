@@ -8,16 +8,44 @@ import { Car } from "@/data/mockData";
 import { Car as CarIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { Cars } from "@/types/fleet";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { getCars, Updatecars } from "@/redux/Slice/fleetSlice";
+import { useParams } from "react-router-dom";
+import { string } from "zod";
+import { useAppSelector } from "@/redux/hook";
+import { Textarea } from "../ui/textarea";
+
 
 interface EditCarFormProps {
-  car: Car | null;
-  isOpen: boolean;
+  car: Cars | null; // not Car
+  IsOpen: boolean;
   onClose: () => void;
-  onSave: (car: Car) => void;
+  onSave: (car: Cars) => void;
 }
 
-export function EditCarForm({ car, isOpen, onClose, onSave }: EditCarFormProps) {
-  const [formData, setFormData] = useState<Car>({
+
+export function EditCarForm({ car, IsOpen, onClose, onSave }: EditCarFormProps) {
+  console.log("Editing car:", car);
+  // const [isOpen, setIsOpen] = useState(false);
+  // const { carId } = useParams<{ carId: string }>();
+  const vehicle = useAppSelector((state) => state.fleet.cars)
+
+useEffect(() => {
+  if (car && IsOpen) {
+    setCarForm((prev) => ({
+      ...prev,
+      ...car,
+    }));
+  }
+}, [car, IsOpen]);
+
+
+
+  const [CarForm, setCarForm] = useState<Cars>({
+
+
     id: "",
     model: "",
     plate: "",
@@ -25,42 +53,84 @@ export function EditCarForm({ car, isOpen, onClose, onSave }: EditCarFormProps) 
     capacity: 4,
     status: "available",
     pricePerKm: 0,
-    fixedCost: 0
+    fixedCost: 0,
+    description: "",
+    small_bags: 0,
+    large_bags: 0,
+    add_trailer: false,
+    created_at: new Date().toISOString(),
   });
 
   // Set form data when car changes
-  useEffect(() => {
-    if (car) {
-      setFormData({
-        ...car,
-        pricePerKm: car.pricePerKm || 0,
-        fixedCost: car.fixedCost || 0
-      });
-    }
-  }, [car]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    
-    // Handle different input types
+
     if (name === "capacity") {
-      setFormData({ ...formData, [name]: parseInt(value) });
+      setCarForm({ ...CarForm, [name]: parseInt(value) });
     } else if (name === "pricePerKm" || name === "fixedCost") {
-      setFormData({ ...formData, [name]: parseFloat(value) });
+      setCarForm({ ...CarForm, [name]: parseFloat(value) });
     } else {
-      setFormData({ ...formData, [name]: value });
+      setCarForm({ ...CarForm, [name]: value });
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+
+
+
+  const dispatch = useDispatch<AppDispatch>()
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    toast.success(`Car ${formData.id} updated successfully`);
-    onClose();
+
+    const formData = new FormData();
+    formData.append("data", JSON.stringify(CarForm));
+
+    try {
+      console.log("carsss", CarForm)
+      await dispatch(Updatecars({ carId: CarForm.id, data: formData })).unwrap();
+      await dispatch(getCars())
+      toast.success("Car created successfully");
+
+      onSave(CarForm);
+      toast.success("New car added to fleet successfully");
+
+      setCarForm({
+        id: "",
+        model: "",
+        plate: "",
+        type: "sedan",
+        capacity: 4,
+        status: "available",
+        pricePerKm: 0,
+        fixedCost: 0,
+        description: "",
+        small_bags: 0,
+        large_bags: 0,
+        add_trailer: false,
+        created_at: new Date().toISOString(),
+      });
+
+     onClose();
+    } catch (error) {
+      console.error("Upadte Car Error:", error);
+
+      let errorMessage = "Failed update Car details";
+      if (typeof error === "object" && error && "error" in error) {
+        errorMessage = (error as any).error;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
+      toast.error(errorMessage);
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={IsOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -75,29 +145,31 @@ export function EditCarForm({ car, isOpen, onClose, onSave }: EditCarFormProps) 
               id="model"
               name="model"
               placeholder="e.g. Toyota Camry 2023"
-              value={formData.model}
+              value={CarForm.model}
               onChange={handleInputChange}
               required
             />
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="plate">License Plate</Label>
             <Input
               id="plate"
               name="plate"
               placeholder="e.g. ABC-123"
-              value={formData.plate}
+              value={CarForm.plate}
               onChange={handleInputChange}
               required
             />
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="type">Car Type</Label>
-            <Select 
-              value={formData.type} 
-              onValueChange={(value: "sedan" | "suv" | "luxury") => setFormData({...formData, type: value})}
+            <Select
+              value={CarForm.type}
+              onValueChange={(value: "sedan" | "suv" | "luxury") =>
+                setCarForm({ ...CarForm, type: value })
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select car type" />
@@ -109,7 +181,7 @@ export function EditCarForm({ car, isOpen, onClose, onSave }: EditCarFormProps) 
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="capacity">Passenger Capacity</Label>
             <Input
@@ -118,12 +190,12 @@ export function EditCarForm({ car, isOpen, onClose, onSave }: EditCarFormProps) 
               type="number"
               min="1"
               max="12"
-              value={formData.capacity}
+              value={CarForm.capacity}
               onChange={handleInputChange}
               required
             />
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="pricePerKm">Price Per Kilometer ($)</Label>
             <Input
@@ -132,31 +204,47 @@ export function EditCarForm({ car, isOpen, onClose, onSave }: EditCarFormProps) 
               type="number"
               step="0.01"
               min="0"
-              value={formData.pricePerKm || 0}
+              value={CarForm.pricePerKm || 0}
               onChange={handleInputChange}
               required
             />
           </div>
-          
+
           <div className="grid gap-2">
             <Label htmlFor="fixedCost">Fixed Cost ($)</Label>
             <Input
               id="fixedCost"
               name="fixedCost"
               type="number"
-              step="0.01"
+              step="1"
               min="0"
-              value={formData.fixedCost || 0}
+              value={CarForm.fixedCost || 0}
               onChange={handleInputChange}
               required
             />
           </div>
-          
+          <div className="grid gap-2">
+            <Label htmlFor="fixedCost">Description</Label>
+            <Textarea
+              name="description"
+              value={CarForm.description}
+              onChange={handleInputChange}
+            />
+          </div>
+
+           <div className="grid gap-2">
+            <label className="text-sm font-medium">Date</label>
+            <Input
+              type="date"
+            />
+          </div>
+
           <div className="grid gap-2">
             <Label htmlFor="status">Status</Label>
-            <Select 
-              value={formData.status} 
-              onValueChange={(value: "available" | "in-use" | "maintenance") => setFormData({...formData, status: value as "available" | "in-use" | "maintenance"})}
+            <Select
+              value={CarForm.status}
+              onValueChange={(value: "available" | "in-use" | "maintenance") => 
+                setCarForm({ ...CarForm, status: value as "available" | "in-use" | "maintenance" })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
@@ -168,7 +256,7 @@ export function EditCarForm({ car, isOpen, onClose, onSave }: EditCarFormProps) 
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="flex justify-end gap-2 mt-2">
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" className="bg-taxi-teal hover:bg-taxi-teal/90">Save Changes</Button>

@@ -7,10 +7,11 @@ import { AddCarForm } from "@/components/fleet/AddCarForm";
 import { EditCarForm } from "@/components/fleet/EditCarForm";
 import { Car, cars } from "@/data/mockData";
 import { toast } from "sonner";
+import { Cars } from "@/types/fleet";
 
 export default function Fleet() {
   const [carsData, setCarsData] = useState<Car[]>(cars);
-  const [carToEdit, setCarToEdit] = useState<Car | null>(null);
+  const [carToEdit, setCarToEdit] = useState<Cars | null>(null);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
 
   const handleAddCar = (car: Omit<Car, "id">) => {
@@ -23,7 +24,7 @@ export default function Fleet() {
     toast.success("New car added to fleet successfully");
   };
 
-  const handleEditCar = (car: Car) => {
+  const handleEditCar = (car: Cars) => {
     setCarToEdit(car);
     setIsEditFormOpen(true);
   };
@@ -56,7 +57,7 @@ export default function Fleet() {
         
         <EditCarForm
           car={carToEdit}
-          isOpen={isEditFormOpen}
+          IsOpen={isEditFormOpen}
           onClose={() => setIsEditFormOpen(false)}
           onSave={handleSaveEditedCar}
         />
