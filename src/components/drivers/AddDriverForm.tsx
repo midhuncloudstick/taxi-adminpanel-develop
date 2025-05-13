@@ -17,8 +17,15 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Upload } from "lucide-react";
-import { Car, cars } from "@/data/mockData";
+import { Car, Upload } from "lucide-react";
+// import { Car, cars } from "@/data/mockData";
+import { Cars } from "@/types/fleet";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { CreateDrivers, getDrivers } from "@/redux/Slice/driverSlice";
+import { getCars } from "@/redux/Slice/fleetSlice";
+import { useAppSelector } from "@/redux/hook";
+import { drivers } from "@/data/mockData";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -30,7 +37,7 @@ const formSchema = z.object({
   phone: z.string().min(10, {
     message: "Phone number must be at least 10 digits.",
   }),
-  licenseNumber: z.string().min(5, {
+  licenceNumber: z.string().min(5, {
     message: "License number must be at least 5 characters.",
   }),
   carId: z.string().min(1, {
@@ -38,6 +45,9 @@ const formSchema = z.object({
   }),
   status: z.enum(["active", "inactive"]),
   photo: z.string().optional(),
+
+  type:z.enum(["internal","external"]),
+
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -48,24 +58,109 @@ interface AddDriverFormProps {
 
 export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [availableCars, setAvailableCars] = useState<Car[]>([]);
-  
+  const [availableCars, setAvailableCars] = useState<Cars[]>([]);
+  const dispatch = useDispatch<AppDispatch>()
+  const vehicle = useAppSelector((state) => state.fleet.cars)
+ const driver = useAppSelector((state)=>state.driver.drivers)
+  const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
+
   // Load cars when component mounts
   useEffect(() => {
-    // Get cars from mockData
-    setAvailableCars(cars);
-  }, []);
-  
+    dispatch(getCars());
+  }, [dispatch]);
+
+  useEffect(() => {
+    setAvailableCars(vehicle);
+  }, [vehicle]);
+
+
+
+  //   const form = useForm<FormValues>({
+  //     resolver: zodResolver(formSchema),
+  //     defaultValues: {
+  //       name: "",
+  //       email: "",
+  //       phone: "",
+  //       licenseNumber: "",
+  //       carId: "",
+  //       status: "active",
+  //       photo: "",
+
+  //     },
+
+  //   });
+
+
+
+  //   const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  //     const file = event.target.files?.[0];
+  //     if (!file) return;
+
+  //     // In a real app, this would be an API call to upload the image
+  //     const reader = new FileReader();
+  //     reader.onload = () => {
+  //       if (typeof reader.result === "string") {
+  //         setPhotoPreview(reader.result);
+  //         form.setValue("photo", reader.result);
+  //       }
+  //     };
+  //     reader.readAsDataURL(file);
+  //   };
+
+  //   const onSubmit = (values: FormValues) => {
+  //     const formData = new FormData();
+  //     formData.append("data", JSON.stringify(values));
+
+  //     try {
+
+  //       await dispatch(CreateDrivers({ data: formData })).unwrap();
+  //       await dispatch(getDrivers())
+  //       toast.success("Car created successfully");
+
+  //       onSuccess();
+  //       toast.success("New car added to fleet successfully");
+
+  //       ({
+  //         name: "",
+  //         email: "",
+  //         phone: "",
+  //         licenseNumber: "",
+  //         carId: "",
+  //         status: "active",
+  //         photo: "",
+  //       });
+
+  //       setIsOpen(false);
+  //     } catch (error) {
+  //       console.error("Create Car Error:", error);
+
+  //       let errorMessage = "Failed to create Car";
+  //       if (typeof error === "object" && error && "error" in error) {
+  //         errorMessage = (error as any).error;
+  //       } else if (typeof error === "string") {
+  //         errorMessage = error;
+  //       }
+
+  //       toast.error(errorMessage);
+  //     }
+  //   };
+  //   // In a real app, this would be an API call to save the driver
+  //   console.log(values);
+
+  //   toast.success("Driver added successfully");
+  //   onSuccess();
+  // };
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       email: "",
       phone: "",
-      licenseNumber: "",
+      licenceNumber: "",
       carId: "",
       status: "active",
       photo: "",
+      type:"internal",
     },
   });
 
@@ -73,7 +168,6 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // In a real app, this would be an API call to upload the image
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
@@ -84,12 +178,50 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
     reader.readAsDataURL(file);
   };
 
-  const onSubmit = (values: FormValues) => {
-    // In a real app, this would be an API call to save the driver
-    console.log(values);
-    
-    toast.success("Driver added successfully");
-    onSuccess();
+  const onSubmit = async (values: FormValues) => {
+    console.log("Form values:", values);
+
+
+    if (!values.phone || !values.licenceNumber) {
+      toast.error("Phone number and License number are required.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("data", JSON.stringify(values));
+
+    try {
+
+      await dispatch(CreateDrivers({ data: formData })).unwrap();
+      await dispatch(getDrivers());
+
+      toast.success("Driver added successfully");
+      onSuccess();
+
+      form.reset({
+        name: "",
+        email: "",
+        phone: "",
+        licenceNumber: "",
+        carId: "",
+        status: "active",
+        photo: "",
+        type:"internal",
+      });
+
+      setIsAddDriverOpen(false);
+    } catch (error) {
+      console.error("Create Driver Error:", error);
+
+      let errorMessage = "Failed to create driver";
+      if (typeof error === "object" && error && "error" in error) {
+        errorMessage = (error as any).error;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
+      toast.error(errorMessage);
+    }
   };
 
   return (
@@ -106,8 +238,8 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
                 </AvatarFallback>
               )}
             </Avatar>
-            <label 
-              htmlFor="photo-upload" 
+            <label
+              htmlFor="photo-upload"
               className="cursor-pointer text-taxi-blue hover:text-taxi-teal text-sm underline"
             >
               Upload Photo
@@ -129,7 +261,7 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
             <FormItem>
               <FormLabel>Full Name</FormLabel>
               <FormControl>
-                <Input placeholder="John Doe" {...field} />
+                <Input placeholder="Enter your name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -144,7 +276,7 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="john@example.com" {...field} />
+                  <Input type="email" placeholder="Enter you email" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -164,12 +296,10 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
               </FormItem>
             )}
           />
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="licenseNumber"
+            name="licenceNumber"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Driver's License</FormLabel>
@@ -180,6 +310,7 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
               </FormItem>
             )}
           />
+
 
           <FormField
             control={form.control}
@@ -195,11 +326,12 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
                   </FormControl>
                   <SelectContent>
                     {availableCars.map((car) => (
-                      <SelectItem key={car.id} value={car.id}>
+                      <SelectItem key={car.id} value={car.id.toString()}>
                         {car.model} ({car.plate}) - {car.type.charAt(0).toUpperCase() + car.type.slice(1)}
                       </SelectItem>
                     ))}
                   </SelectContent>
+
                 </Select>
                 <FormMessage />
               </FormItem>
@@ -228,6 +360,29 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
             </FormItem>
           )}
         />
+
+         <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="active">Internal</SelectItem>
+                  <SelectItem value="inactive">External</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
 
         <div className="flex justify-end space-x-2 pt-4">
           <Button variant="outline" onClick={onSuccess} type="button">

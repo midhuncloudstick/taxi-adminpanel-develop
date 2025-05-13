@@ -3,10 +3,13 @@ import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
 import fleetReducer from "./Slice/fleetSlice";
+import driverReducer from "./Slice/driverSlice"
+import { drivers } from "@/data/mockData";
 
 // Combine all reducers
 const rootReducer = combineReducers({
   fleet: fleetReducer,
+  driver: driverReducer,
   // Add other slices here like `user: userReducer`
 });
 

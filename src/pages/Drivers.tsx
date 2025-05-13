@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { drivers, getBookingsByDriverId, Booking } from "@/data/mockData";
 import { DriversTable } from "@/components/shared/DriversTable";
@@ -15,19 +15,34 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useAppSelector } from "@/redux/hook";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { getDrivers } from "@/redux/Slice/driverSlice";
 
 export default function Drivers() {
-  const [selectedDriverId, setSelectedDriverId] = useState<string | null>(null);
+  const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
   const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
 
+  const drivers = useAppSelector((state) => state.driver.drivers)
+  const dispatch = useDispatch<AppDispatch>()
   const selectedTrips: Booking[] = selectedDriverId
-    ? getBookingsByDriverId(selectedDriverId)
+    ? getBookingsByDriverId(selectedDriverId.toString())
     : [];
+
 
   const handleDriverAdded = () => {
     setIsAddDriverOpen(false);
     // In a real app, we would refetch the drivers list here
   };
+
+
+  useEffect(() => {
+    console.log("getting driver list")
+    dispatch(getDrivers())
+  }, [dispatch])
+
+
 
   return (
     <PageContainer title="Driver Management">
@@ -59,7 +74,11 @@ export default function Drivers() {
           drivers={drivers}
           selectedId={selectedDriverId}
           onSelect={setSelectedDriverId}
+          onEdit={(driver) => {
+          console.log("Editing driver", driver);
+          }}
         />
+
         {selectedDriverId && (
           <div>
             <h3 className="text-lg font-semibold text-taxi-blue mt-8 mb-2">

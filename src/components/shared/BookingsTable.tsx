@@ -7,10 +7,11 @@ import { ChevronDown, ChevronUp, MapPin, Calendar, Clock, MessageCircle } from "
 import { Button } from "../ui/button";
 import { BookingStatusDropdown } from "./BookingStatusDropdown";
 import { ChatDialog } from "./ChatDialog";
+import { Drivers } from "@/types/driver";
 
 interface BookingsTableProps {
   bookings: Booking[];
-  drivers?: Driver[];
+  drivers?: Drivers[];
   showCustomer?: boolean;
   showDriver?: boolean;
   showDriverSelect?: boolean;
@@ -35,7 +36,7 @@ export function BookingsTable({
 }: BookingsTableProps) {
   const getSortSymbol = (col: string) =>
     sortKey === col ? (sortDirection === "asc" ? "▲" : "▼") : "";
-    
+
   const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
 
   const toggleRow = (bookingId: string) => {
@@ -118,9 +119,10 @@ export function BookingsTable({
                         </SelectTrigger>
                         <SelectContent>
                           {drivers.map(d => (
-                            <SelectItem key={d.id} value={d.id}>
+                            <SelectItem key={d.id} value={d.id.toString()}>
                               {d.name}
                             </SelectItem>
+
                           ))}
                         </SelectContent>
                       </Select>

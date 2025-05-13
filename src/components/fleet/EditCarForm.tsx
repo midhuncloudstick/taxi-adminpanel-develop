@@ -96,7 +96,7 @@ useEffect(() => {
       toast.success("Car created successfully");
 
       onSave(CarForm);
-      toast.success("New car added to fleet successfully");
+      toast.success("Updated car added to fleet successfully");
 
       setCarForm({
         id: "",
