@@ -37,9 +37,7 @@ export default function Drivers() {
   };
 
 
-useEffect(()=>{
-  dispatch(getDrivers())
-},[dispatch])
+
 
   return (
     <PageContainer title="Driver Management">

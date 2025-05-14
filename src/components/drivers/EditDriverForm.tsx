@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,7 @@ import {
     RadioGroupItem,
 } from "@/components/ui/radio-group";
 import { Car } from "@/data/mockData";
-import { Car as CarIcon, Upload } from "lucide-react";
+import { Car as CarIcon, Upload ,Loader} from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Cars } from "@/types/fleet";
@@ -16,7 +17,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { getCars, Updatecars } from "@/redux/Slice/fleetSlice";
 import { useParams } from "react-router-dom";
-import { string, z } from "zod";
+import { string } from "zod";
 import { useAppSelector } from "@/redux/hook";
 import { Textarea } from "../ui/textarea";
 import { Drivers } from "@/types/driver";
@@ -45,32 +46,32 @@ interface EditCarFormProps {
 
 
 const InternalDriverSchema = z.object({
-  id: z.number(),
-  type: z.literal("internal"),
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().optional(),
-  phone: z.string().min(10, { message: "Please enter a valid phone number." }),
-  licenceNumber: z.string().min(5, { message: "Please enter a valid license number." }),
-  carId: z.string().min(1, { message: "Please select a vehicle." }),
-  status: z.enum(["active", "inactive"]),
-  photo: z.string().optional(),
+    id: z.number(),
+    type: z.literal("internal"),
+    name: z.string().min(2, { message: "Name must be at least 8 characters." }),
+    email: z.string().optional(),
+    phone: z.string().min(10, { message: "Please enter a valid phone number." }),
+    licenceNumber: z.string().min(5, { message: "Please enter a valid license number." }),
+    carId: z.string().min(1, { message: "Please select a vehicle." }),
+    status: z.enum(["active", "inactive"]),
+    photo: z.string().optional(),
 });
 
 const ExternalDriverSchema = z.object({
-  id: z.number(),
-  type: z.literal("external"),
-  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
-  email: z.string().email({ message: "Please enter a valid email address." }),
-  phone: z.string().optional(),
-  licenceNumber: z.string().optional(),
-  carId: z.string().min(1, { message: "Please select a vehicle." }),
-  status: z.enum(["active", "inactive"]),
-  photo: z.string().optional(),
+    id: z.number(),
+    type: z.literal("external"),
+    name: z.string().min(2, { message: "Name must be at least 8 characters." }),
+    email: z.string().email({ message: "Please enter a valid email address." }),
+    phone: z.string().optional(),
+    licenceNumber: z.string().optional(),
+    carId: z.string().min(1, { message: "Please select a vehicle." }),
+    status: z.enum(["active", "inactive"]),
+    photo: z.string().optional(),
 });
 
 export const formSchema = z.discriminatedUnion("type", [
-  InternalDriverSchema,
-  ExternalDriverSchema,
+    InternalDriverSchema,
+    ExternalDriverSchema,
 ]);
 
 
@@ -83,6 +84,7 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [availableCars, setAvailableCars] = useState<Cars[]>([]);
     const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
+    const [loading,setLoading]= useState(false)
 
 
     useEffect(() => {
@@ -94,99 +96,98 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
     }, [vehicle]);
 
 
-   const form = useForm<FormValues>({
-  resolver: zodResolver(formSchema),
-  defaultValues: {
-    id: driver.id,
-    name: driver?.name || "",
-    email: driver?.email || "",
-    phone: driver?.phone || "",
-    licenceNumber: driver?.licenceNumber || "",
-    carId: driver?.carId || "",
-    status: driver?.status || "active",
-    photo: driver?.photo || "",
-    type: driver?.type || "internal",
-  },
-});
-
-useEffect(() => {
-  if (driver && IsOpen) {
-    form.reset({
-      id: driver.id,
-      name: driver.name,
-      email: driver.email,
-      phone: driver.phone,
-      licenceNumber: driver.licenceNumber,
-      carId: driver.carId,
-      status: driver.status,
-      photo: driver.photo,
-      type: driver.type,
-    });
-    setPhotoPreview(driver.photo || null);
-  }
-}, [driver, IsOpen, form]);
-
-const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    if (typeof reader.result === "string") {
-      setPhotoPreview(reader.result);
-      form.setValue("photo", reader.result);
-    }
-  };
-  reader.readAsDataURL(file);
-};
-
-
-
-const onSubmit = async (values: FormValues) => {
-  if (!values.id) {
-    toast.error("Driver ID is missing");
-    return;
-  }
-
-  const formData = new FormData();
-  Object.entries(values).forEach(([key, value]) => {
-  formData.append(key, value as any);
-});
-
-
-  try {
-    console.log("updated-driver",values)
-   const result = await dispatch(UpdateDrivers({ driverId: values.id.toString(), data: formData }));
-   console.log("Dispatch result:", result);
-
-    await dispatch(getDrivers());
-    toast.success("Driver updated successfully");
-    onSuccess();
-
-    form.reset({
-      id: 0,
-      name: "",
-      email: "",
-      phone: "",
-      licenceNumber: "",
-      carId: "",
-      status: "active",
-      photo: "",
-      type: "internal",
+    const form = useForm<FormValues>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            id: driver.id,
+            name: driver?.name || "",
+            email: driver?.email || "",
+            phone: driver?.phone || "",
+            licenceNumber: driver?.licenceNumber || "",
+            carId: driver?.carId || "",
+            status: driver?.status || "active",
+            photo: driver?.photo || "",
+            type: driver?.type || "internal",
+        },
     });
 
-    setIsAddDriverOpen(false);
-  } catch (error) {
-    let errorMessage = "Failed to update driver";
-    if (typeof error === "object" && error && "error" in error) {
-      errorMessage = (error as any).error;
-    } else if (typeof error === "string") {
-      errorMessage = error;
-    }
+    useEffect(() => {
+        if (driver && IsOpen) {
+            form.reset({
+                id: driver.id,
+                name: driver.name,
+                email: driver.email,
+                phone: driver.phone,
+                licenceNumber: driver.licenceNumber,
+                carId: driver.carId,
+                status: driver.status,
+                photo: driver.photo,
+                type: driver.type,
+            });
+            setPhotoPreview(driver.photo || null);
+        }
+    }, [driver, IsOpen, form]);
 
-    toast.error(errorMessage);
-  }
-};
+    const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (typeof reader.result === "string") {
+                setPhotoPreview(reader.result);
+                form.setValue("photo", reader.result);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+
+
+    const onSubmit = async (values: FormValues) => {
+        if (!values.id) {
+            toast.error("Driver ID is missing");
+            return;
+        }
+
+        const formData = new FormData();
+        const {id,...rest}= values
+        formData.append("data", JSON.stringify(rest));
+
+
+        try {
+            console.log("updated-driver", values)
+            const result = await dispatch(UpdateDrivers({ driverId: values.id.toString(), data: formData }));
+            console.log("Dispatch result:", result);
+
+            await dispatch(getDrivers());
+            toast.success("Driver updated successfully");
+            onSuccess();
+
+            form.reset({
+                id: 0,
+                name: "",
+                email: "",
+                phone: "",
+                licenceNumber: "",
+                carId: "",
+                status: "active",
+                photo: "",
+                type: "internal",
+            });
+
+            setIsAddDriverOpen(false);
+        } catch (error) {
+            let errorMessage = "Failed to update driver";
+            if (typeof error === "object" && error && "error" in error) {
+                errorMessage = (error as any).error;
+            } else if (typeof error === "string") {
+                errorMessage = error;
+            }
+
+            toast.error(errorMessage);
+        }
+    };
 
 
     return (
@@ -370,11 +371,17 @@ const onSubmit = async (values: FormValues) => {
 
 
                         <div className="flex justify-end space-x-2 pt-4">
-                            <Button variant="outline" type="button" onClick={onClose}>
-                                Cancel
-                            </Button>
-                            <Button type="submit" className="bg-taxi-teal hover:bg-taxi-teal/90">
-                                Save Driver
+                            <Button
+                                type="submit"
+                                className={`${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-taxi-teal hover:bg-taxi-teal/90'
+                                    }`}
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <Loader size="sm" className="mr-2" />
+                                ) : (
+                                    'Save Driver'
+                                )}
                             </Button>
                         </div>
                     </form>

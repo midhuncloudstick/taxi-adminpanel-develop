@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { getCarById } from "@/data/mockData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
@@ -6,6 +6,9 @@ import { Edit, User } from "lucide-react";
 import { Button } from "../ui/button";
 import { EditDriverForm } from "../drivers/EditDriverForm";
 import { Cars } from "@/types/fleet";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { getDrivers } from "@/redux/Slice/driverSlice";
 
 type Drivers = {
   id: number;
@@ -33,6 +36,15 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
   const [driverData, setDriversData] = useState<Drivers[]>(drivers);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [driverToEdit, setDriverToEdit] = useState<Drivers | null>(null);
+  const dispatch = useDispatch<AppDispatch>()
+  
+
+
+
+useEffect(() => {
+console.log("reached the driverlisting")
+dispatch(getDrivers())
+}, [dispatch]);
 
   const handleSaveEditedDriver = (editedDriver: Drivers) => {
     setDriversData((prev) =>

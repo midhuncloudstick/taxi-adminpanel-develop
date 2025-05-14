@@ -87,7 +87,7 @@ export const UpdateDrivers = createAsyncThunk(
       for (const [key, value] of data.entries()) {
         console.log(`${key}:`, value);
       }
-
+ 
       const url = `/api/v1/driver/${driverId}`;
       const response = await api.patchEvent(url, data, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -109,25 +109,7 @@ export const UpdateDrivers = createAsyncThunk(
 
 
 
-// export const Deletecars = createAsyncThunk(
-//   "car/delete",
-//   async (
-//     {carId}: {carId: string},
-//   ) => {
-//     try {
-//       // const userId = localStorage.getItem("userid");
-//       const url = `/api/v1/cars/delete/${carId}`;
-//       const response = await api.deleteEvents(url);
-//       const deleteData = response.data;
-//       return deleteData;
-//     } catch (error: unknown) {
-//       if (axios.isAxiosError(error)) {
-//         return error|| "list view fetching failed";
-//       }
-//       return "An unexpected error occurred.";
-//     }
-//   }
-// );
+
 
 
 
@@ -221,17 +203,12 @@ const driverSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(UpdateDrivers.fulfilled, (state, action) => {
-        state.loading = false;
-        const updatedDriver = action.payload;
-        const index = state.drivers.findIndex(d => d.id === updatedDriver.id);
-        if (index !== -1) {
-          state.drivers[index] = updatedDriver;
-        }
-        state.error = null;
-        console.log("action.payload.drivers",action.payload)
+       .addCase(UpdateDrivers.fulfilled, (state, action) => {
+        state.loading = false; // Reset loading state
+        state.drivers = state.drivers.map((driver) =>
+          driver.id === action.payload.id ? action.payload : driver
+        ); // Update the driver in the list (or modify this as per your state structure)
       })
-
       .addCase(UpdateDrivers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
