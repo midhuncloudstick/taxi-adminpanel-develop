@@ -223,21 +223,21 @@ useEffect(() => {
               required
             />
           </div>
-          <div className="grid gap-2">
+          {/* <div className="grid gap-2">
             <Label htmlFor="fixedCost">Description</Label>
             <Textarea
               name="description"
               value={CarForm.description}
               onChange={handleInputChange}
             />
-          </div>
+          </div> */}
 
-           <div className="grid gap-2">
+           {/* <div className="grid gap-2">
             <label className="text-sm font-medium">Date</label>
             <Input
               type="date"
             />
-          </div>
+          </div> */}
 
           <div className="grid gap-2">
             <Label htmlFor="status">Status</Label>

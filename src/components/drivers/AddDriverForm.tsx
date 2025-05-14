@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/radio-group";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Car, Upload } from "lucide-react";
+import { Car, Upload, Loader } from "lucide-react";
 // import { Car, cars } from "@/data/mockData";
 import { Cars } from "@/types/fleet";
 import { useDispatch } from "react-redux";
@@ -75,6 +75,7 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
   const vehicle = useAppSelector((state) => state.fleet.cars)
   const driver = useAppSelector((state) => state.driver.drivers)
   const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Load cars when component mounts
   useEffect(() => {
@@ -407,17 +408,19 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
             </FormItem>
           )}
         />
-
-
-
-
-
         <div className="flex justify-end space-x-2 pt-4">
-          <Button variant="outline" onClick={onSuccess} type="button">
-            Cancel
-          </Button>
-          <Button type="submit" className="bg-taxi-teal hover:bg-taxi-teal/90">
-            Add Driver
+          <Button
+            type="submit"
+            className={`flex items-center ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-taxi-teal hover:bg-taxi-teal/90'}`}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader className="w-4 h-4 mr-2 animate-spin" /> Saving...
+              </>
+            ) : (
+              'Save Driver'
+            )}
           </Button>
         </div>
       </form>

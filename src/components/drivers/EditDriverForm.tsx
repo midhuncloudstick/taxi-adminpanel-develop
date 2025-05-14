@@ -9,7 +9,7 @@ import {
     RadioGroupItem,
 } from "@/components/ui/radio-group";
 import { Car } from "@/data/mockData";
-import { Car as CarIcon, Upload ,Loader} from "lucide-react";
+import { Car as CarIcon, Upload, Loader } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Cars } from "@/types/fleet";
@@ -84,7 +84,7 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [availableCars, setAvailableCars] = useState<Cars[]>([]);
     const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
-    const [loading,setLoading]= useState(false)
+    const [loading, setLoading] = useState(false)
 
 
     useEffect(() => {
@@ -151,7 +151,7 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
         }
 
         const formData = new FormData();
-        const {id,...rest}= values
+        const { id, ...rest } = values
         formData.append("data", JSON.stringify(rest));
 
 
@@ -373,12 +373,13 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
                         <div className="flex justify-end space-x-2 pt-4">
                             <Button
                                 type="submit"
-                                className={`${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-taxi-teal hover:bg-taxi-teal/90'
-                                    }`}
+                                className={`flex items-center ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-taxi-teal hover:bg-taxi-teal/90'}`}
                                 disabled={loading}
                             >
                                 {loading ? (
-                                    <Loader size="sm" className="mr-2" />
+                                    <>
+                                        <Loader className="w-4 h-4 mr-2 animate-spin" /> Saving...
+                                    </>
                                 ) : (
                                     'Save Driver'
                                 )}
