@@ -37,12 +37,9 @@ export default function Drivers() {
   };
 
 
-  useEffect(() => {
-    console.log("getting driver list")
-    dispatch(getDrivers())
-  }, [dispatch])
-
-
+useEffect(()=>{
+  dispatch(getDrivers())
+},[dispatch])
 
   return (
     <PageContainer title="Driver Management">

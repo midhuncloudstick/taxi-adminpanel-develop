@@ -15,6 +15,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { Car, Upload } from "lucide-react";
@@ -27,28 +31,36 @@ import { getCars } from "@/redux/Slice/fleetSlice";
 import { useAppSelector } from "@/redux/hook";
 import { drivers } from "@/data/mockData";
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  phone: z.string().min(10, {
-    message: "Phone number must be at least 10 digits.",
-  }),
-  licenceNumber: z.string().min(5, {
-    message: "License number must be at least 5 characters.",
-  }),
-  carId: z.string().min(1, {
-    message: "Please select a vehicle.",
-  }),
+
+
+const InternalDriverSchema = z.object({
+  type: z.literal("internal"),
+  name: z.string().min(2, { message: "Name must be at least 8 characters." }),
+  email: z.string().optional(),
+  phone: z.string().min(10, { message: "Please enter a valid phone number." }),
+  licenceNumber: z.string().min(5, { message: "Please enter a valid license number." }),
+  carId: z.string().min(1, { message: "Please select a vehicle." }),
   status: z.enum(["active", "inactive"]),
   photo: z.string().optional(),
-
-  type:z.enum(["internal","external"]),
-
 });
+
+const ExternalDriverSchema = z.object({
+  type: z.literal("external"),
+  name: z.string().min(2, { message: "Name must be at least 8 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  phone: z.string().optional(),
+  licenceNumber: z.string().optional(),
+  carId: z.string().min(1, { message: "Please select a vehicle." }),
+  status: z.enum(["active", "inactive"]),
+  photo: z.string().optional(),
+});
+
+// Combine using discriminated union
+export const formSchema = z.discriminatedUnion("type", [
+  InternalDriverSchema,
+  ExternalDriverSchema,
+]);
+
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -61,7 +73,7 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
   const [availableCars, setAvailableCars] = useState<Cars[]>([]);
   const dispatch = useDispatch<AppDispatch>()
   const vehicle = useAppSelector((state) => state.fleet.cars)
- const driver = useAppSelector((state)=>state.driver.drivers)
+  const driver = useAppSelector((state) => state.driver.drivers)
   const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
 
   // Load cars when component mounts
@@ -160,7 +172,7 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
       carId: "",
       status: "active",
       photo: "",
-      type:"internal",
+      type: "internal",
     },
   });
 
@@ -206,7 +218,7 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
         carId: "",
         status: "active",
         photo: "",
-        type:"internal",
+        type: "internal",
       });
 
       setIsAddDriverOpen(false);
@@ -360,28 +372,44 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
             </FormItem>
           )}
         />
-
-         <FormField
+        <FormField
           control={form.control}
           name="type"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Type</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="active">Internal</SelectItem>
-                  <SelectItem value="inactive">External</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  value={field.value}
+                  className="flex flex-row items-center gap-6"
+                >
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <RadioGroupItem value="internal" id="type-internal" />
+                    </FormControl>
+                    <FormLabel htmlFor="type-internal" className="font-normal">
+                      Internal
+                    </FormLabel>
+                  </FormItem>
+
+                  <FormItem className="flex items-center space-x-2">
+                    <FormControl>
+                      <RadioGroupItem value="external" id="type-external" />
+                    </FormControl>
+                    <FormLabel htmlFor="type-external" className="font-normal">
+                      External
+                    </FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+
+
 
 
         <div className="flex justify-end space-x-2 pt-4">
