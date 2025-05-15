@@ -19,6 +19,7 @@ interface AddCarFormProps {
 
 export function AddCarForm({ onAddCar }: AddCarFormProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const dispatch = useDispatch<AppDispatch>()
   const [CarForm, setCarForm] = useState<Cars>({
 
     id: "",
@@ -53,7 +54,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
 
 
 
-  const dispatch = useDispatch<AppDispatch>()
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,14 +202,14 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
             />
           </div>
 
-          {/* <div className="grid gap-2">
-            <Label htmlFor="fixedCost">Description</Label>
+          <div className="grid gap-2">
+            <Label htmlFor="description">Description</Label>
             <Textarea
               name="description"
               value={CarForm.description}
               onChange={handleInputChange}
             />
-          </div> */}
+          </div>
 
           {/* <div className="grid gap-2">
             <label className="text-sm font-medium">Date</label>

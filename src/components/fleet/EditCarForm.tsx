@@ -31,6 +31,8 @@ export function EditCarForm({ car, IsOpen, onClose, onSave }: EditCarFormProps) 
   // const [isOpen, setIsOpen] = useState(false);
   // const { carId } = useParams<{ carId: string }>();
   const vehicle = useAppSelector((state) => state.fleet.cars)
+  const dispatch = useDispatch<AppDispatch>()
+
 
 useEffect(() => {
   if (car && IsOpen) {
@@ -81,7 +83,6 @@ useEffect(() => {
 
 
 
-  const dispatch = useDispatch<AppDispatch>()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -223,14 +224,14 @@ useEffect(() => {
               required
             />
           </div>
-          {/* <div className="grid gap-2">
-            <Label htmlFor="fixedCost">Description</Label>
+          <div className="grid gap-2">
+            <Label htmlFor="description">Description</Label>
             <Textarea
               name="description"
               value={CarForm.description}
               onChange={handleInputChange}
             />
-          </div> */}
+          </div>
 
            {/* <div className="grid gap-2">
             <label className="text-sm font-medium">Date</label>

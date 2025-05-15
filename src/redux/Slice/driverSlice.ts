@@ -204,32 +204,17 @@ const driverSlice = createSlice({
         state.error = null;
       })
        .addCase(UpdateDrivers.fulfilled, (state, action) => {
-        state.loading = false; // Reset loading state
+        state.loading = false; 
         state.drivers = state.drivers.map((driver) =>
           driver.id === action.payload.id ? action.payload : driver
-        ); // Update the driver in the list (or modify this as per your state structure)
+        )
       })
       .addCase(UpdateDrivers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
 
-    // .addCase(Deletecars.pending, (state) => {
-    //     state.loading = true;
-    //     state.error = null;
-    //   })
-    //   .addCase(Deletecars.fulfilled, (state, action) => {
-    //     state.loading = false;
-
-
-    //     console.log("action.payload", action.payload);
-    //     state.error = null;
-    //   })
-    //   .addCase(Deletecars.rejected, (state, action) => {
-    //     state.loading = false;
-    //     state.error = action.payload as string;
-    //   }) 
-
+    
 
 
 

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/radio-group";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { toast } from "sonner";
-import { Car, Upload, Loader } from "lucide-react";
+import { Car, Upload, Loader, X, Loader2 } from "lucide-react";
 // import { Car, cars } from "@/data/mockData";
 import { Cars } from "@/types/fleet";
 import { useDispatch } from "react-redux";
@@ -75,7 +75,7 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
   const vehicle = useAppSelector((state) => state.fleet.cars)
   const driver = useAppSelector((state) => state.driver.drivers)
   const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Load cars when component mounts
   useEffect(() => {
@@ -191,6 +191,21 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
     reader.readAsDataURL(file);
   };
 
+  const handleRemovePhoto = () => {
+    setPhotoPreview(null);
+
+    const input = document.getElementById("photo-upload") as HTMLInputElement | null;
+    if (input) input.value = "";
+
+    form.setValue("photo", null, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+
+    console.log("Removed photo, form value:", form.getValues("photo"));
+  };
+
+
   const onSubmit = async (values: FormValues) => {
     console.log("Form values:", values);
 
@@ -199,7 +214,7 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
       toast.error("Phone number and License number are required.");
       return;
     }
-
+    setIsLoading(true);
     const formData = new FormData();
     formData.append("data", JSON.stringify(values));
 
@@ -227,13 +242,16 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
       console.error("Create Driver Error:", error);
 
       let errorMessage = "Failed to create driver";
-      if (typeof error === "object" && error && "error" in error) {
-        errorMessage = (error as any).error;
-      } else if (typeof error === "string") {
-        errorMessage = error;
+      if ('error' in error && typeof (error as { error: unknown }).error === "string") {
+        errorMessage = (error as { error: string }).error;
+      } else if ('message' in error && typeof (error as { message: unknown }).message === "string") {
+        errorMessage = (error as { message: string }).message;
       }
 
+
       toast.error(errorMessage);
+    } finally {
+      setIsLoading(false)
     }
   };
 
@@ -241,22 +259,38 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
         <div className="flex justify-center mb-6">
-          <div className="space-y-2 flex flex-col items-center">
-            <Avatar className="w-32 h-32 border-2 border-gray-200">
-              {photoPreview ? (
-                <AvatarImage src={photoPreview} alt="Driver photo preview" />
-              ) : (
-                <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
-                  <Upload className="w-12 h-12" />
-                </AvatarFallback>
+
+
+          <div className="relative space-y-2 flex flex-col items-center">
+            <div className="relative">
+              <Avatar className="w-32 h-32 border-2 border-gray-200">
+                {photoPreview ? (
+                  <AvatarImage src={photoPreview} alt="Driver photo preview" />
+                ) : (
+                  <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
+                    <Upload className="w-12 h-12" />
+                  </AvatarFallback>
+                )}
+              </Avatar>
+
+              {photoPreview && (
+                <button
+                  type="button"
+                  className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
+                  onClick={handleRemovePhoto}
+                >
+                  <X className="w-4 h-4 text-black-500" />
+                </button>
               )}
-            </Avatar>
+            </div>
+
             <label
               htmlFor="photo-upload"
               className="cursor-pointer text-taxi-blue hover:text-taxi-teal text-sm underline"
             >
               Upload Photo
             </label>
+
             <input
               id="photo-upload"
               type="file"
@@ -265,6 +299,7 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
               onChange={handlePhotoChange}
             />
           </div>
+
         </div>
 
         <FormField
@@ -411,12 +446,18 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
         <div className="flex justify-end space-x-2 pt-4">
           <Button
             type="submit"
-            className={`flex items-center ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-taxi-teal hover:bg-taxi-teal/90'}`}
-            disabled={loading}
+            className={`flex items-center gap-2
+                ${isLoading
+                ? 'bg-gray-400 cursor-not-allowed opacity-75'
+                : 'bg-taxi-teal hover:bg-taxi-teal/90'
+              }
+           transition-all duration-200`}
+            disabled={isLoading}
           >
-            {loading ? (
+            {isLoading ? (
               <>
-                <Loader className="w-4 h-4 mr-2 animate-spin" /> Saving...
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Saving...</span>
               </>
             ) : (
               'Save Driver'
