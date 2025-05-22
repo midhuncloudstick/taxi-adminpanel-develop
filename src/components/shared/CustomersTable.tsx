@@ -1,15 +1,27 @@
 
-import React from "react";
-import { Customer } from "@/data/mockData";
+import React, { useEffect } from "react";
+// import { Customer } from "@/data/mockData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { listCustomerUsers } from "@/redux/Slice/customerSlice";
+import {Customer } from '@/types/customer'
 
 interface CustomersTableProps {
   customers: Customer[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  selectedId: any | null;
+  onSelect: (id: number) => void;
 }
 
 export function CustomersTable({ customers, selectedId, onSelect }: CustomersTableProps) {
+
+
+  const dispatch = useDispatch<AppDispatch>()
+
+useEffect(()=>{
+  dispatch(listCustomerUsers())
+},[dispatch])
+
   return (
     <div className="overflow-auto rounded-lg shadow bg-white">
       <Table>
@@ -28,7 +40,7 @@ export function CustomersTable({ customers, selectedId, onSelect }: CustomersTab
               onClick={() => onSelect(c.id)}
               className={`cursor-pointer ${selectedId === c.id ? "bg-blue-50" : ""}`}
             >
-              <TableCell>{c.name}</TableCell>
+              <TableCell>{c.username}</TableCell>
               <TableCell>{c.email}</TableCell>
               <TableCell>{c.phone}</TableCell>
             </TableRow>

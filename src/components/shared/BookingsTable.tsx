@@ -8,6 +8,7 @@ import { Button } from "../ui/button";
 import { BookingStatusDropdown } from "./BookingStatusDropdown";
 import { ChatDialog } from "./ChatDialog";
 import { Drivers } from "@/types/driver";
+import { } from "@/types/booking"
 
 interface BookingsTableProps {
   bookings: Booking[];

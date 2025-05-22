@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Car } from "@/data/mockData";
-import { Car as CarIcon } from "lucide-react";
+import { Car as CarIcon, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Cars } from "@/types/fleet";
@@ -32,7 +32,7 @@ export function EditCarForm({ car, IsOpen, onClose, onSave }: EditCarFormProps) 
   // const { carId } = useParams<{ carId: string }>();
   const vehicle = useAppSelector((state) => state.fleet.cars)
   const dispatch = useDispatch<AppDispatch>()
-
+  const [features, setFeatures] = useState<string[]>([""]); 
 
 useEffect(() => {
   if (car && IsOpen) {
@@ -40,8 +40,18 @@ useEffect(() => {
       ...prev,
       ...car,
     }));
+
+    // 🟢 Parse car.features string into an array for inputs
+    const parsedFeatures =
+      typeof car.features === "string"
+        ? car.features.split(",").map((f) => f.trim()).filter(Boolean)
+        : [];
+
+    // 🟢 Always leave one empty string for adding new features
+    setFeatures(parsedFeatures.length ? [...parsedFeatures, ""] : [""]);
   }
 }, [car, IsOpen]);
+
 
 
 
@@ -56,6 +66,7 @@ useEffect(() => {
     status: "available",
     pricePerKm: 0,
     fixedCost: 0,
+    features:"",
     description: "",
     small_bags: 0,
     large_bags: 0,
@@ -65,6 +76,22 @@ useEffect(() => {
 
   // Set form data when car changes
 
+  const handleFeatureChange = (index: number, value: string) => {
+    const newFeatures = [...features];
+    newFeatures[index] = value;
+    setFeatures(newFeatures);
+
+    // Add new empty field if current field is filled and it's the last one
+    if (value && index === features.length - 1 && features.length < 6) {
+      setFeatures([...newFeatures, ""]);
+    }
+  };
+
+  const handleRemoveFeature = (index: number) => {
+    if (features.length > 1) {
+      setFeatures(features.filter((_, i) => i !== index));
+    }
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -110,6 +137,7 @@ useEffect(() => {
         fixedCost: 0,
         description: "",
         small_bags: 0,
+        features:"",
         large_bags: 0,
         add_trailer: false,
         created_at: new Date().toISOString(),
@@ -233,12 +261,32 @@ useEffect(() => {
             />
           </div>
 
-           {/* <div className="grid gap-2">
-            <label className="text-sm font-medium">Date</label>
-            <Input
-              type="date"
-            />
-          </div> */}
+           <div className="grid gap-2">
+            <Label>Features (Max 6)</Label>
+            {features.map((feature, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <Input
+                  id={`feature-${index}`}
+                  name={`feature-${index}`}
+                  value={feature}
+                  onChange={(e) => handleFeatureChange(index, e.target.value)}
+                  placeholder={`Feature ${index + 1}`}
+                />
+                {features.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFeature(index)}
+                    className="text-red-500 hover:text-black-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+            {features.length >= 6 && (
+              <p className="text-sm text-muted-foreground">Maximum 6 features reached</p>
+            )}
+          </div>
 
           <div className="grid gap-2">
             <Label htmlFor="status">Status</Label>

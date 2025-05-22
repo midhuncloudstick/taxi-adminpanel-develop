@@ -4,6 +4,7 @@ export interface Cars {
   id:string;
   model: string;
   description: string;
+  features:string;
   plate: string;
   type: "sedan" | "suv" | "luxury";
   capacity: number;

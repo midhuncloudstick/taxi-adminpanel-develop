@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Car } from "@/data/mockData";
-import { Car as CarIcon, Plus } from "lucide-react";
+import { Car as CarIcon, Plus, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Cars } from "@/types/fleet";
@@ -14,19 +13,20 @@ import { AppDispatch } from "@/redux/store";
 import { Textarea } from "../ui/textarea";
 
 interface AddCarFormProps {
-  onAddCar: (car: Omit<Car, "id">) => void;
+  onAddCar: (car: Omit<Cars, "id">) => void;
 }
 
 export function AddCarForm({ onAddCar }: AddCarFormProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const dispatch = useDispatch<AppDispatch>()
+  const dispatch = useDispatch<AppDispatch>();
+  const [features, setFeatures] = useState<string[]>([""]); 
   const [CarForm, setCarForm] = useState<Cars>({
-
     id: "",
     model: "",
     plate: "",
     type: "sedan",
     capacity: 4,
+    features: "",
     status: "available",
     pricePerKm: 0,
     fixedCost: 0,
@@ -36,6 +36,23 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
     add_trailer: false,
     created_at: new Date().toISOString(),
   });
+
+  const handleFeatureChange = (index: number, value: string) => {
+    const newFeatures = [...features];
+    newFeatures[index] = value;
+    setFeatures(newFeatures);
+
+    // Add new empty field if current field is filled and it's the last one
+    if (value && index === features.length - 1 && features.length < 6) {
+      setFeatures([...newFeatures, ""]);
+    }
+  };
+
+  const handleRemoveFeature = (index: number) => {
+    if (features.length > 1) {
+      setFeatures(features.filter((_, i) => i !== index));
+    }
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -51,31 +68,34 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
     }
   };
 
-
-
-
-  
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Filter out empty features and join with comma
+    const formattedFeatures = features.filter(f => f.trim() !== "").join(", ");
     const formData = new FormData();
-    formData.append("data", JSON.stringify(CarForm));
+    formData.append("data", JSON.stringify({
+      ...CarForm,
+      features: formattedFeatures
+    }));
 
     try {
-      console.log("carsss", CarForm)
       await dispatch(CreateCars({ data: formData })).unwrap();
-      await dispatch(getCars())
+      await dispatch(getCars());
       toast.success("Car created successfully");
 
-      onAddCar(CarForm);
-      toast.success("New car added to fleet successfully");
+      onAddCar({
+        ...CarForm,
+        features: formattedFeatures
+      });
 
+      // Reset form
       setCarForm({
         id: "",
         model: "",
         plate: "",
         type: "sedan",
+        features: "",
         capacity: 4,
         status: "available",
         pricePerKm: 0,
@@ -86,18 +106,16 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
         add_trailer: false,
         created_at: new Date().toISOString(),
       });
-
+      setFeatures([""]);
       setIsOpen(false);
     } catch (error) {
       console.error("Create Car Error:", error);
-
       let errorMessage = "Failed to create Car";
       if (typeof error === "object" && error && "error" in error) {
         errorMessage = (error as any).error;
       } else if (typeof error === "string") {
         errorMessage = error;
       }
-
       toast.error(errorMessage);
     }
   };
@@ -211,12 +229,33 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
             />
           </div>
 
-          {/* <div className="grid gap-2">
-            <label className="text-sm font-medium">Date</label>
-            <Input
-              type="date"
-            />
-          </div> */}
+          <div className="grid gap-2">
+            <Label>Features (Max 6)</Label>
+            {features.map((feature, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <Input
+                  id={`feature-${index}`}
+                  name={`feature-${index}`}
+                  value={feature}
+                  onChange={(e) => handleFeatureChange(index, e.target.value)}
+                  placeholder={`Feature ${index + 1}`}
+                />
+                {features.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFeature(index)}
+                    className="text-black-500 hover:text-black-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+            {features.length >= 6 && (
+              <p className="text-sm text-muted-foreground">Maximum 6 features reached</p>
+            )}
+          </div>
+
           <div className="grid gap-2">
             <Label htmlFor="status">Status</Label>
             <Select
