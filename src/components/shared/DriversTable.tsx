@@ -84,7 +84,7 @@ dispatch(getDrivers())
               <TableCell>
                 <Avatar className="h-10 w-10">
                   {d.photo ? (
-                    <AvatarImage src={d.photo} alt={d.name} />
+                    <AvatarImage src={`http://139.84.156.137:8080${d.photo}`} alt={d.name} />
                   ) : (
                     <AvatarFallback className="bg-taxi-blue text-white">
                       <User size={16} />

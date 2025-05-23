@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Car as CarIcon, Plus, X } from "lucide-react";
+import { Car as CarIcon, Plus, Upload, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Cars } from "@/types/fleet";
@@ -11,6 +11,7 @@ import { CreateCars, getCars } from "@/redux/Slice/fleetSlice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { Textarea } from "../ui/textarea";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface AddCarFormProps {
   onAddCar: (car: Omit<Cars, "id">) => void;
@@ -19,9 +20,15 @@ interface AddCarFormProps {
 export function AddCarForm({ onAddCar }: AddCarFormProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-  const [features, setFeatures] = useState<string[]>([""]); 
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [images, setImages] = useState<string[]>([]); // Store image previews (base64)
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+
   const [CarForm, setCarForm] = useState<Cars>({
+
     id: "",
+    car_images: "",
     model: "",
     plate: "",
     type: "sedan",
@@ -37,42 +44,74 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
     created_at: new Date().toISOString(),
   });
 
-  const handleFeatureChange = (index: number, value: string) => {
-    const newFeatures = [...features];
-    newFeatures[index] = value;
-    setFeatures(newFeatures);
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
 
-    // Add new empty field if current field is filled and it's the last one
-    if (value && index === features.length - 1 && features.length < 6) {
-      setFeatures([...newFeatures, ""]);
-    }
+    const newImageFiles = Array.from(files);
+    const newImages = newImageFiles.map((file) => URL.createObjectURL(file));
+
+    // Add the new images to the current ones
+    setImages((prevImages) => [...prevImages, ...newImages]);
+    setImageFiles((prevFiles) => [...prevFiles, ...newImageFiles]);
   };
 
-  const handleRemoveFeature = (index: number) => {
-    if (features.length > 1) {
-      setFeatures(features.filter((_, i) => i !== index));
-    }
+
+  // Remove a specific image by index
+  const handleRemoveImage = (index: number) => {
+    setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+    setImageFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+  };
+
+  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setPhotoFile(file);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setPhotoPreview(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoPreview(null);
+    setPhotoFile(null);
+
+    const input = document.getElementById("photo-upload") as HTMLInputElement | null;
+    if (input) input.value = "";
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
 
-    if (name === "capacity") {
-      setCarForm({ ...CarForm, [name]: parseInt(value) });
-    } else if (name === "pricePerKm" || name === "fixedCost") {
-      setCarForm({ ...CarForm, [name]: parseFloat(value) });
-    } else {
-      setCarForm({ ...CarForm, [name]: value });
-    }
+    setCarForm((prevForm) => ({
+      ...prevForm,
+      [name]:
+        name === "capacity" ||
+          name === "small_bags" ||
+          name === "large_bags"
+          ? parseInt(value)
+          : name === "pricePerKm" || name === "fixedCost"
+            ? parseFloat(value)
+            : name === "add_trailer"
+              ? value === "yes" // Convert string to boolean for trailer
+              : value,
+    }));
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Filter out empty features and join with comma
-    const formattedFeatures = features.filter(f => f.trim() !== "").join(", ");
+    const formattedFeatures = images.filter(f => f.trim() !== "").join(", ");
     const formData = new FormData();
     formData.append("data", JSON.stringify({
       ...CarForm,
@@ -93,6 +132,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
       setCarForm({
         id: "",
         model: "",
+        car_images: "",
         plate: "",
         type: "sedan",
         features: "",
@@ -106,7 +146,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
         add_trailer: false,
         created_at: new Date().toISOString(),
       });
-      setFeatures([""]);
+      setImages([""]);
       setIsOpen(false);
     } catch (error) {
       console.error("Create Car Error:", error);
@@ -127,7 +167,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
           <Plus className="mr-2 h-4 w-4" /> Add New Car
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[500px] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CarIcon className="h-5 w-5" />
@@ -135,6 +175,45 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+
+          <div className="relative space-y-2 flex flex-col items-center">
+            <div className="relative">
+              <Avatar className="w-32 h-32 border-2 border-gray-200">
+                {photoPreview ? (
+                  <AvatarImage src={photoPreview} alt="Driver photo preview" />
+                ) : (
+                  <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
+                    <Upload className="w-12 h-12" />
+                  </AvatarFallback>
+                )}
+              </Avatar>
+
+              {photoPreview && (
+                <button
+                  type="button"
+                  className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
+                  onClick={handleRemovePhoto}
+                >
+                  <X className="w-4 h-4 text-black-500" />
+                </button>
+              )}
+            </div>
+
+            <label
+              htmlFor="photo-upload"
+              className="cursor-pointer text-taxi-blue hover:text-taxi-teal text-sm underline"
+            >
+              Upload Photo
+            </label>
+
+            <input
+              id="photo-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoChange}
+            />
+          </div>
           <div className="grid gap-2">
             <Label htmlFor="model">Car Model</Label>
             <Input
@@ -221,6 +300,46 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
           </div>
 
           <div className="grid gap-2">
+            <Label htmlFor="small_bags">Small Luggage</Label>
+            <Input
+              id="small_bags"
+              name="small_bags"
+              type="number"
+              value={CarForm.small_bags || 0}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="large_bags">Large Luggage</Label>
+            <Input
+              id="large_bags"
+              name="large_bags"
+              type="number"
+              value={CarForm.large_bags || 0}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+
+          <Label htmlFor="add_trailer">Trailer</Label>
+          <Select
+            value={CarForm.add_trailer ? "yes" : "no"} // Convert boolean to string for select value
+            onValueChange={(value: "yes" | "no") => {
+              setCarForm({ ...CarForm, add_trailer: value === "yes" }); // Convert string back to boolean
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select trailer option" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="no">No</SelectItem>
+              <SelectItem value="yes">Yes</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <div className="grid gap-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               name="description"
@@ -230,20 +349,22 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
           </div>
 
           <div className="grid gap-2">
-            <Label>Features (Max 6)</Label>
-            {features.map((feature, index) => (
+            <Label>Images </Label>
+            {images.map((feature, index) => (
               <div key={index} className="flex gap-2 items-center">
-                <Input
-                  id={`feature-${index}`}
-                  name={`feature-${index}`}
-                  value={feature}
-                  onChange={(e) => handleFeatureChange(index, e.target.value)}
-                  placeholder={`Feature ${index + 1}`}
+                <Label>Images</Label>
+                <input
+                  type="file"
+                  id="photo-upload"
+                  accept="image/*"
+                  multiple
+                  onChange={handleImageChange} // Just call the function to handle all selected files
                 />
-                {features.length > 1 && (
+
+                {images.length > 1 && (
                   <button
                     type="button"
-                    onClick={() => handleRemoveFeature(index)}
+                    onClick={() => handleRemoveImage(index)}
                     className="text-black-500 hover:text-black-700"
                   >
                     <X className="h-4 w-4" />
@@ -251,7 +372,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
                 )}
               </div>
             ))}
-            {features.length >= 6 && (
+            {images.length >= 6 && (
               <p className="text-sm text-muted-foreground">Maximum 6 features reached</p>
             )}
           </div>
@@ -281,5 +402,6 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
         </form>
       </DialogContent>
     </Dialog>
+
   );
 }

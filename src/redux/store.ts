@@ -5,6 +5,7 @@ import storage from "redux-persist/lib/storage";
 import fleetReducer from "./Slice/fleetSlice";
 import driverReducer from "./Slice/driverSlice"
 import customerReducer from './Slice/customerSlice'
+import bookingReducer from './Slice/bookingSlice'
 import { drivers } from "@/data/mockData";
 
 // Combine all reducers
@@ -12,6 +13,7 @@ const rootReducer = combineReducers({
   fleet: fleetReducer,
   driver: driverReducer,
   customer:customerReducer,
+  booking:bookingReducer,
   // Add other slices here like `user: userReducer`
 });
 

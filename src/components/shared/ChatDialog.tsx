@@ -1,13 +1,12 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MessageCircle, Send } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { bookingInChat } from "@/redux/Slice/bookingSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch } from "@/redux/store";
 
 interface ChatDialogProps {
   bookingId: string;
@@ -27,55 +26,37 @@ export function ChatDialog({ bookingId, customerId, driverId }: ChatDialogProps)
   const [isOpen, setIsOpen] = useState(false);
   const [recipient, setRecipient] = useState<"customer" | "driver" | "both">("both");
   const [messageContent, setMessageContent] = useState('');
-  const [messages, setMessages] = useState<Message[]>([
-    // {
-    //   id: '1',
-    //   sender: "customer", 
-    //   recipient: "both",
-    //   content: "Hi, I'm at the airport. Where should I meet you?",
-    //   timestamp: new Date(Date.now() - 1000 * 60 * 60)
-    // },
-    {
-      id: '2',
-      sender: "driver",
-      recipient: "both",
-      content: "I'm on my way, will be there in 10 minutes. Please wait at the pickup zone B.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 40)
-    },
-    {
-      id: '3',
-      sender: "admin",
-      recipient: "customer",
-      content: "Your driver is on the way. Please wait at pickup zone B.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 38)
-    },
-    {
-      id: '4',
-      sender: "admin",
-      recipient: "driver",
-      content: "Please make sure to help the customer with their luggage.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 35)
-    }
-  ]);
+  
+  const messages = useSelector((state: any) => state.booking.messages);
+  const dispatch = useDispatch<AppDispatch>();
 
-  const handleSendMessage = () => {
-    if (!messageContent.trim()) return;
-    
+  const handleSendMessage = async () => {
+    if (!messageContent.trim()) return; 
+
     const newMessage: Message = {
       id: Date.now().toString(),
-      sender: "admin",
+      sender: "admin", 
       recipient: recipient,
       content: messageContent,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-    
-    setMessages([...messages, newMessage]);
-    setMessageContent('');
+
+    try {
+      await dispatch(bookingInChat({ message: messageContent ,bookingId})).unwrap(); 
+
+      setMessageContent(''); 
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
+
+  useEffect(() => {
+   
+  }, [bookingId, dispatch]);
 
   return (
     <>
@@ -87,53 +68,22 @@ export function ChatDialog({ bookingId, customerId, driverId }: ChatDialogProps)
       >
         <MessageCircle size={16} />
       </Button>
-      
+
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[500px] h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Booking Chat - {bookingId}</DialogTitle>
           </DialogHeader>
-          
-          <div className="mb-4">
-            <Label htmlFor="recipient">Send message to Customer</Label>
-            {/* <Select 
-              value={recipient} 
-              onValueChange={(value: "customer" | "driver" | "both") => setRecipient(value)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select recipient" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="customer">Customer</SelectItem>
-                <SelectItem value="driver">Driver</SelectItem>
-                <SelectItem value="both">Both</SelectItem>
-              </SelectContent>
-            </Select> */}
-          </div>
-          
+
           <ScrollArea className="flex-1 pr-4">
             <div className="space-y-4">
-              {messages.map((message) => (
+              {messages?.map((message: Message) => (
                 <div 
                   key={message.id}
-                  className={`p-3 bg-taxi-blue text-white rounded-lg max-w-[80%] ${
-                    message.sender === "admin" 
-
-                      
-                   
-                   
-                  }`}
+                  className={`p-3 rounded-lg max-w-[80%] ${message.sender === "admin" ? 'bg-green-500' : 'bg-blue-500'}`}
                 >
                   <div className="text-xs mb-1">
-                    {/* {message.sender ==   "You" 
-                      }  */}
-                    {message.sender === "admin" && 
-                      <span className="text-xs opacity-80">
-                        {" → "}
-                        {/* { 
-                           message.recipient ==   "Customer"} */}
-                      </span>
-                    }
+                    {message.sender === "admin" && <span className="text-xs opacity-80">{" → "}</span>}
                   </div>
                   <p>{message.content}</p>
                   <div className="text-xs mt-1 opacity-75 text-right">
@@ -143,7 +93,7 @@ export function ChatDialog({ bookingId, customerId, driverId }: ChatDialogProps)
               ))}
             </div>
           </ScrollArea>
-          
+
           <div className="mt-4 flex gap-2">
             <Textarea
               placeholder="Type your message here..."

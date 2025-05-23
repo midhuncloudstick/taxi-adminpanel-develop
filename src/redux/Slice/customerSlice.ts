@@ -57,26 +57,17 @@ export const listCustomerUsers = createAsyncThunk(
 );
 
 export const listBookingBycustomerId = createAsyncThunk(
-  "customers/customerId",
-  async (
-  _,
-  ) => {
-    
+  'booking/listByCustomerId',
+  async (userId: string, { rejectWithValue }) => {
     try {
-    //   const userId = localStorage.getItem("userid");
-    const url = "/api/v1/user/booking/1";
-
-      const response = await api.getEvents(url);
-      const customerbyidData = response.data;
-      return customerbyidData;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return error|| "car details fetching failed";
-      }
-      return "An unexpected error occurred.";
+      const response = await api.getEvents(`/api/v1/bookings/customer/${userId}`);
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || 'Something went wrong');
     }
   }
 );
+
 
 
 

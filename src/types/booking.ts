@@ -15,7 +15,7 @@ export interface Booking {
   carId: string;
   plate_number: string;
   car_type: string;
-  driverId: number | null;
+  driverId: any | null;
   driver_name: string;
   driver_phone: string;
   userId: number;
@@ -25,6 +25,7 @@ export interface Booking {
   user_phonenumber: string;
   user_address: string;
   specialRequest: string;
+   customerId: string;
   created_at: string;
 
   car: {
@@ -51,7 +52,7 @@ export interface Booking {
     phone: string;
     licenceNumber: string;
     carId: string | null;
-    car: any; // replace with a proper Car type if needed
+    car: any; 
     status: string;
     completedTrips: number | null;
     rating: number;
@@ -73,4 +74,14 @@ export interface Booking {
     address: string;
     created_at: string;
   };
+}
+
+
+export interface chats{
+  id: number;
+  booking_id: string;
+  customer_email: string;
+  message: string;
+  sent_status: "sent" | "pending" | "failed"; // Use an enum or literal types to constrain possible values
+  time: string; // ISO
 }

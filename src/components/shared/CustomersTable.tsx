@@ -10,7 +10,7 @@ import {Customer } from '@/types/customer'
 interface CustomersTableProps {
   customers: Customer[];
   selectedId: any | null;
-  onSelect: (id: number) => void;
+  onSelect: (id: any) => void;
 }
 
 export function CustomersTable({ customers, selectedId, onSelect }: CustomersTableProps) {
@@ -33,7 +33,7 @@ useEffect(()=>{
           </TableRow>
         </TableHeader>
         <TableBody>
-          {customers.map((c) => (
+          {customers?.map((c) => (
             <TableRow
               key={c.id}
               data-selected={selectedId === c.id}

@@ -69,13 +69,15 @@ interface AddDriverFormProps {
 }
 
 export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+ 
   const [availableCars, setAvailableCars] = useState<Cars[]>([]);
   const dispatch = useDispatch<AppDispatch>()
   const vehicle = useAppSelector((state) => state.fleet.cars)
   const driver = useAppSelector((state) => state.driver.drivers)
   const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+const [photoFile, setPhotoFile] = useState<File | null>(null); 
 
   // Load cars when component mounts
   useEffect(() => {
@@ -176,84 +178,88 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
       type: "internal",
     },
   });
+const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
 
-  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  setPhotoFile(file); // store actual file
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setPhotoPreview(reader.result);
-        form.setValue("photo", reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
+  const reader = new FileReader();
+  reader.onload = () => {
+    if (typeof reader.result === "string") {
+      setPhotoPreview(reader.result); // preview only
+    }
   };
+  reader.readAsDataURL(file); // still needed for preview
+};
 
-  const handleRemovePhoto = () => {
-    setPhotoPreview(null);
 
-    const input = document.getElementById("photo-upload") as HTMLInputElement | null;
-    if (input) input.value = "";
+const handleRemovePhoto = () => {
+  setPhotoPreview(null);
+  setPhotoFile(null); // clear the file
 
-    form.setValue("photo", null, {
-      shouldValidate: true,
-      shouldDirty: true,
+  const input = document.getElementById("photo-upload") as HTMLInputElement | null;
+  if (input) input.value = "";
+
+  form.setValue("photo", "", {
+    shouldValidate: true,
+    shouldDirty: true,
+  });
+};
+
+
+
+const onSubmit = async (values: FormValues) => {
+  if (!values.phone || !values.licenceNumber) {
+    toast.error("Phone number and License number are required.");
+    return;
+  }
+
+  setIsLoading(true);
+
+  const formData = new FormData();
+  formData.append("data", JSON.stringify(values));
+
+  if (photoFile) {
+    formData.append("photo", photoFile); // append actual file here
+  }
+
+  try {
+    await dispatch(CreateDrivers({ data: formData })).unwrap();
+    await dispatch(getDrivers());
+
+    toast.success("Driver added successfully");
+    onSuccess();
+
+    form.reset({
+      name: "",
+      email: "",
+      phone: "",
+      licenceNumber: "",
+      carId: "",
+      status: "active",
+      photo: "",
+      type: "internal",
     });
 
-    console.log("Removed photo, form value:", form.getValues("photo"));
-  };
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setIsAddDriverOpen(false);
+  } catch (error) {
+    console.error("Create Driver Error:", error);
 
-
-  const onSubmit = async (values: FormValues) => {
-    console.log("Form values:", values);
-
-
-    if (!values.phone || !values.licenceNumber) {
-      toast.error("Phone number and License number are required.");
-      return;
+    let errorMessage = "Failed to create driver";
+    if ('error' in error && typeof (error as { error: unknown }).error === "string") {
+      errorMessage = (error as { error: string }).error;
+    } else if ('message' in error && typeof (error as { message: unknown }).message === "string") {
+      errorMessage = (error as { message: string }).message;
     }
-    setIsLoading(true);
-    const formData = new FormData();
-    formData.append("data", JSON.stringify(values));
 
-    try {
-
-      await dispatch(CreateDrivers({ data: formData })).unwrap();
-      await dispatch(getDrivers());
-
-      toast.success("Driver added successfully");
-      onSuccess();
-
-      form.reset({
-        name: "",
-        email: "",
-        phone: "",
-        licenceNumber: "",
-        carId: "",
-        status: "active",
-        photo: "",
-        type: "internal",
-      });
-
-      setIsAddDriverOpen(false);
-    } catch (error) {
-      console.error("Create Driver Error:", error);
-
-      let errorMessage = "Failed to create driver";
-      if ('error' in error && typeof (error as { error: unknown }).error === "string") {
-        errorMessage = (error as { error: string }).error;
-      } else if ('message' in error && typeof (error as { message: unknown }).message === "string") {
-        errorMessage = (error as { message: string }).message;
-      }
-
-
-      toast.error(errorMessage);
-    } finally {
-      setIsLoading(false)
-    }
-  };
+    toast.error(errorMessage);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <Form {...form}>

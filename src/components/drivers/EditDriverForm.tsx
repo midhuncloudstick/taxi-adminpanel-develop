@@ -85,6 +85,8 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
     const [availableCars, setAvailableCars] = useState<Cars[]>([]);
     const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false)
+    const [photoFile, setPhotoFile] = useState<File | null>(null); 
+    
 
 
     useEffect(() => {
@@ -128,24 +130,34 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
         }
     }, [driver, IsOpen, form]);
 
-    const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (!file) return;
+const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = () => {
-            if (typeof reader.result === "string") {
-                setPhotoPreview(reader.result);
-                form.setValue("photo", reader.result);
-            }
-        };
-        reader.readAsDataURL(file);
-    };
-    const handleRemovePhoto = () => {
-        setPhotoPreview(null);
-        const input = document.getElementById("photo-upload") as HTMLInputElement | null;
-        if (input) input.value = "";
-    };
+  setPhotoFile(file); // store actual file
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    if (typeof reader.result === "string") {
+      setPhotoPreview(reader.result); // preview only
+    }
+  };
+  reader.readAsDataURL(file); // still needed for preview
+};
+
+
+const handleRemovePhoto = () => {
+  setPhotoPreview(null);
+  setPhotoFile(null); // clear the file
+
+  const input = document.getElementById("photo-upload") as HTMLInputElement | null;
+  if (input) input.value = "";
+
+  form.setValue("photo", "", {
+    shouldValidate: true,
+    shouldDirty: true,
+  });
+};
 
 
 
@@ -185,7 +197,8 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
                 photo: "",
                 type: "internal",
             });
-
+            setPhotoFile(null);
+            setPhotoPreview(null);
             setIsAddDriverOpen(false);
         } catch (error: unknown) { // Type-safe error handling
             let errorMessage = "Failed to update driver";
@@ -211,7 +224,7 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
 
     return (
         <Dialog open={IsOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-3xl">
                 <DialogHeader>
                     <DialogTitle>Edit Driver</DialogTitle>
                     <DialogDescription>Update the driver's information below.</DialogDescription>

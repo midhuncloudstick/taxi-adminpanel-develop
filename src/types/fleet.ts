@@ -2,6 +2,7 @@
 
 export interface Cars {
   id:string;
+  car_images:"",
   model: string;
   description: string;
   features:string;

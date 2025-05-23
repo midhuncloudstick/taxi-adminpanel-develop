@@ -1,8 +1,11 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookingCard } from "./BookingCard";
 import { Booking, bookings } from "@/data/mockData";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { getBookinglist } from "@/redux/Slice/bookingSlice";
 
 export function BookingsList() {
   const [bookingsData, setBookingsData] = useState<Booking[]>(bookings);
@@ -12,6 +15,13 @@ export function BookingsList() {
   const upcomingBookings = bookingsData.filter(booking => booking.status === "upcoming");
   const completedBookings = bookingsData.filter(booking => booking.status === "completed");
   const cancelledBookings = bookingsData.filter(booking => booking.status === "cancelled");
+
+// const dispatch = useDispatch<AppDispatch>()
+
+// useEffect(()=>{
+//   dispatch(getBookinglist())
+// },[dispatch])
+
 
   const handleUpdateDriver = (bookingId: string, driverId: string) => {
     setBookingsData(prevBookings => 
