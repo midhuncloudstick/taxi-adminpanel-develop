@@ -15,6 +15,7 @@ import { bookingInChat, getBookinglist } from "@/redux/Slice/bookingSlice";
 import { useAppSelector } from "@/redux/hook";
 import { listCustomerUsers } from "@/redux/Slice/customerSlice";
 import { getDrivers } from "@/redux/Slice/driverSlice";
+import { Customer } from "@/types/customer";
 
 interface BookingsTableProps {
   bookings: Booking[];
@@ -56,9 +57,16 @@ export function BookingsTable({
     }));
   };
 
-
+  const [availableDrivers, setAvailableDrivers] = useState<Drivers[]>([]);
+  const [availableCustomers, setAvailableCustomers] = useState<Customer[]>([]);
   const bookinglist = useAppSelector((state) => state.booking.selectedBooking)
-  const driver = useAppSelector((state)=>state.driver.drivers)
+  const driver = useAppSelector((state) => state.driver.drivers)
+  const customer = useAppSelector((state) => state.customer.customers)
+
+  const customersFromStore = useAppSelector(state => state.customer.customers || []);
+  const driversFromStore = useAppSelector(state => state.driver.drivers || []);
+
+
   const dispatch = useDispatch<AppDispatch>()
 
   useEffect(() => {
@@ -67,17 +75,24 @@ export function BookingsTable({
 
 
 
-  // useEffect(()=>{
-  //   dispatch(listCustomerUsers())
-  // })
-
-
   useEffect(() => {
-    dispatch(getDrivers())
-  }, [dispatch])
+    dispatch(listCustomerUsers());
+  }, [dispatch]);
 
+  // Update local customers state when Redux state changes
+  useEffect(() => {
+    setAvailableCustomers(customersFromStore);
+  }, [customersFromStore]);
 
+  // Fetch drivers once on component mount
+  useEffect(() => {
+    dispatch(getDrivers());
+  }, [dispatch]);
 
+  // Update local drivers state when Redux state changes
+  useEffect(() => {
+    setAvailableDrivers(driversFromStore);
+  }, [driversFromStore]);
   const formatDate = (date: string) => {
     const formattedDate = new Date(date);
     return formattedDate.toLocaleDateString("en-US"); // Customize format if needed
@@ -131,10 +146,10 @@ export function BookingsTable({
               </TableCell>
             </TableRow>
           )} */}
-          {Array.isArray(bookings) &&
-            bookinglist.map((b) => {
-              const customer = getCustomerById(b.customerId);
-              const driver = getDriverById(b.driverId);
+          {Array.isArray(bookings) && bookinglist?.map((b) => {
+        const customer = getCustomerById(b.customerId);
+        const driver = getDriverById(b.driverId);
+
               return (
                 <React.Fragment key={b.id}>
                   <TableRow className={expandedRows[b.id] ? "border-b-0" : ""}>
@@ -158,36 +173,37 @@ export function BookingsTable({
                     <TableCell>{b.kilometers}</TableCell>
                     <TableCell>{b.pickupLocation}</TableCell>
                     <TableCell>{b.dropLocation}</TableCell>
-                    {showCustomer && (
-                      <TableCell>
-                        {customer ? `${customer.name} (${b.customerId})` : b.customerId}
-                      </TableCell>
-                    )}
-                    {showDriverSelect ? (
-                      <TableCell>
-                        <Select
-                          value={b.driver ? b.driver.id.toString() : ""}  // Ensure `b.driver.id` is a string
-                          onValueChange={val => onUpdateDriver && onUpdateDriver(b.id, val)}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Driver" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {drivers.map(d => (
-                              <SelectItem key={d.id} value={d.id.toString()}>
-                                {d.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
+                      {showCustomer && (
+                <TableCell>
+                  {customer ? `${customer.name} (${b.customerId})` : b.customerId}
+                </TableCell>
+              )}
+              {showDriverSelect ? (
+                <TableCell>
+                  <Select
+                    value={driver ? driver.id.toString() : ""}
+                    onValueChange={val => onUpdateDriver && onUpdateDriver(b.id, val)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Driver">
+                        {driver ? driver.name : ""}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableDrivers.map(d => (
+                        <SelectItem key={d.id} value={d.id.toString()}>
+                          {d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+              ) : showDriver ? (
+                <TableCell>
+                  {driver ? driver.name : "No Driver"}
+                </TableCell>
+              ) : null}
 
-                    ) : showDriver ? (
-                      <TableCell>
-                        {driver ? driver.name : b.driver ? b.driver.name : "No Driver"}
-                      </TableCell>
-
-                    ) : null}
                     <TableCell>
                       <BookingStatusDropdown
                         status={b.status as "pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled"}

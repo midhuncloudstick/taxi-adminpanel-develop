@@ -387,7 +387,7 @@ const [photoFile, setPhotoFile] = useState<File | null>(null);
               <button
                 type="button"
                 onClick={() => handleRemoveFeature(index)}
-                className="text-red-500 hover:text-black-700"
+                className="text-black-500 hover:text-black-700"
               >
                 <X className="h-4 w-4" />
               </button>

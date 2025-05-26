@@ -2,9 +2,20 @@
 import { PageContainer } from "@/components/layout/PageContainer";
 import { getCompletedBookings } from "@/data/mockData";
 import { BookingsTable } from "@/components/shared/BookingsTable";
+import { AppDispatch } from "@/redux/store";
+import { useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { histories } from "@/redux/Slice/historySlice";
 
 export default function History() {
   const completed = getCompletedBookings();
+  
+
+
+  const dispatch = useDispatch<AppDispatch>()
+ useEffect(()=>{
+  dispatch(histories())
+ },[dispatch])
 
   return (
     <PageContainer title="Booking History">

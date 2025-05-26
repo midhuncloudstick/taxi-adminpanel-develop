@@ -221,30 +221,30 @@ const onSubmit = async (values: FormValues) => {
   formData.append("data", JSON.stringify(values));
 
   if (photoFile) {
-    formData.append("photo", photoFile); // append actual file here
+    formData.append("photo", photoFile); 
   }
 
-  try {
-    await dispatch(CreateDrivers({ data: formData })).unwrap();
-    await dispatch(getDrivers());
+try {
+  await dispatch(CreateDrivers({ data: formData })).unwrap();
+  await dispatch(getDrivers()); 
 
-    toast.success("Driver added successfully");
-    onSuccess();
+  toast.success("Driver added successfully");
+  onSuccess();
 
-    form.reset({
-      name: "",
-      email: "",
-      phone: "",
-      licenceNumber: "",
-      carId: "",
-      status: "active",
-      photo: "",
-      type: "internal",
-    });
+  form.reset({
+    name: "",
+    email: "",
+    phone: "",
+    licenceNumber: "",
+    carId: "",
+    status: "active",
+    photo: "",
+    type: "internal",
+  });
 
-    setPhotoFile(null);
-    setPhotoPreview(null);
-    setIsAddDriverOpen(false);
+  setPhotoFile(null);
+  setPhotoPreview(null);
+  setIsAddDriverOpen(false);
   } catch (error) {
     console.error("Create Driver Error:", error);
 

@@ -101,6 +101,7 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead>ID</TableHead>
+            <TableHead>Images</TableHead>
             <TableHead>Model</TableHead>
             <TableHead>Plate Number</TableHead>
             <TableHead>Type</TableHead>
@@ -116,6 +117,7 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
             Vehicle.map((car) => (
               <TableRow key={car.id}>
                 <TableCell className="font-medium">{car.id}</TableCell>
+                <TableCell>{car.car_images}</TableCell>
                 <TableCell>{car.model}</TableCell>
                 <TableCell>{car.plate}</TableCell>
                 <TableCell>{getCarTypeBadge(car.type)}</TableCell>

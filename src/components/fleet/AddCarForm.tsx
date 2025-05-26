@@ -24,7 +24,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [images, setImages] = useState<string[]>([]); // Store image previews (base64)
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-
+  const [features, setFeatures] = useState<string[]>([""]);
   const [CarForm, setCarForm] = useState<Cars>({
 
     id: "",
@@ -106,59 +106,84 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
     }));
   };
 
+    const handleFeatureChange = (index: number, value: string) => {
+    const newFeatures = [...features];
+    newFeatures[index] = value;
+    setFeatures(newFeatures);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Filter out empty features and join with comma
-    const formattedFeatures = images.filter(f => f.trim() !== "").join(", ");
-    const formData = new FormData();
-    formData.append("data", JSON.stringify({
-      ...CarForm,
-      features: formattedFeatures
-    }));
-
-    try {
-      await dispatch(CreateCars({ data: formData })).unwrap();
-      await dispatch(getCars());
-      toast.success("Car created successfully");
-
-      onAddCar({
-        ...CarForm,
-        features: formattedFeatures
-      });
-
-      // Reset form
-      setCarForm({
-        id: "",
-        model: "",
-        car_images: "",
-        plate: "",
-        type: "sedan",
-        features: "",
-        capacity: 4,
-        status: "available",
-        pricePerKm: 0,
-        fixedCost: 0,
-        description: "",
-        small_bags: 0,
-        large_bags: 0,
-        add_trailer: false,
-        created_at: new Date().toISOString(),
-      });
-      setImages([""]);
-      setIsOpen(false);
-    } catch (error) {
-      console.error("Create Car Error:", error);
-      let errorMessage = "Failed to create Car";
-      if (typeof error === "object" && error && "error" in error) {
-        errorMessage = (error as any).error;
-      } else if (typeof error === "string") {
-        errorMessage = error;
-      }
-      toast.error(errorMessage);
+    // Add new empty field if current field is filled and it's the last one
+    if (value && index === features.length - 1 && features.length < 6) {
+      setFeatures([...newFeatures, ""]);
     }
   };
+
+  const handleRemoveFeature = (index: number) => {
+    if (features.length > 1) {
+      setFeatures(features.filter((_, i) => i !== index));
+    }
+  };
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  const formattedFeatures = images.filter(f => f.trim() !== "").join(", ");
+  const formData = new FormData();
+
+  // Append form fields as a single JSON blob
+  const formFields = {
+    ...CarForm,
+    features: formattedFeatures
+  };
+  formData.append("data", JSON.stringify(formFields));
+
+  // Append image files (important!)
+  imageFiles.forEach((file, index) => {
+    formData.append("car_images", file); // Use correct field name expected by backend
+  });
+
+  try {
+    await dispatch(CreateCars({ data: formData })).unwrap();
+    await dispatch(getCars());
+    toast.success("Car created successfully");
+
+    onAddCar({
+      ...CarForm,
+      features: formattedFeatures
+    });
+
+    // Reset state
+    setCarForm({
+      id: "",
+      model: "",
+      car_images: "",
+      plate: "",
+      type: "sedan",
+      features: "",
+      capacity: 4,
+      status: "available",
+      pricePerKm: 0,
+      fixedCost: 0,
+      description: "",
+      small_bags: 0,
+      large_bags: 0,
+      add_trailer: false,
+      created_at: new Date().toISOString(),
+    });
+    setImages([]);
+    setImageFiles([]);
+    setIsOpen(false);
+  } catch (error) {
+    console.error("Create Car Error:", error);
+    let errorMessage = "Failed to create Car";
+    if (typeof error === "object" && error && "error" in error) {
+      errorMessage = (error as any).error;
+    } else if (typeof error === "string") {
+      errorMessage = error;
+    }
+    toast.error(errorMessage);
+  }
+};
+
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -339,43 +364,34 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
             </SelectContent>
           </Select>
 
-          <div className="grid gap-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              name="description"
-              value={CarForm.description}
-              onChange={handleInputChange}
+               <div className="grid gap-2">
+        <Label>Features (Max 6)</Label>
+        {features.map((feature, index) => (
+          <div key={index} className="flex gap-2 items-center">
+            <Input
+              id={`feature-${index}`}
+              name={`feature-${index}`}
+              value={feature}
+              onChange={(e) => handleFeatureChange(index, e.target.value)}
+              placeholder={`Feature ${index + 1}`}
             />
-          </div>
-
-          <div className="grid gap-2">
-            <Label>Images </Label>
-            {images.map((feature, index) => (
-              <div key={index} className="flex gap-2 items-center">
-                <Label>Images</Label>
-                <input
-                  type="file"
-                  id="photo-upload"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageChange} // Just call the function to handle all selected files
-                />
-
-                {images.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="text-black-500 hover:text-black-700"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            ))}
-            {images.length >= 6 && (
-              <p className="text-sm text-muted-foreground">Maximum 6 features reached</p>
+            {features.length > 1 && (
+              <button
+                type="button"
+                onClick={() => handleRemoveFeature(index)}
+                className="text-black-500 hover:text-black-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
             )}
           </div>
+        ))}
+        {features.length >= 6 && (
+          <p className="text-sm text-muted-foreground">Maximum 6 features reached</p>
+        )}
+      </div>
+
+
 
           <div className="grid gap-2">
             <Label htmlFor="status">Status</Label>

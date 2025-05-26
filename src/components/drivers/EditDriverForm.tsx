@@ -126,9 +126,15 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
                 photo: driver.photo,
                 type: driver.type,
             });
-            setPhotoPreview(driver.photo || null);
-        }
-    }, [driver, IsOpen, form]);
+           setPhotoPreview(
+      driver.photo
+        ? driver.photo.startsWith("http")
+          ? driver.photo
+          : `http://139.84.156.137:8080/${driver.photo.replace(/^\/+/, '')}`
+        : null
+    );
+  }
+}, [driver, IsOpen, form]);
 
 const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
   const file = event.target.files?.[0];

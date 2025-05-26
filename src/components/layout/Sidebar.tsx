@@ -53,7 +53,7 @@ export function Sidebar() {
     { icon: Users, label: "Customers", to: "/customers" },
     { icon: Settings, label: "Drivers", to: "/drivers" },
     { icon: History, label: "History", to: "/history" },
-    { icon: Search, label: "Search", to: "/search" },
+    // { icon: Search, label: "Search", to: "/search" },
   ];
 
   return (
