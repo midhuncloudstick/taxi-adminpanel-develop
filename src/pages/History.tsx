@@ -6,12 +6,13 @@ import { AppDispatch } from "@/redux/store";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { histories } from "@/redux/Slice/historySlice";
+import { useAppSelector } from "@/redux/hook";
 
 export default function History() {
   const completed = getCompletedBookings();
   
 
-
+const listhistorties = useAppSelector((state) => state.history.history)
   const dispatch = useDispatch<AppDispatch>()
  useEffect(()=>{
   dispatch(histories())

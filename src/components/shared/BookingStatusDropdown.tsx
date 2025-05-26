@@ -3,6 +3,9 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { ArrowDown, Check, X, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { updateBookingStatus } from "@/redux/Slice/bookingSlice";
 
 interface BookingStatusDropdownProps {
   status: "pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled";
@@ -18,6 +21,8 @@ export function BookingStatusDropdown({
   onSetWaiting,
 }: BookingStatusDropdownProps) {
   const [open, setOpen] = useState(false);
+
+
 
   // Colors for each status
   function getStatusUI(s: string) {
@@ -36,6 +41,9 @@ export function BookingStatusDropdown({
         return "bg-gray-100 text-gray-900";
     }
   }
+
+   
+ 
 
   // Dropdown content for each relevant status
   let dropdownContent = null;

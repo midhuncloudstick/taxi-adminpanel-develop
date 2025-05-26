@@ -11,7 +11,7 @@ import { Drivers } from "@/types/driver";
 import { } from "@/types/booking"
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
-import { bookingInChat, getBookinglist } from "@/redux/Slice/bookingSlice";
+import { bookingInChat, getBookinglist, updateBookingStatus } from "@/redux/Slice/bookingSlice";
 import { useAppSelector } from "@/redux/hook";
 import { listCustomerUsers } from "@/redux/Slice/customerSlice";
 import { getDrivers } from "@/redux/Slice/driverSlice";
@@ -93,6 +93,7 @@ export function BookingsTable({
   useEffect(() => {
     setAvailableDrivers(driversFromStore);
   }, [driversFromStore]);
+
   const formatDate = (date: string) => {
     const formattedDate = new Date(date);
     return formattedDate.toLocaleDateString("en-US"); // Customize format if needed
@@ -108,6 +109,11 @@ export function BookingsTable({
     });
   };
 
+
+
+  const handleStatusChange = (bookingId: string, newStatus: string) => {
+  dispatch(updateBookingStatus({ status: newStatus, bookingId }));
+};
 
 
   // Function to handle sending chat
@@ -147,147 +153,150 @@ export function BookingsTable({
             </TableRow>
           )} */}
           {Array.isArray(bookings) && bookinglist?.map((b) => {
-        const customer = getCustomerById(b.customerId);
-        const driver = getDriverById(b.driverId);
+            const customer = getCustomerById(b.customerId);
+            const driver = getDriverById(b.driverId);
 
-              return (
-                <React.Fragment key={b.id}>
-                  <TableRow className={expandedRows[b.id] ? "border-b-0" : ""}>
-                    <TableCell className="p-2 text-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        onClick={() => toggleRow(b.id)}
+            return (
+              <React.Fragment key={b.id}>
+                <TableRow className={expandedRows[b.id] ? "border-b-0" : ""}>
+                  <TableCell className="p-2 text-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => toggleRow(b.id)}
+                    >
+                      {expandedRows[b.id] ? (
+                        <ChevronUp size={16} />
+                      ) : (
+                        <ChevronDown size={16} />
+                      )}
+                    </Button>
+                  </TableCell>
+                  <TableCell className="font-medium">{b.id}</TableCell>
+                  <TableCell>{formatDate(b.date)}</TableCell> {/* Formatted Date */}
+                  <TableCell>{formatTime(b.pickupTime)}</TableCell> {/* Formatted Time */}
+                  <TableCell>{b.kilometers}</TableCell>
+                  <TableCell>{b.pickupLocation}</TableCell>
+                  <TableCell>{b.dropLocation}</TableCell>
+                  {showCustomer && (
+                    <TableCell>
+                      {(() => {
+                        const bookingCustomer = availableCustomers.find(c => c.id?.toString() === b.customerId?.toString());
+                        return bookingCustomer
+                          ? `${bookingCustomer.username} (${b.customerId})`
+                          : b.customerId;
+                      })()}
+                    </TableCell>
+                  )}
+                  {showDriverSelect ? (
+                    <TableCell>
+                      <Select
+                        value={driver ? driver.id.toString() : ""}
+                        onValueChange={val => onUpdateDriver && onUpdateDriver(b.id, val)}
                       >
-                        {expandedRows[b.id] ? (
-                          <ChevronUp size={16} />
-                        ) : (
-                          <ChevronDown size={16} />
-                        )}
-                      </Button>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Driver" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableDrivers.map(d => (
+                            <SelectItem key={d.id} value={d.id.toString()}>
+                              {d.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
-                    <TableCell className="font-medium">{b.id}</TableCell>
-                    <TableCell>{formatDate(b.date)}</TableCell> {/* Formatted Date */}
-                    <TableCell>{formatTime(b.pickupTime)}</TableCell> {/* Formatted Time */}
-                    <TableCell>{b.kilometers}</TableCell>
-                    <TableCell>{b.pickupLocation}</TableCell>
-                    <TableCell>{b.dropLocation}</TableCell>
-                      {showCustomer && (
-                <TableCell>
-                  {customer ? `${customer.name} (${b.customerId})` : b.customerId}
-                </TableCell>
-              )}
-              {showDriverSelect ? (
-                <TableCell>
-                  <Select
-                    value={driver ? driver.id.toString() : ""}
-                    onValueChange={val => onUpdateDriver && onUpdateDriver(b.id, val)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Driver">
-                        {driver ? driver.name : ""}
-                      </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableDrivers.map(d => (
-                        <SelectItem key={d.id} value={d.id.toString()}>
-                          {d.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-              ) : showDriver ? (
-                <TableCell>
-                  {driver ? driver.name : "No Driver"}
-                </TableCell>
-              ) : null}
-
+                  ) : showDriver ? (
                     <TableCell>
-                      <BookingStatusDropdown
-                        status={b.status as "pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled"}
-                        onSetWaiting={
-                          onUpdateStatus && b.status === "pending"
-                            ? () => onUpdateStatus(b.id, "waiting for confirmation")
-                            : undefined
-                        }
-                        onApprove={
-                          onUpdateStatus && b.status === "waiting for confirmation"
-                            ? () => onUpdateStatus(b.id, "upcoming")
-                            : undefined
-                        }
-                        onCancel={
-                          onUpdateStatus
-                            ? () => onUpdateStatus(b.id, "cancelled")
-                            : undefined
-                        }
-                      />
+                      {driver ? driver.name : "No Driver"}
+                    </TableCell>
+                  ) : null}
 
-                    </TableCell>
-                    <TableCell>${b.amount.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <ChatDialog bookingId={b.id} />
-                    </TableCell>
-                  </TableRow>
-                  {expandedRows[b.id] && (
-                    <TableRow>
-                      <TableCell colSpan={12} className="bg-gray-50 p-0">
-                        <div className="p-4 space-y-4">
-                          <h4 className="font-medium text-lg">Booking Details</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <Calendar size={16} className="text-taxi-blue" />
-                                <span className="font-medium">Date:</span> {formatDate(b.date)}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Clock size={16} className="text-taxi-blue" />
-                                <span className="font-medium">Time:</span> {formatTime(b.pickupTime)}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <MapPin size={16} className="text-taxi-blue" />
-                                <span className="font-medium">Pickup:</span> {b.pickupLocation}
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <MapPin size={16} className="text-taxi-blue" />
-                                <span className="font-medium">Destination:</span> {b.dropLocation}
-                              </div>
+                  <TableCell>
+                    <BookingStatusDropdown
+                      status={b.status as "pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled"}
+                      onSetWaiting={
+                        onUpdateStatus && b.status === "pending"
+                          ? () => onUpdateStatus(b.id, "waiting for confirmation")
+                          : undefined
+                      }
+                      onApprove={
+                        onUpdateStatus && b.status === "waiting for confirmation"
+                          ? () => onUpdateStatus(b.id, "upcoming")
+                          : undefined
+                      }
+                      onCancel={
+                        onUpdateStatus
+                          ? () => onUpdateStatus(b.id, "cancelled")
+                          : undefined
+                      }
+                    />
+
+                  </TableCell>
+                  <TableCell>${b.amount.toFixed(2)}</TableCell>
+                  <TableCell>
+                    <ChatDialog bookingId={b.id} />
+                  </TableCell>
+                </TableRow>
+                {expandedRows[b.id] && (
+                  <TableRow>
+                    <TableCell colSpan={12} className="bg-gray-50 p-0">
+                      <div className="p-4 space-y-4">
+                        <h4 className="font-medium text-lg">Booking Details</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-2">
+                              <Calendar size={16} className="text-taxi-blue" />
+                              <span className="font-medium">Date:</span> {formatDate(b.date)}
                             </div>
-                            <div className="space-y-2">
-                              {customer && (
-                                <>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">Customer:</span> {customer.name}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">Phone:</span> {customer.phone}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium">Email:</span> {customer.email}
-                                  </div>
-                                </>
-                              )}
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">Distance:</span> {b.kilometers} km
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">Fare:</span> ${b.amount.toFixed(2)}
-                              </div>
+                            <div className="flex items-center gap-2">
+                              <Clock size={16} className="text-taxi-blue" />
+                              <span className="font-medium">Time:</span> {formatTime(b.pickupTime)}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin size={16} className="text-taxi-blue" />
+                              <span className="font-medium">Pickup:</span> {b.pickupLocation}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <MapPin size={16} className="text-taxi-blue" />
+                              <span className="font-medium">Destination:</span> {b.dropLocation}
                             </div>
                           </div>
-                          {b.specialRequest && (
-                            <div className="mt-2">
-                              <span className="font-medium">Notes:</span> {b.specialRequest || "No notes available"}
+                          <div className="space-y-2">
+                            {customer && (
+                              <>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">Customer:</span> {customer.name}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">Phone:</span> {customer.phone}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">Email:</span> {customer.email}
+                                </div>
+                              </>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">Distance:</span> {b.kilometers} km
                             </div>
-                          )}
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">Fare:</span> ${b.amount.toFixed(2)}
+                            </div>
+                          </div>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </React.Fragment>
-              );
-            })}
+                        {b.specialRequest && (
+                          <div className="mt-2">
+                            <span className="font-medium">Notes:</span> {b.specialRequest || "No notes available"}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </React.Fragment>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

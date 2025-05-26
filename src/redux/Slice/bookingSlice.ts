@@ -72,6 +72,25 @@ export const bookingInChat = createAsyncThunk(
     }
 )
 
+export const updateBookingStatus = createAsyncThunk(
+    "booking/status",
+    async(
+        {status,bookingId}:{status:string,bookingId:string}
+    )=>{
+        try{
+          const url =`/api/v1/booking/${bookingId}/status`;
+          const response = await api.patchEvent(url,{status,bookingId});
+          const statusUpdate = response.data;
+          return statusUpdate;
+        }catch (error:unknown){
+            if (axios.isAxiosError(error)){
+                return error || "chat detail fetching failed";
+            }
+            return "An unexpected error occured"
+        }
+    }
+)
+
 
 const bookingSlice = createSlice({
   name: "booking",
@@ -151,6 +170,22 @@ updateBooking: (state, action: PayloadAction<Booking>) => {
         state.error = null;
       })
       .addCase(bookingInChat.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(updateBookingStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateBookingStatus.fulfilled, (state, action) => {
+        state.loading = false;
+        state.booking = action.payload.data;
+
+        console.log("action.payload.booking", action.payload);
+        state.error = null;
+      })
+      .addCase(updateBookingStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
