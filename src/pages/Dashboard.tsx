@@ -4,6 +4,7 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { BookingsTable } from "@/components/shared/BookingsTable";
 import { bookings, drivers } from "@/data/mockData";
 import { BookingsFilterBar } from "@/components/dashboard/BookingsFilterBar";
+import {Drivers} from '@/types/driver'
 
 // Utility: sort bookings
 function sortBookings(bookings, sortKey, sortDirection) {
@@ -98,7 +99,7 @@ export default function Dashboard() {
           />
           <BookingsTable
             bookings={filteredBookings}
-            drivers={drivers}
+            drivers={driver}
             showCustomer
             showDriverSelect
             onUpdateDriver={handleUpdateDriver}

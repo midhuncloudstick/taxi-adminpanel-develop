@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -90,81 +89,8 @@ const [photoFile, setPhotoFile] = useState<File | null>(null);
 
 
 
-  //   const form = useForm<FormValues>({
-  //     resolver: zodResolver(formSchema),
-  //     defaultValues: {
-  //       name: "",
-  //       email: "",
-  //       phone: "",
-  //       licenseNumber: "",
-  //       carId: "",
-  //       status: "active",
-  //       photo: "",
-
-  //     },
-
-  //   });
-
-
-
-  //   const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //     const file = event.target.files?.[0];
-  //     if (!file) return;
-
-  //     // In a real app, this would be an API call to upload the image
-  //     const reader = new FileReader();
-  //     reader.onload = () => {
-  //       if (typeof reader.result === "string") {
-  //         setPhotoPreview(reader.result);
-  //         form.setValue("photo", reader.result);
-  //       }
-  //     };
-  //     reader.readAsDataURL(file);
-  //   };
-
-  //   const onSubmit = (values: FormValues) => {
-  //     const formData = new FormData();
-  //     formData.append("data", JSON.stringify(values));
-
-  //     try {
-
-  //       await dispatch(CreateDrivers({ data: formData })).unwrap();
-  //       await dispatch(getDrivers())
-  //       toast.success("Car created successfully");
-
-  //       onSuccess();
-  //       toast.success("New car added to fleet successfully");
-
-  //       ({
-  //         name: "",
-  //         email: "",
-  //         phone: "",
-  //         licenseNumber: "",
-  //         carId: "",
-  //         status: "active",
-  //         photo: "",
-  //       });
-
-  //       setIsOpen(false);
-  //     } catch (error) {
-  //       console.error("Create Car Error:", error);
-
-  //       let errorMessage = "Failed to create Car";
-  //       if (typeof error === "object" && error && "error" in error) {
-  //         errorMessage = (error as any).error;
-  //       } else if (typeof error === "string") {
-  //         errorMessage = error;
-  //       }
-
-  //       toast.error(errorMessage);
-  //     }
-  //   };
-  //   // In a real app, this would be an API call to save the driver
-  //   console.log(values);
-
-  //   toast.success("Driver added successfully");
-  //   onSuccess();
-  // };
+  
+ 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {

@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Edit, Trash } from "lucide-react";
+import { Edit, Trash, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useDispatch } from "react-redux";
@@ -19,6 +19,7 @@ import { AppDispatch } from "@/redux/store";
 import { Deletecars, getCars } from "@/redux/Slice/fleetSlice";
 import { useAppSelector } from "@/redux/hook";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 
 interface FleetTableProps {
   onEdit: (car: Car) => void;
@@ -59,7 +60,7 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
   };
 
 
-  
+
   useEffect(() => {
     console.log("reached the listing")
     dispatch(getCars())
@@ -74,24 +75,24 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
   };
 
   const confirmDelete = async () => {
-  if (!carToDelete) return;
+    if (!carToDelete) return;
 
-  try {
-    console.log("deletedddddd")
-    await dispatch(Deletecars({ carId: carToDelete })).unwrap();
-    await dispatch(getCars());
+    try {
+      console.log("deletedddddd")
+      await dispatch(Deletecars({ carId: carToDelete })).unwrap();
+      await dispatch(getCars());
 
-    setCarsData(carsData.filter((car) => car.id !== carToDelete));
-    onDelete(carToDelete);
-    toast.success("Car deleted successfully");
-  } catch (error) {
-    toast.error("Failed to delete car");
-    console.error("Delete error:", error); 
-  } finally {
-    setCarToDelete(null);
-    setIsDeleteDialogOpen(false);
-  }
-};
+      setCarsData(carsData.filter((car) => car.id !== carToDelete));
+      onDelete(carToDelete);
+      toast.success("Car deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete car");
+      console.error("Delete error:", error);
+    } finally {
+      setCarToDelete(null);
+      setIsDeleteDialogOpen(false);
+    }
+  };
 
 
   return (
@@ -117,7 +118,22 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
             Vehicle.map((car) => (
               <TableRow key={car.id}>
                 <TableCell className="font-medium">{car.id}</TableCell>
-                <TableCell>{car.car_images}</TableCell>
+                <Avatar className="h-1 w-1">
+                  {Array.isArray(car.car_images) && car.car_images.length > 0 ? (
+                    car.car_images.map((image, index) => (
+                         <AvatarImage
+                      src={`http://139.84.156.137:8080${image.image_url}`}
+                      alt={car.model}
+                       className="h-10 w-10 rounded-full object-cover border-2 border-gray-200 shadow"
+                    />
+                    ))
+                 
+                  ) : (
+                    <AvatarFallback className="bg-taxi-blue text-white">
+                      <User size={16} />
+                    </AvatarFallback>
+                  )}
+                </Avatar>
                 <TableCell>{car.model}</TableCell>
                 <TableCell>{car.plate}</TableCell>
                 <TableCell>{getCarTypeBadge(car.type)}</TableCell>

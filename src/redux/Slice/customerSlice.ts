@@ -60,7 +60,8 @@ export const listBookingBycustomerId = createAsyncThunk(
   'booking/listByCustomerId',
   async (userId: string, { rejectWithValue }) => {
     try {
-      const response = await api.getEvents(`/api/v1/bookings/customer/${userId}`);
+      const url = `/api/v1/bookings/customer/${userId}`;
+      const response = await api.getEvents(url);
       return response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data || 'Something went wrong');
@@ -134,7 +135,7 @@ const customerSlice = createSlice({
           })
           .addCase(listCustomerUsers.fulfilled, (state, action) => {
             state.loading = false;
-            state.selectedCustomers = action.payload.message;
+            state.customers = action.payload.message;
            
             console.log("action.payload", action.payload);
             state.error = null;

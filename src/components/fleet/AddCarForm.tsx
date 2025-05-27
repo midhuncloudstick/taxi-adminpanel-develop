@@ -26,14 +26,12 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [features, setFeatures] = useState<string[]>([""]);
   const [CarForm, setCarForm] = useState<Cars>({
-
     id: "",
     car_images: "",
     model: "",
     plate: "",
     type: "sedan",
     capacity: 4,
-    features: "",
     status: "available",
     pricePerKm: 0,
     fixedCost: 0,
@@ -42,55 +40,28 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
     large_bags: 0,
     add_trailer: false,
     created_at: new Date().toISOString(),
+    features: []
   });
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files) return;
-
     const newImageFiles = Array.from(files);
     const newImages = newImageFiles.map((file) => URL.createObjectURL(file));
-
-    // Add the new images to the current ones
     setImages((prevImages) => [...prevImages, ...newImages]);
     setImageFiles((prevFiles) => [...prevFiles, ...newImageFiles]);
+    event.target.value = "";
   };
 
-
-  // Remove a specific image by index
   const handleRemoveImage = (index: number) => {
     setImages((prevImages) => prevImages.filter((_, i) => i !== index));
     setImageFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
-  };
-
-  const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setPhotoFile(file);
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setPhotoPreview(reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleRemovePhoto = () => {
-    setPhotoPreview(null);
-    setPhotoFile(null);
-
-    const input = document.getElementById("photo-upload") as HTMLInputElement | null;
-    if (input) input.value = "";
   };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-
     setCarForm((prevForm) => ({
       ...prevForm,
       [name]:
@@ -101,17 +72,15 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
           : name === "pricePerKm" || name === "fixedCost"
             ? parseFloat(value)
             : name === "add_trailer"
-              ? value === "yes" // Convert string to boolean for trailer
+              ? value === "yes"
               : value,
     }));
   };
 
-    const handleFeatureChange = (index: number, value: string) => {
+  const handleFeatureChange = (index: number, value: string) => {
     const newFeatures = [...features];
     newFeatures[index] = value;
     setFeatures(newFeatures);
-
-    // Add new empty field if current field is filled and it's the last one
     if (value && index === features.length - 1 && features.length < 6) {
       setFeatures([...newFeatures, ""]);
     }
@@ -123,66 +92,66 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
     }
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const formattedFeatures = images.filter(f => f.trim() !== "").join(", ");
-  const formData = new FormData();
+    const formattedFeatures = features
+      .filter(f => f.trim() !== "")
+      .map(f => ({ feature: f }));
 
-  // Append form fields as a single JSON blob
-  const formFields = {
-    ...CarForm,
-    features: formattedFeatures
-  };
-  formData.append("data", JSON.stringify(formFields));
-
-  // Append image files (important!)
-  imageFiles.forEach((file, index) => {
-    formData.append("car_images", file); // Use correct field name expected by backend
-  });
-
-  try {
-    await dispatch(CreateCars({ data: formData })).unwrap();
-    await dispatch(getCars());
-    toast.success("Car created successfully");
-
-    onAddCar({
+    const { id, car_images, ...fieldsToSend } = {
       ...CarForm,
       features: formattedFeatures
+    };
+
+    const formData = new FormData();
+    formData.append("data", JSON.stringify(fieldsToSend));
+
+    imageFiles.forEach((file) => {
+      formData.append("photo", file);
     });
 
-    // Reset state
-    setCarForm({
-      id: "",
-      model: "",
-      car_images: "",
-      plate: "",
-      type: "sedan",
-      features: "",
-      capacity: 4,
-      status: "available",
-      pricePerKm: 0,
-      fixedCost: 0,
-      description: "",
-      small_bags: 0,
-      large_bags: 0,
-      add_trailer: false,
-      created_at: new Date().toISOString(),
-    });
-    setImages([]);
-    setImageFiles([]);
-    setIsOpen(false);
-  } catch (error) {
-    console.error("Create Car Error:", error);
-    let errorMessage = "Failed to create Car";
-    if (typeof error === "object" && error && "error" in error) {
-      errorMessage = (error as any).error;
-    } else if (typeof error === "string") {
-      errorMessage = error;
+    try {
+      await dispatch(CreateCars({ data: formData })).unwrap();
+      await dispatch(getCars());
+      toast.success("Car created successfully");
+
+      onAddCar({
+        ...CarForm,
+        features: features.filter(f => f.trim() !== ""),
+      });
+
+      setCarForm({
+        id: "",
+        model: "",
+        car_images: "",
+        plate: "",
+        type: "sedan",
+        features: [],
+        capacity: 4,
+        status: "available",
+        pricePerKm: 0,
+        fixedCost: 0,
+        description: "",
+        small_bags: 0,
+        large_bags: 0,
+        add_trailer: false,
+        created_at: new Date().toISOString(),
+      });
+      setImages([]);
+      setImageFiles([]);
+      setIsOpen(false);
+    } catch (error) {
+      console.error("Create Car Error:", error);
+      let errorMessage = "Failed to create Car";
+      if (typeof error === "object" && error && "error" in error) {
+        errorMessage = (error as any).error;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+      toast.error(errorMessage);
     }
-    toast.error(errorMessage);
-  }
-};
+  };
 
 
   return (
@@ -202,41 +171,38 @@ const handleSubmit = async (e: React.FormEvent) => {
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
 
           <div className="relative space-y-2 flex flex-col items-center">
-            <div className="relative">
-              <Avatar className="w-32 h-32 border-2 border-gray-200">
-                {photoPreview ? (
-                  <AvatarImage src={photoPreview} alt="Driver photo preview" />
-                ) : (
-                  <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
-                    <Upload className="w-12 h-12" />
-                  </AvatarFallback>
-                )}
-              </Avatar>
-
-              {photoPreview && (
-                <button
-                  type="button"
-                  className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
-                  onClick={handleRemovePhoto}
-                >
-                  <X className="w-4 h-4 text-black-500" />
-                </button>
-              )}
+            <div className="flex flex-wrap gap-2 justify-center">
+              {images.map((img, idx) => (
+                <div key={idx} className="relative">
+                  <Avatar className="w-1 h-1 border-2 border-gray-200">
+                    <AvatarImage src={img} alt={`car image ${idx + 1}`} />
+                    <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
+                      <Upload className="w-5 h-5" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    type="button"
+                    className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
+                    onClick={() => handleRemoveImage(idx)}
+                  >
+                    <X className="w-4 h-4 text-black-500" />
+                  </button>
+                </div>
+              ))}
             </div>
-
             <label
               htmlFor="photo-upload"
               className="cursor-pointer text-taxi-blue hover:text-taxi-teal text-sm underline"
             >
-              Upload Photo
+              Upload Photos
             </label>
-
             <input
               id="photo-upload"
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={handlePhotoChange}
+              multiple
+              onChange={handleImageChange}
             />
           </div>
           <div className="grid gap-2">
@@ -364,32 +330,32 @@ const handleSubmit = async (e: React.FormEvent) => {
             </SelectContent>
           </Select>
 
-               <div className="grid gap-2">
-        <Label>Features (Max 6)</Label>
-        {features.map((feature, index) => (
-          <div key={index} className="flex gap-2 items-center">
-            <Input
-              id={`feature-${index}`}
-              name={`feature-${index}`}
-              value={feature}
-              onChange={(e) => handleFeatureChange(index, e.target.value)}
-              placeholder={`Feature ${index + 1}`}
-            />
-            {features.length > 1 && (
-              <button
-                type="button"
-                onClick={() => handleRemoveFeature(index)}
-                className="text-black-500 hover:text-black-700"
-              >
-                <X className="h-4 w-4" />
-              </button>
+          <div className="grid gap-2">
+            <Label>Features (Max 6)</Label>
+            {features.map((feature, index) => (
+              <div key={index} className="flex gap-2 items-center">
+                <Input
+                  id={`feature-${index}`}
+                  name={`feature-${index}`}
+                  value={feature}
+                  onChange={(e) => handleFeatureChange(index, e.target.value)}
+                  placeholder={`Feature ${index + 1}`}
+                />
+                {features.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFeature(index)}
+                    className="text-black-500 hover:text-black-700"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+            {features.length >= 6 && (
+              <p className="text-sm text-muted-foreground">Maximum 6 features reached</p>
             )}
           </div>
-        ))}
-        {features.length >= 6 && (
-          <p className="text-sm text-muted-foreground">Maximum 6 features reached</p>
-        )}
-      </div>
 
 
 

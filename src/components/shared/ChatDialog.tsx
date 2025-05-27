@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { bookingInChat } from "@/redux/Slice/bookingSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/redux/store";
+import { toast } from "sonner";
 
 interface ChatDialogProps {
   bookingId: string;
@@ -45,6 +46,7 @@ export function ChatDialog({ bookingId, customerId, driverId }: ChatDialogProps)
       await dispatch(bookingInChat({ message: messageContent ,bookingId})).unwrap(); 
 
       setMessageContent(''); 
+      toast.success("Message sent successfully!");
     } catch (error) {
       console.error("Error sending message:", error);
     }

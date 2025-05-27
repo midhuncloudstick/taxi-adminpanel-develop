@@ -13,7 +13,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { bookingInChat, getBookinglist, updateBookingStatus } from "@/redux/Slice/bookingSlice";
 import { useAppSelector } from "@/redux/hook";
-import { listCustomerUsers } from "@/redux/Slice/customerSlice";
+import { listBookingBycustomerId, listCustomerUsers } from "@/redux/Slice/customerSlice";
 import { getDrivers } from "@/redux/Slice/driverSlice";
 import { Customer } from "@/types/customer";
 
@@ -60,12 +60,14 @@ export function BookingsTable({
   const [availableDrivers, setAvailableDrivers] = useState<Drivers[]>([]);
   const [availableCustomers, setAvailableCustomers] = useState<Customer[]>([]);
   const bookinglist = useAppSelector((state) => state.booking.selectedBooking)
-  const driver = useAppSelector((state) => state.driver.drivers)
-  const customer = useAppSelector((state) => state.customer.customers)
+
 
   const customersFromStore = useAppSelector(state => state.customer.customers || []);
+  console.log("availableCustomers", availableCustomers)
+
   const driversFromStore = useAppSelector(state => state.driver.drivers || []);
 
+  console.log("availableDrivers", availableDrivers)
 
   const dispatch = useDispatch<AppDispatch>()
 
@@ -79,44 +81,44 @@ export function BookingsTable({
     dispatch(listCustomerUsers());
   }, [dispatch]);
 
-  // Update local customers state when Redux state changes
   useEffect(() => {
+    console.log("customersFromStore", customersFromStore)
+    console.log("availableCustomerssss", availableCustomers)
     setAvailableCustomers(customersFromStore);
   }, [customersFromStore]);
 
-  // Fetch drivers once on component mount
   useEffect(() => {
     dispatch(getDrivers());
   }, [dispatch]);
 
-  // Update local drivers state when Redux state changes
   useEffect(() => {
     setAvailableDrivers(driversFromStore);
   }, [driversFromStore]);
 
+
+  
+
   const formatDate = (date: string) => {
     const formattedDate = new Date(date);
-    return formattedDate.toLocaleDateString("en-US"); // Customize format if needed
+    return formattedDate.toLocaleDateString("en-US");
   };
 
-  // Format the time (e.g., "hh:mm AM/PM")
   const formatTime = (time: string) => {
     const formattedTime = new Date(time);
     return formattedTime.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: true, // Set to true for AM/PM
+      hour12: true,
     });
   };
 
 
 
   const handleStatusChange = (bookingId: string, newStatus: string) => {
-  dispatch(updateBookingStatus({ status: newStatus, bookingId }));
-};
+    dispatch(updateBookingStatus({ status: newStatus, bookingId }));
+  };
 
 
-  // Function to handle sending chat
 
 
 
@@ -181,22 +183,25 @@ export function BookingsTable({
                   <TableCell>{b.dropLocation}</TableCell>
                   {showCustomer && (
                     <TableCell>
-                      {(() => {
-                        const bookingCustomer = availableCustomers.find(c => c.id?.toString() === b.customerId?.toString());
-                        return bookingCustomer
-                          ? `${bookingCustomer.username} (${b.customerId})`
-                          : b.customerId;
-                      })()}
+                      {b.user_firstname + " "+b.user_lastname}
                     </TableCell>
                   )}
                   {showDriverSelect ? (
                     <TableCell>
                       <Select
-                        value={driver ? driver.id.toString() : ""}
+                        value={b.driverId ? b.driverId.toString() : ""}
                         onValueChange={val => onUpdateDriver && onUpdateDriver(b.id, val)}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Driver" />
+                          <SelectValue placeholder="Driver">
+                            {
+                              // Show the selected driver's name in the input
+                              (() => {
+                                const selectedDriver = availableDrivers.find(d => d.id?.toString() === b.driverId?.toString());
+                                return selectedDriver ? selectedDriver.name : "";
+                              })()
+                            }
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {availableDrivers.map(d => (
@@ -209,7 +214,10 @@ export function BookingsTable({
                     </TableCell>
                   ) : showDriver ? (
                     <TableCell>
-                      {driver ? driver.name : "No Driver"}
+                      {(() => {
+                        const bookingDriver = availableDrivers.find(d => d.id?.toString() === b.driverId?.toString());
+                        return bookingDriver ? bookingDriver.name : "No Driver";
+                      })()}
                     </TableCell>
                   ) : null}
 

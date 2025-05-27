@@ -91,6 +91,44 @@ export const updateBookingStatus = createAsyncThunk(
     }
 )
 
+export const AssignDriverthroughEmail = createAsyncThunk(
+    "booking/email",
+    async(
+        {driverId,bookingId}:{driverId:number,bookingId:string}
+    )=>{
+        try{
+         const url =`/api/v1/booking/${bookingId}/driver`;
+          const response = await api.patchEvent(url,{driverId,bookingId});
+          const AssignDriverthroughEmailUpdate = response.data;
+          return AssignDriverthroughEmailUpdate;
+        }catch (error:unknown){
+            if (axios.isAxiosError(error)){
+                return error || "chat detail fetching failed";
+            }
+            return "An unexpected error occured"
+        }
+    }
+)
+
+export const AssignDriverthroughSMS = createAsyncThunk(
+    "booking/sms",
+    async(
+        {driverId,bookingId}:{driverId:number,bookingId:string}
+    )=>{
+        try{
+          const url =`/api/v1/booking/${bookingId}/driver`;
+          const response = await api.patchEvent(url,{driverId,bookingId});
+          const AssignDriverthroughSMSUpdate = response.data;
+          return AssignDriverthroughSMSUpdate;
+        }catch (error:unknown){
+            if (axios.isAxiosError(error)){
+                return error || "chat detail fetching failed";
+            }
+            return "An unexpected error occured"
+        }
+    }
+)
+
 
 const bookingSlice = createSlice({
   name: "booking",
@@ -186,6 +224,38 @@ updateBooking: (state, action: PayloadAction<Booking>) => {
         state.error = null;
       })
       .addCase(updateBookingStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(AssignDriverthroughEmail.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(AssignDriverthroughEmail.fulfilled, (state, action) => {
+        state.loading = false;
+        state.booking = action.payload.data;
+
+        console.log("action.payload.booking", action.payload);
+        state.error = null;
+      })
+      .addCase(AssignDriverthroughEmail.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(AssignDriverthroughSMS.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(AssignDriverthroughSMS.fulfilled, (state, action) => {
+        state.loading = false;
+        state.booking = action.payload.data;
+
+        console.log("action.payload.booking", action.payload);
+        state.error = null;
+      })
+      .addCase(AssignDriverthroughSMS.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

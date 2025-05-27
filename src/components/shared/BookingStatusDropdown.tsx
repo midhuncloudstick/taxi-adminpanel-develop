@@ -22,8 +22,12 @@ export function BookingStatusDropdown({
 }: BookingStatusDropdownProps) {
   const [open, setOpen] = useState(false);
 
+const dispatch = useDispatch<AppDispatch>();
 
 
+  const handleStatusChange = (bookingId: string, newStatus: string) => {
+    dispatch(updateBookingStatus({ status: newStatus, bookingId }));
+  };
   // Colors for each status
   function getStatusUI(s: string) {
     switch (s) {

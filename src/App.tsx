@@ -1,9 +1,8 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { Sidebar } from "@/components/layout/Sidebar";
 import Dashboard from "./pages/Dashboard";
 import Fleet from "./pages/Fleet";
@@ -20,45 +19,42 @@ import { AuthProvider, useAuth } from "./hooks/useAuth";
 
 const queryClient = new QueryClient();
 
-// Protected route component
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-};
+const SidebarLayout = () => (
+  <div className="flex">
+    <Sidebar />
+    <div className="flex-1">
+      <Outlet />
+    </div>
+  </div>
+);
 
 const AppRoutes = () => {
   const { isAuthenticated } = useAuth();
 
   return (
+    <Routes>
+  {!isAuthenticated ? (
     <>
-      {isAuthenticated ? (
-        <div className="flex">
-          <Sidebar />
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/fleet" element={<Fleet />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/drivers" element={<Drivers />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/search" element={<Search />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </div>
-      ) : (
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-               <Route path="/login" element={<Login />} />
-        </Routes>
-      )}
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </>
+  ) : (
+    <Route element={<SidebarLayout />}>
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/fleet" element={<Fleet />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/customers" element={<Customers />} />
+      <Route path="/drivers" element={<Drivers />} />
+      <Route path="/history" element={<History />} />
+      {/* Redirect /login to / if authenticated */}
+      <Route path="/login" element={<Navigate to="/" replace />} />
+      {/* <Route path="/search" element={<Search />} /> */}
+      <Route path="*" element={<NotFound />} />
+    </Route>
+  )}
+</Routes>
   );
 };
 
