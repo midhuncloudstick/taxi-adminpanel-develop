@@ -36,7 +36,9 @@ const InternalDriverSchema = z.object({
   type: z.literal("internal"),
   name: z.string().min(2, { message: "Name must be at least 8 characters." }),
   email: z.string().optional(),
-  phone: z.string().min(10, { message: "Please enter a valid phone number." }),
+   phone: z.string()
+    .min(10, { message: "Please enter a valid phone number." })
+    .regex(/^\+91\d{10}$/, { message: "Phone number must start with +91 and be 10 digits." }),
   licenceNumber: z.string().min(5, { message: "Please enter a valid license number." }),
   carId: z.string().min(1, { message: "Please select a vehicle." }),
   status: z.enum(["active", "inactive"]),
@@ -47,7 +49,11 @@ const ExternalDriverSchema = z.object({
   type: z.literal("external"),
   name: z.string().min(2, { message: "Name must be at least 8 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
-  phone: z.string().optional(),
+  phone: z.string()
+    .optional()
+    .refine(val => !val || /^\+91\d{10}$/.test(val), {
+      message: "Phone number must start with +91 and be 10 digits.",
+    }),
   licenceNumber: z.string().optional(),
   carId: z.string().min(1, { message: "Please select a vehicle." }),
   status: z.enum(["active", "inactive"]),

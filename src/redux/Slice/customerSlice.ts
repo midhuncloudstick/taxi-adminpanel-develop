@@ -60,7 +60,7 @@ export const listBookingBycustomerId = createAsyncThunk(
   'booking/listByCustomerId',
   async (userId: string, { rejectWithValue }) => {
     try {
-      const url = `/api/v1/bookings/customer/${userId}`;
+      const url = `/api/v1/user/booking/${userId}`;
       const response = await api.getEvents(url);
       return response.data;
     } catch (err: any) {

@@ -129,6 +129,48 @@ export const AssignDriverthroughSMS = createAsyncThunk(
     }
 )
 
+export const sortingInBooking = createAsyncThunk(
+  "booking/sort",
+  async (
+    _,
+  ) => {
+
+    try {
+      const url = "/api/v1/booking/list";
+
+      const response = await api.getEvents(url);
+      const sortedData = response.data;
+      return sortedData;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error || "booking details fetching failed";
+      }
+      return "An unexpected error occurred.";
+    }
+  }
+);
+
+export const getnotification = createAsyncThunk(
+  "booking/notification",
+  async (
+    _,
+  ) => {
+
+    try {
+      const url = "/api/v1/booking/upcomings";
+
+      const response = await api.getEvents(url);
+      const notificationss = response.data;
+      return notificationss;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error || "booking details fetching failed";
+      }
+      return "An unexpected error occurred.";
+    }
+  }
+);
+
 
 const bookingSlice = createSlice({
   name: "booking",
@@ -234,7 +276,7 @@ updateBooking: (state, action: PayloadAction<Booking>) => {
       })
       .addCase(AssignDriverthroughEmail.fulfilled, (state, action) => {
         state.loading = false;
-        state.booking = action.payload.data;
+        state.booking = action.payload.message;
 
         console.log("action.payload.booking", action.payload);
         state.error = null;
@@ -250,12 +292,29 @@ updateBooking: (state, action: PayloadAction<Booking>) => {
       })
       .addCase(AssignDriverthroughSMS.fulfilled, (state, action) => {
         state.loading = false;
-        state.booking = action.payload.data;
+        state.booking = action.payload.message;
 
         console.log("action.payload.booking", action.payload);
         state.error = null;
       })
       .addCase(AssignDriverthroughSMS.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(getnotification.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+
+      .addCase(getnotification.fulfilled, (state, action) => {
+        state.loading = false;
+        state.booking = action.payload.data;
+
+        console.log("action.payload.booking", action.payload);
+        state.error = null;
+      })
+      .addCase(getnotification.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

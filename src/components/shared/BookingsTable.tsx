@@ -11,7 +11,7 @@ import { Drivers } from "@/types/driver";
 import { } from "@/types/booking"
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
-import { bookingInChat, getBookinglist, updateBookingStatus } from "@/redux/Slice/bookingSlice";
+import { AssignDriverthroughEmail, AssignDriverthroughSMS, bookingInChat, getBookinglist, updateBookingStatus } from "@/redux/Slice/bookingSlice";
 import { useAppSelector } from "@/redux/hook";
 import { listBookingBycustomerId, listCustomerUsers } from "@/redux/Slice/customerSlice";
 import { getDrivers } from "@/redux/Slice/driverSlice";
@@ -71,6 +71,8 @@ export function BookingsTable({
 
   const dispatch = useDispatch<AppDispatch>()
 
+
+
   useEffect(() => {
     dispatch(getBookinglist())
   }, [dispatch])
@@ -96,7 +98,7 @@ export function BookingsTable({
   }, [driversFromStore]);
 
 
-  
+
 
   const formatDate = (date: string) => {
     const formattedDate = new Date(date);
@@ -112,16 +114,23 @@ export function BookingsTable({
     });
   };
 
-
-
-  const handleStatusChange = (bookingId: string, newStatus: string) => {
-    dispatch(updateBookingStatus({ status: newStatus, bookingId }));
-  };
-
-
-
-
-
+const assignDriver = async ({
+  driverId,
+  bookingId,
+  driverType,
+}: {
+  driverId: number;
+  bookingId: string;
+  driverType: "internal" | "external";
+}) => {
+  if (driverType === "internal") {
+    await dispatch(AssignDriverthroughSMS({ driverId, bookingId }));
+  } else {
+    await dispatch(AssignDriverthroughEmail({ driverId, bookingId }));
+  }
+  await dispatch(getBookinglist()); // <-- Refresh bookings after assignment
+  await dispatch(getDrivers());     // (optional) refresh drivers if needed
+};
 
   return (
     <div className="overflow-auto rounded-lg shadow bg-white">
@@ -183,62 +192,68 @@ export function BookingsTable({
                   <TableCell>{b.dropLocation}</TableCell>
                   {showCustomer && (
                     <TableCell>
-                      {b.user_firstname + " "+b.user_lastname}
+                      {b.user_firstname + " " + b.user_lastname}
                     </TableCell>
                   )}
                   {showDriverSelect ? (
                     <TableCell>
                       <Select
-                        value={b.driverId ? b.driverId.toString() : ""}
-                        onValueChange={val => onUpdateDriver && onUpdateDriver(b.id, val)}
+                        value={b.driverId?.toString() || ""}
+                        onValueChange={val => {
+                          const selectedDriver = availableDrivers.find(
+                            d => d.id?.toString() === val
+                          );
+                          if (selectedDriver) {
+                            assignDriver({
+                              driverId: selectedDriver.id,
+                              bookingId: b.id,
+                              driverType: selectedDriver.type, // "internal" or "external"
+                            });
+                          }
+                        }}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Driver">
                             {
-                              // Show the selected driver's name in the input
                               (() => {
-                                const selectedDriver = availableDrivers.find(d => d.id?.toString() === b.driverId?.toString());
+                                const selectedDriver = availableDrivers.find(
+                                  d => d.id?.toString() === b.driverId?.toString()
+                                );
                                 return selectedDriver ? selectedDriver.name : "";
                               })()
                             }
                           </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
-                          {availableDrivers.map(d => (
-                            <SelectItem key={d.id} value={d.id.toString()}>
-                              {d.name}
-                            </SelectItem>
-                          ))}
+                          {availableDrivers
+                            .filter(d => d.status === "active")
+                            .map(d => (
+                              <SelectItem key={d.id} value={d.id.toString()}>
+                                {d.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                     </TableCell>
                   ) : showDriver ? (
                     <TableCell>
-                      {(() => {
-                        const bookingDriver = availableDrivers.find(d => d.id?.toString() === b.driverId?.toString());
-                        return bookingDriver ? bookingDriver.name : "No Driver";
-                      })()}
+                      {
+                        (() => {
+                          const bookingDriver = availableDrivers.find(
+                            d => d.id?.toString() === b.driverId?.toString()
+                          );
+                          return bookingDriver ? bookingDriver.name : "No Driver";
+                        })()
+                      }
                     </TableCell>
                   ) : null}
 
+
+
                   <TableCell>
                     <BookingStatusDropdown
-                      status={b.status as "pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled"}
-                      onSetWaiting={
-                        onUpdateStatus && b.status === "pending"
-                          ? () => onUpdateStatus(b.id, "waiting for confirmation")
-                          : undefined
-                      }
-                      onApprove={
-                        onUpdateStatus && b.status === "waiting for confirmation"
-                          ? () => onUpdateStatus(b.id, "upcoming")
-                          : undefined
-                      }
-                      onCancel={
-                        onUpdateStatus
-                          ? () => onUpdateStatus(b.id, "cancelled")
-                          : undefined
-                      }
+                      bookingId={b.id}
+                      status={b.status as 'requested' | 'waiting for driver confirmation' | 'assigned driver' | 'journey started' | 'pickup' | 'journey completed' | 'cancelled'}
                     />
 
                   </TableCell>
