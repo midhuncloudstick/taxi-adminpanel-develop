@@ -128,8 +128,8 @@ const assignDriver = async ({
   } else {
     await dispatch(AssignDriverthroughEmail({ driverId, bookingId }));
   }
-  await dispatch(getBookinglist()); // <-- Refresh bookings after assignment
-  await dispatch(getDrivers());     // (optional) refresh drivers if needed
+  await dispatch(getBookinglist()); 
+  await dispatch(getDrivers());     
 };
 
   return (
@@ -163,7 +163,7 @@ const assignDriver = async ({
               </TableCell>
             </TableRow>
           )} */}
-          {Array.isArray(bookings) && bookinglist?.map((b) => {
+          {Array.isArray(bookinglist) && bookinglist.map((b) => {
             const customer = getCustomerById(b.customerId);
             const driver = getDriverById(b.driverId);
 
@@ -207,7 +207,7 @@ const assignDriver = async ({
                             assignDriver({
                               driverId: selectedDriver.id,
                               bookingId: b.id,
-                              driverType: selectedDriver.type, // "internal" or "external"
+                              driverType: selectedDriver.type, 
                             });
                           }
                         }}
@@ -234,6 +234,7 @@ const assignDriver = async ({
                             ))}
                         </SelectContent>
                       </Select>
+                      
                     </TableCell>
                   ) : showDriver ? (
                     <TableCell>

@@ -38,11 +38,14 @@ export default function Customers() {
     fetchBookings();
   }, [selectedCustomerId, dispatch]);
 
-  const filteredCustomers = customerlist.filter(c =>
-    c.username?.toLowerCase().includes(search.toLowerCase()) ||
-    c.email?.toLowerCase().includes(search.toLowerCase()) ||
-    c.phone?.toLowerCase().includes(search.toLowerCase())
-  );
+const filteredCustomers = Array.isArray(customerlist)
+  ? customerlist.filter(c =>
+      c.username?.toLowerCase().includes(search.toLowerCase()) ||
+      c.email?.toLowerCase().includes(search.toLowerCase()) ||
+      c.phone?.toLowerCase().includes(search.toLowerCase())
+    )
+  : [];
+
 
   return (
     <PageContainer title="Customer Management">

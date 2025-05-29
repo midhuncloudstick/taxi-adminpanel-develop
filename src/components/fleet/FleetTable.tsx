@@ -122,7 +122,7 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
                   {Array.isArray(car.car_images) && car.car_images.length > 0 ? (
                     car.car_images.map((image, index) => (
                          <AvatarImage
-                      src={`http://139.84.156.137:8080${image.image_url}`}
+                      src={`https://brisbane.cloudhousetechnologies.com${image.image_url}`}
                         alt={image.Car?.model || `Image ${index + 1}`}
                        className="h-10 w-10 rounded-full object-cover border-2 border-gray-200 shadow"
                     />

@@ -3,6 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Driver } from "@/data/mockData";
 import { useAppSelector } from "@/redux/hook";
+import { sortingInBooking } from "@/redux/Slice/bookingSlice";
+import { getDrivers } from "@/redux/Slice/driverSlice";
+import { AppDispatch } from "@/redux/store";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 
 interface BookingsFilterBarProps {
   status: string;
@@ -30,6 +35,28 @@ export function BookingsFilterBar({
   showPending,
 }: BookingsFilterBarProps) {
 
+  const dispatch = useDispatch<AppDispatch>();
+
+  const driverslist = useAppSelector(state => state.driver.drivers);
+  useEffect(() => {
+    dispatch(getDrivers())
+  }, [dispatch])
+
+
+useEffect(() => {
+  dispatch(sortingInBooking({
+    status,
+    driver,
+    search: location,
+    customerID: customerId,
+    bookingId: "",      
+    date: "",           
+    pickup_time: "",    
+    page: 1,            
+    limit: 10           
+  }))
+}, [dispatch, status, driver, location, customerId])
+
 
 
   return (
@@ -40,9 +67,12 @@ export function BookingsFilterBar({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Statuses</SelectItem>
-          {showPending && <SelectItem value="pending">Pending</SelectItem>}
-          <SelectItem value="upcoming">Upcoming</SelectItem>
-          <SelectItem value="completed">Completed</SelectItem>
+          {showPending && <SelectItem value="requested">Requested</SelectItem>}
+          <SelectItem value="waiting for driver confirmation">Waiting for driver Confirmation</SelectItem>
+          <SelectItem value="assigned driver">Assigned Driver</SelectItem>
+          <SelectItem value="journey started">Journey Started</SelectItem>
+          <SelectItem value="pick Up">Pickup</SelectItem>
+          <SelectItem value="journey completed">Journey Completed</SelectItem>
           <SelectItem value="cancelled">Cancelled</SelectItem>
         </SelectContent>
       </Select>
@@ -52,8 +82,10 @@ export function BookingsFilterBar({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Drivers</SelectItem>
-          {drivers.map(d => (
-            <SelectItem value={d.id} key={d.id}>{d.name}</SelectItem>
+          {Array.isArray (driverslist)&&driverslist?.map(d => (
+            <SelectItem value={d.id.toString()} key={d.id}>
+              {d.name}
+            </SelectItem>
           ))}
         </SelectContent>
       </Select>

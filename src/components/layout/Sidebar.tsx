@@ -9,6 +9,7 @@ import {
   DollarSign, 
   History, 
   List, 
+  Mail, 
   Menu, 
   Search, 
   Settings, 
@@ -53,7 +54,8 @@ export function Sidebar() {
     { icon: Users, label: "Customers", to: "/customers" },
     { icon: Settings, label: "Drivers", to: "/drivers" },
     { icon: History, label: "History", to: "/history" },
-    // { icon: Search, label: "Search", to: "/search" },
+    { icon: Mail, label: "Message", to: "/message" },
+   
   ];
 
   return (

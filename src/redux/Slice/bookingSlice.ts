@@ -13,7 +13,7 @@ import axios from "axios";
 
 interface BookingState {
   booking: Booking[];
-  chats:chats[]
+  chats: chats[]
   selectedBooking: Booking[] | null;
   loading: boolean;
   error: string | null;
@@ -24,7 +24,7 @@ interface BookingState {
 
 const initialState: BookingState = {
   booking: [],
-  chats:[],
+  chats: [],
   loading: false,
   error: null,
   selectedBooking: null,
@@ -54,93 +54,130 @@ export const getBookinglist = createAsyncThunk(
 );
 
 export const bookingInChat = createAsyncThunk(
-    "booking/chat",
-    async(
-        {message,bookingId}:{message:string ,bookingId:string}
-    )=>{
-        try{
-          const url =`/api/v1/booking/${bookingId}/chats`;
-          const response = await api.postEvents(url,{message,bookingId});
-          const chat = response.data;
-          return chat;
-        }catch (error:unknown){
-            if (axios.isAxiosError(error)){
-                return error || "chat detail fetching failed";
-            }
-            return "An unexpected error occured"
-        }
+  "booking/chat",
+  async (
+    { message, bookingId }: { message: string, bookingId: string }
+  ) => {
+    try {
+      const url = `/api/v1/booking/${bookingId}/chats`;
+      const response = await api.postEvents(url, { message, bookingId });
+      const chat = response.data;
+      return chat;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error || "chat detail fetching failed";
+      }
+      return "An unexpected error occured"
     }
+  }
 )
 
 export const updateBookingStatus = createAsyncThunk(
-    "booking/status",
-    async(
-        {status,bookingId}:{status:string,bookingId:string}
-    )=>{
-        try{
-          const url =`/api/v1/booking/${bookingId}/status`;
-          const response = await api.patchEvent(url,{status,bookingId});
-          const statusUpdate = response.data;
-          return statusUpdate;
-        }catch (error:unknown){
-            if (axios.isAxiosError(error)){
-                return error || "chat detail fetching failed";
-            }
-            return "An unexpected error occured"
-        }
+  "booking/status",
+  async (
+    { status, bookingId }: { status: string, bookingId: string }
+  ) => {
+    try {
+      const url = `/api/v1/booking/${bookingId}/status`;
+      const response = await api.patchEvent(url, { status, bookingId });
+      const statusUpdate = response.data;
+      return statusUpdate;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error || "chat detail fetching failed";
+      }
+      return "An unexpected error occured"
     }
+  }
 )
 
 export const AssignDriverthroughEmail = createAsyncThunk(
-    "booking/email",
-    async(
-        {driverId,bookingId}:{driverId:number,bookingId:string}
-    )=>{
-        try{
-         const url =`/api/v1/booking/${bookingId}/driver`;
-          const response = await api.patchEvent(url,{driverId,bookingId});
-          const AssignDriverthroughEmailUpdate = response.data;
-          return AssignDriverthroughEmailUpdate;
-        }catch (error:unknown){
-            if (axios.isAxiosError(error)){
-                return error || "chat detail fetching failed";
-            }
-            return "An unexpected error occured"
-        }
+  "booking/email",
+  async (
+    { driverId, bookingId }: { driverId: number, bookingId: string }
+  ) => {
+    try {
+      const url = `/api/v1/booking/${bookingId}/driver`;
+      const response = await api.patchEvent(url, { driverId, bookingId });
+      const AssignDriverthroughEmailUpdate = response.data;
+      return AssignDriverthroughEmailUpdate;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error || "chat detail fetching failed";
+      }
+      return "An unexpected error occured"
     }
+  }
 )
 
 export const AssignDriverthroughSMS = createAsyncThunk(
-    "booking/sms",
-    async(
-        {driverId,bookingId}:{driverId:number,bookingId:string}
-    )=>{
-        try{
-          const url =`/api/v1/booking/${bookingId}/driver`;
-          const response = await api.patchEvent(url,{driverId,bookingId});
-          const AssignDriverthroughSMSUpdate = response.data;
-          return AssignDriverthroughSMSUpdate;
-        }catch (error:unknown){
-            if (axios.isAxiosError(error)){
-                return error || "chat detail fetching failed";
-            }
-            return "An unexpected error occured"
-        }
+  "booking/sms",
+  async (
+    { driverId, bookingId }: { driverId: number, bookingId: string }
+  ) => {
+    try {
+      const url = `/api/v1/booking/${bookingId}/driver`;
+      const response = await api.patchEvent(url, { driverId, bookingId });
+      const AssignDriverthroughSMSUpdate = response.data;
+      return AssignDriverthroughSMSUpdate;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error || "chat detail fetching failed";
+      }
+      return "An unexpected error occured"
     }
+  }
 )
 
 export const sortingInBooking = createAsyncThunk(
   "booking/sort",
   async (
-    _,
+    {
+      search,
+      customerID,
+      status,
+      driver,
+      bookingId,
+      date,
+      pickup_time,
+      page,
+      limit,
+      sortBy,      // e.g. "customerID", "status", "date", "pickup_time", "bookingId"
+      sortOrder,   // "asc" or "desc"
+    }: {
+      search: string,
+      customerID: string,
+      status: string,
+      driver: string,
+      bookingId: string,
+      date: string,
+      pickup_time: string,
+      page: number,
+      limit: number,
+      sortBy?: string,
+      sortOrder?: "asc" | "desc"
+    }
   ) => {
-
     try {
-      const url = "/api/v1/booking/list";
+      const baseUrl = "/api/v1/booking/list";
+      const queryParams = new URLSearchParams();
+      if (search !== undefined && search !== null && search !== "") queryParams.append('search', String(search));
+      if (customerID !== undefined && search !== null && search !== "") queryParams.append('customerID', String(customerID));
+      if (status !== undefined && status !== null && status !== "" && status!=="all") queryParams.append('status', String(status));
+      if (driver !== undefined && driver !== null && driver !== "" && driver !=="all") queryParams.append('driver', String(driver));
+      if (bookingId !== undefined && bookingId !== null && bookingId !== "") queryParams.append('bookingId', String(bookingId));
+      if (date !== undefined && date !== null && date !== "") queryParams.append('date', String(date));
+      if (pickup_time !== undefined && pickup_time !== null && pickup_time !== "") queryParams.append('bookingId', String(pickup_time));
+      // if (typeof page === "number") queryParams.append('page', String(page));
+      // if (typeof limit === "number") queryParams.append('limit', String(limit));
+      if (sortBy !== undefined && sortBy !== null && sortBy !== "") queryParams.append('bookingId', String(sortBy));
+      if (sortOrder) queryParams.append('sortOrder', sortOrder);
 
+
+
+      const url = `${baseUrl}?${queryParams.toString()}`;
       const response = await api.getEvents(url);
-      const sortedData = response.data;
-      return sortedData;
+      return response.data;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return error || "booking details fetching failed";
@@ -185,7 +222,7 @@ const bookingSlice = createSlice({
       //     taskCost: action.payload.taskCost || "0",
       //   });
     },
-updateBooking: (state, action: PayloadAction<Booking>) => {
+    updateBooking: (state, action: PayloadAction<Booking>) => {
       //   const index = state.tasks.findIndex((task) => task.ID === action.payload.ID);
       //   if (index !== -1) {
       //     state.tasks[index] = {
@@ -238,7 +275,7 @@ updateBooking: (state, action: PayloadAction<Booking>) => {
         state.error = action.payload as string;
       })
 
-    .addCase(bookingInChat.pending, (state) => {
+      .addCase(bookingInChat.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
@@ -318,7 +355,24 @@ updateBooking: (state, action: PayloadAction<Booking>) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-}
+
+      .addCase(sortingInBooking.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+
+      .addCase(sortingInBooking.fulfilled, (state, action) => {
+        state.loading = false;
+        state.selectedBooking = action.payload.message;
+
+        console.log("sortingggggg", action.payload);
+        state.error = null;
+      })
+      .addCase(sortingInBooking.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+  }
 });
 
 export const { addBooking, updateBooking, setBooking } = bookingSlice.actions;
