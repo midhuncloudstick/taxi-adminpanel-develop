@@ -3,7 +3,7 @@ export interface Booking {
   id: string;
   date: string;
   pickupTime: string;
-  status: 'requested' | 'waiting for driver confirmation' | 'driver assigned' | ' journey completed' | 'cancelled';
+  status: 'requested' | 'waiting for driver confirmation' | 'driver assigned' | ' journey completed' | 'cancelled'|'pickup' |'journey started';
   kilometers: number;
   pickupLocation: string;
   dropLocation: string;

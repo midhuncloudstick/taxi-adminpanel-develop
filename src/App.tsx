@@ -18,6 +18,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import SendDriverinfo from "./pages/SendDriverinfo";
 import UpdateRide from "./pages/UpdateRide";
+import NewPricing from "./pages/NewPricing";
 
 const queryClient = new QueryClient();
 
@@ -47,7 +48,8 @@ const AppRoutes = () => {
         <Route element={<SidebarLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/fleet" element={<Fleet />} />
-          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/pricing" element={<NewPricing />} />
+           {/* <Route path="/pricing" element={<Pricing />} /> */}
           <Route path="/customers" element={<Customers />} />
           <Route path="/drivers" element={<Drivers />} />
           <Route path="/history" element={<History />} />

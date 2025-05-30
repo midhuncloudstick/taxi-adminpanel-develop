@@ -71,7 +71,7 @@ useEffect(() => {
           <SelectItem value="waiting for driver confirmation">Waiting for driver Confirmation</SelectItem>
           <SelectItem value="assigned driver">Assigned Driver</SelectItem>
           <SelectItem value="journey started">Journey Started</SelectItem>
-          <SelectItem value="pick Up">Pickup</SelectItem>
+          <SelectItem value="pickup">Pickup</SelectItem>
           <SelectItem value="journey completed">Journey Completed</SelectItem>
           <SelectItem value="cancelled">Cancelled</SelectItem>
         </SelectContent>
@@ -83,7 +83,7 @@ useEffect(() => {
         <SelectContent>
           <SelectItem value="all">All Drivers</SelectItem>
           {Array.isArray (driverslist)&&driverslist?.map(d => (
-            <SelectItem value={d.id.toString()} key={d.id}>
+            <SelectItem value={d.name.toString()} key={d.name}>
               {d.name}
             </SelectItem>
           ))}
