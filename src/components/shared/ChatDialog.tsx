@@ -86,7 +86,7 @@ export function ChatDialog({ bookingId, customerId, driverId }: ChatDialogProps)
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[500px] h-[80vh] flex flex-col">
+        <DialogContent className="mt-2 border rounded p-4 shadow-sm max-h-60 overflow-y-auto space-y-2 bg-white">
           <DialogHeader>
             <DialogTitle>Booking Chat - {bookingId}</DialogTitle>
             <p>Type your message below to chat.</p>

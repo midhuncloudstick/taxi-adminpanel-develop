@@ -30,7 +30,7 @@ export const getpeakdaypricing = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-     const url = "api/vi/pricing";
+     const url = "api/v1/pricing";
 
       const response = await api.patchEvent(url,{peak_days,rate1,rate2,rate3,rate4});
 

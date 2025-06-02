@@ -19,6 +19,9 @@ import { AuthProvider, useAuth } from "./hooks/useAuth";
 import SendDriverinfo from "./pages/SendDriverinfo";
 import UpdateRide from "./pages/UpdateRide";
 import NewPricing from "./pages/NewPricing";
+import WebSocketListener from "./WebSocketListener";
+import NotificationSocket from "./NotificationSocket";
+import WebSocketBookingListener from "./WebsocketBookingListener";
 
 const queryClient = new QueryClient();
 
@@ -73,6 +76,9 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+       <WebSocketListener/>
+        <NotificationSocket />
+       <WebSocketBookingListener />
           <BrowserRouter>
             <AppRoutes />
           </BrowserRouter>
