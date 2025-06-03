@@ -1,65 +1,125 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from 'react';
 
-const NotificationSocket = () => {
-  const ws = useRef<WebSocket | null>(null);
+interface WebSocketMessage {
+  type?: string;
+  data?: any;
+  message?: string;
+}
+
+const useNotificationWebSocket = () => {
+  const socket = useRef<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
   const retryCount = useRef(0);
-  const maxRetries = 3;
-  const retryDelay = 3000; // 3 seconds
+  const maxRetries = 5;
+  const retryDelay = useRef(1000); // Start with 1 second delay
+  const pingInterval = useRef<NodeJS.Timeout | null>(null);
 
-  const connectWebSocket = () => {
-    ws.current = new WebSocket("wss://brisbane.cloudhousetechnologies.com/booking/notification");
+  const connect = useCallback(() => {
+    // Cleanup previous connection if exists
+    if (socket.current) {
+      socket.current.close();
+    }
+
+    const wsUrl = 'wss://brisbane.cloudhousetechnologies.com/booking/notification';
+    console.log(`Connecting to WebSocket at ${wsUrl}`);
     
-    ws.current.onopen = () => {
-      console.log("🔔 WebSocket connected successfully");
-      retryCount.current = 0; // Reset retry counter on successful connection
-      
-      // Optional: Send initial message if server requires it
-      // ws.current?.send(JSON.stringify({ type: "subscribe" }));
-    };
+    socket.current = new WebSocket(wsUrl);
 
-    ws.current.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log("📨 Notification received:", data);
-        
-        if (data.message) {
-          // Use a proper notification system instead of alert
-          console.log("New notification:", data.message);
-          // Or use a toast notification: toast.info(data.message);
+    socket.current.onopen = () => {
+      console.log('WebSocket connected successfully');
+      setIsConnected(true);
+      retryCount.current = 0;
+      retryDelay.current = 1000;
+
+      // Setup ping interval (match server's 30s)
+      pingInterval.current = setInterval(() => {
+        if (socket.current?.readyState === WebSocket.OPEN) {
+          socket.current.send(JSON.stringify({ type: 'ping' }));
         }
-      } catch (err) {
-        console.error("Failed to parse message:", err, "Raw data:", event.data);
+      }, 25000); // 25s to be slightly faster than server's 30s
+    };
+
+    socket.current.onmessage = (event) => {
+      try {
+        const message: WebSocketMessage = JSON.parse(event.data);
+        
+        // Handle ping response if needed
+        if (message.type === 'ping') {
+          socket.current?.send(JSON.stringify({ type: 'pong' }));
+          return;
+        }
+
+        // Handle actual notifications
+        console.log('Received notification:', message);
+        // Here you would process your notifications
+        // e.g., update state, show toast, etc.
+
+      } catch (error) {
+        console.log('Received non-JSON message:', event.data);
       }
     };
 
-    ws.current.onerror = (error) => {
-      console.error("WebSocket error:", error);
+    socket.current.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setIsConnected(false);
     };
 
-    ws.current.onclose = (event) => {
-      console.log(`WebSocket closed (code: ${event.code}, reason: ${event.reason})`);
+    socket.current.onclose = (event) => {
+      console.log(`WebSocket closed (code ${event.code}): ${event.reason}`);
+      setIsConnected(false);
       
-      // Reconnect logic
-      if (retryCount.current < maxRetries) {
-        retryCount.current += 1;
-        console.log(`Attempting to reconnect (${retryCount.current}/${maxRetries})...`);
-        setTimeout(connectWebSocket, retryDelay);
+      // Cleanup ping interval
+      if (pingInterval.current) {
+        clearInterval(pingInterval.current);
+        pingInterval.current = null;
       }
-    };
-  };
 
-  useEffect(() => {
-    connectWebSocket();
-
-    return () => {
-      if (ws.current) {
-        console.log("Cleaning up WebSocket connection");
-        ws.current.close();
+      // Attempt reconnect if not normal closure
+      if (event.code !== 1000 && retryCount.current < maxRetries) {
+        const delay = retryDelay.current;
+        retryCount.current++;
+        retryDelay.current = Math.min(delay * 2, 30000); // Exponential backoff, max 30s
+        
+        console.log(`Will attempt reconnect in ${delay}ms (attempt ${retryCount.current}/${maxRetries})`);
+        setTimeout(connect, delay);
       }
     };
   }, []);
 
-  return null;
+  useEffect(() => {
+    connect();
+
+    return () => {
+      // Cleanup on unmount
+      if (socket.current) {
+        socket.current.close();
+      }
+      if (pingInterval.current) {
+        clearInterval(pingInterval.current);
+      }
+    };
+  }, [connect]);
+
+  return {
+    isConnected,
+    send: (message: WebSocketMessage) => {
+      if (socket.current?.readyState === WebSocket.OPEN) {
+        socket.current.send(JSON.stringify(message));
+      }
+    }
+  };
 };
 
-export default NotificationSocket;
+// Usage example in a React component
+const NotificationComponent = () => {
+  const { isConnected } = useNotificationWebSocket();
+
+  return (
+    <div>
+      Connection status: {isConnected ? 'Connected' : 'Disconnected'}
+      {/* Your component UI */}
+    </div>
+  );
+};
+
+export default NotificationComponent;

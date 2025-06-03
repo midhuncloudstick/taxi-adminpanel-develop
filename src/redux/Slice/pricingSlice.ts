@@ -22,6 +22,25 @@ const initialState: PeakDayPriceState = {
 
 };
 
+export const getPricing = createAsyncThunk(
+  "price/get",
+  async (
+   _,
+    { rejectWithValue }
+  ) => {
+    try {
+     const url = "/api/v1/pricing";
+
+      const response = await api.getEvents(url);
+
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || "Something went wrong");
+    }
+  }
+);
+
+
 
 export const getpeakdaypricing = createAsyncThunk(
   "price/getpeakdaypricing",
@@ -57,6 +76,20 @@ const pricingSlice = createSlice({
         state.error = null;
       })
       .addCase(getpeakdaypricing.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+        .addCase(getPricing.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getPricing.fulfilled, (state, action) => {
+        state.loading = false;
+        state. price= action.payload.message;
+        state.error = null;
+      })
+      .addCase(getPricing.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

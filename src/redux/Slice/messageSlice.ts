@@ -25,7 +25,7 @@ const initialState: messageState = {
 
 // bookingSlice.ts
 export const getMessage = createAsyncThunk(
-  "form/startjourney",
+  "message/startjourney",
   async (
   _,
     { rejectWithValue }
@@ -47,7 +47,7 @@ export const getMessage = createAsyncThunk(
 
 // Slice
 const messageSlice = createSlice({
-  name: 'form',
+  name: 'message',
   initialState,
   reducers: {},
   extraReducers: (builder) => {

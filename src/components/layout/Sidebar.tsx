@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import {
   Mail,
   Menu,
   Settings,
+  User,
   Users,
   X
 } from "lucide-react";
@@ -54,6 +55,16 @@ export function Sidebar() {
     { icon: History, label: "History", to: "/history" },
     { icon: Mail, label: "Message", to: "/message" },
   ];
+
+
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+
+useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    setUser(JSON.parse(storedUser));
+  }
+}, []);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -109,8 +120,8 @@ export function Sidebar() {
               <span className="text-sm font-medium">BT</span>
             </div>
             <div>
-              <p className="text-sm font-medium">Admin User</p>
-              <p className="text-xs text-gray-500">admin@brisbanetaxi.com</p>
+              <p className="text-sm font-medium">{user?.name}</p>
+              <p className="text-xs text-gray-500">{user?.email}</p>
             </div>
           </div>
         )}

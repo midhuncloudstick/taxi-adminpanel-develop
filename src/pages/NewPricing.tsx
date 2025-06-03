@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, isEqual } from "date-fns";
@@ -13,7 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
-import { getpeakdaypricing } from "@/redux/Slice/pricingSlice";
+import { getpeakdaypricing, getPricing } from "@/redux/Slice/pricingSlice";
+import { useAppSelector } from "@/redux/hook";
 
 interface PeakDayPricing {
   distance1: string;
@@ -41,6 +42,10 @@ export default function NewPricing() {
     });
     const [isEditingPricing, setIsEditingPricing] = useState(false);
     const [tempPricing, setTempPricing] = useState<PeakDayPricing>({...peakDayPricing});
+    const getPrice = useAppSelector((state)=>state.pricing.price)
+    useEffect(()=>{
+        dispatch(getPricing())
+    },[])
 
     const handleSave = () => {
         const pricingData = {

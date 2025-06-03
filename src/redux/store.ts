@@ -9,6 +9,8 @@ import bookingReducer from './Slice/bookingSlice'
 import historyReducer from './Slice/historySlice'
 import formReducer from './Slice/formSlice'
 import messageReducer from './Slice/messageSlice'
+import pricingReducer  from '@/redux/Slice/pricingSlice';
+
 // Combine all reducers
 const rootReducer = combineReducers({
   fleet: fleetReducer,
@@ -16,6 +18,7 @@ const rootReducer = combineReducers({
   customer:customerReducer,
   booking:bookingReducer,
   form:formReducer,
+  pricing:pricingReducer,
   message:messageReducer,
   history:historyReducer, // Assuming you have a historyReducer
   // Add other slices here like `user: userReducer`

@@ -43,15 +43,11 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
     features: []
   });
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-    const newImageFiles = Array.from(files);
-    const newImages = newImageFiles.map((file) => URL.createObjectURL(file));
-    setImages((prevImages) => [...prevImages, ...newImages]);
-    setImageFiles((prevFiles) => [...prevFiles, ...newImageFiles]);
-    event.target.value = "";
-  };
+const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = Array.from(e.target.files || []);
+  const imagePreviews = files.map(file => URL.createObjectURL(file));
+  setImages(prev => [...prev, ...imagePreviews]);
+};
 
   const handleRemoveImage = (index: number) => {
     setImages((prevImages) => prevImages.filter((_, i) => i !== index));
@@ -171,40 +167,45 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
 
           <div className="relative space-y-2 flex flex-col items-center">
-            <div className="flex flex-wrap gap-2 justify-center">
-              {images.map((img, idx) => (
-                <div key={idx} className="relative">
-                  <Avatar className="w-1 h-1 border-2 border-gray-200">
-                    <AvatarImage src={img} alt={`car image ${idx + 1}`} />
-                    <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
-                      <Upload className="w-5 h-5" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <button
-                    type="button"
-                    className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
-                    onClick={() => handleRemoveImage(idx)}
-                  >
-                    <X className="w-4 h-4 text-black-500" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <label
-              htmlFor="photo-upload"
-              className="cursor-pointer text-taxi-blue hover:text-taxi-teal text-sm underline"
-            >
-              Upload Photos
-            </label>
-            <input
-              id="photo-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              multiple
-              onChange={handleImageChange}
-            />
-          </div>
+  <div className="flex flex-wrap gap-4 justify-center">
+    {images.map((img, idx) => (
+      <div key={idx} className="relative">
+        <Avatar className="w-24 h-24 border-2 border-gray-200">
+          <AvatarImage
+            src={img}
+            alt={`car image ${idx + 1}`}
+            className="w-full h-full object-cover"
+          />
+          <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
+            <Upload className="w-6 h-6" />
+          </AvatarFallback>
+        </Avatar>
+        <button
+          type="button"
+          className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
+          onClick={() => handleRemoveImage(idx)}
+        >
+          <X className="w-4 h-4 text-black-500" />
+        </button>
+      </div>
+    ))}
+  </div>
+
+  <label
+    htmlFor="photo-upload"
+    className="cursor-pointer text-taxi-blue hover:text-taxi-teal text-sm underline"
+  >
+    Upload Photos
+  </label>
+  <input
+    id="photo-upload"
+    type="file"
+    accept="image/*"
+    className="hidden"
+    multiple
+    onChange={handleImageChange}
+  />
+</div>
           <div className="grid gap-2">
             <Label htmlFor="model">Car Model</Label>
             <Input

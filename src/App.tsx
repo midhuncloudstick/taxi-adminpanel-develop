@@ -76,8 +76,9 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <NotificationSocket />
        <WebSocketListener/>
-        <NotificationSocket />
+        
        <WebSocketBookingListener />
           <BrowserRouter>
             <AppRoutes />
