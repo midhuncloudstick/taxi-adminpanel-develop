@@ -22,7 +22,7 @@ export function Header({ title }: HeaderProps) {
 
   const availablecarslist = useAppSelector((state) => state.fleet.cars) ?? [];
   const availabledriverslist = useAppSelector((state) => state.driver.drivers) ?? [];
-
+     const upcoming = useAppSelector((state) => state.notification.notification) || [];
   useEffect(() => {
     dispatch(getAvailableCars());
     dispatch(getAvailableDrivers());
@@ -122,11 +122,15 @@ export function Header({ title }: HeaderProps) {
             onClick={() => setNotifOpen((open) => !open)}
           >
             <Bell size={20} />
-            <span className="absolute -top-1 -right-1 bg-taxi-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-              3
+            {
+              upcoming && upcoming.length>0&&
+                <span className="absolute -top-1 -right-1 bg-taxi-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+              {upcoming.length}
             </span>
+            }
+          
           </Button>
-          <UpcomingTripsDropdown open={notifOpen} />
+          <UpcomingTripsDropdown open={notifOpen} setopen={setNotifOpen} />
           {notifOpen && (
             <div className="fixed inset-0 z-30" onClick={() => setNotifOpen(false)} />
           )}

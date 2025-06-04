@@ -76,10 +76,11 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <WebSocketBookingListener />
           <NotificationSocket />
-       <WebSocketListener/>
+           <WebSocketListener/>
         
-       <WebSocketBookingListener />
+       
           <BrowserRouter>
             <AppRoutes />
           </BrowserRouter>

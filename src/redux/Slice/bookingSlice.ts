@@ -213,45 +213,19 @@ const bookingSlice = createSlice({
   name: "booking",
   initialState,
   reducers: {
-    addBooking: (state, action: PayloadAction<Booking>) => {
-      //   state.tasks.push({
-      //     ...action.payload,
-      //     startDate: new Date(action.payload.startDate).toISOString(),
-      //     endDate: new Date(action.payload.endDate).toISOString(),
-      //     status: action.payload.status, // Ensure this matches "NotStarted" | "InProgress" | "Completed"
-      //     taskCost: action.payload.taskCost || "0",
-      //   });
-    },
-    updateBooking: (state, action: PayloadAction<Booking>) => {
-      //   const index = state.tasks.findIndex((task) => task.ID === action.payload.ID);
-      //   if (index !== -1) {
-      //     state.tasks[index] = {
-      //       ...action.payload,
-      //       startDate: new Date(action.payload.startDate).toISOString(),
-      //       endDate: new Date(action.payload.endDate).toISOString(),
-      //       status: action.payload.status, // Ensure this matches "NotStarted" | "InProgress" | "Completed"
-      //       taskCost: action.payload.taskCost || "0",
-      //     };
-      //   }
-    },
-    deleteBooking: (state, action: PayloadAction<number>) => {
-      //   state.tasks = state.tasks.filter((task) => task.ID !== action.payload);
-    },
-    setBooking: (state, action: PayloadAction<Booking[]>) => {
-      //   state.tasks = action.payload.map((task) => ({
-      //     ...task,
-      //     startDate: task.startDate ? new Date(task.startDate).toISOString() : null, // Validate start_date
-      //     endDate: task.endDate ? new Date(task.endDate).toISOString() : null,       // Validate end_date
-      //     status: task.status === "NotStarted"
-      //       ? "NotStarted"
-      //       : task.status === "InProgress"
-      //       ? "InProgress"
-      //       : task.status === "Completed"
-      //       ? "Completed"
-      //       : task.status, // Map status values
-      //     taskCost: task.taskCost || "0",
-      //   }));
-    },
+    updatelist: (state, action) => {
+  const newBooking = action.payload;
+  const existingIndex = state.selectedBooking.findIndex(
+    (b) => b.id === newBooking.id
+  );
+  if (existingIndex !== -1) {
+    state.selectedBooking[existingIndex] = newBooking;
+  } else {
+    state.selectedBooking.unshift(newBooking);
+  }
+
+
+},
   },
 
 
@@ -375,5 +349,5 @@ const bookingSlice = createSlice({
   }
 });
 
-export const { addBooking, updateBooking, setBooking } = bookingSlice.actions;
+export const { updatelist } = bookingSlice.actions;
 export default bookingSlice.reducer;

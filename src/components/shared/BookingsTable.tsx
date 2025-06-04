@@ -42,10 +42,11 @@ import {
 } from "@/redux/Slice/customerSlice";
 import { getDrivers } from "@/redux/Slice/driverSlice";
 import { Customer } from "@/types/customer";
+import { clearnotification } from "@/redux/Slice/notificationSlice";
 
 interface BookingsTableProps {
   bookings: Booking[];
-  drivers?: Drivers[];
+  drivers?: string;
   showCustomer?: boolean;
   showDriver?: boolean;
   showDriverSelect?: boolean;
@@ -60,7 +61,7 @@ interface BookingsTableProps {
 
 export function BookingsTable({
   bookings,
-  drivers = [],
+  drivers = '',
   showCustomer,
   showDriver,
   showDriverSelect,
@@ -77,9 +78,10 @@ export function BookingsTable({
 
   const [availableDrivers, setAvailableDrivers] = useState<Drivers[]>([]);
   const [availableCustomers, setAvailableCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true); // ⬅️ added loading state
+  const [loading, setLoading] = useState(false); // ⬅️ added loading state
 
   const bookinglist = useAppSelector((state) => state.booking.selectedBooking);
+  const toggleidfromNotification = useAppSelector((state)=>state.notification.toglelistId)
   const customersFromStore = useAppSelector(state => state.customer.customers || []);
   const driversFromStore = useAppSelector(state => state.driver.drivers || []);
 
@@ -87,9 +89,9 @@ export function BookingsTable({
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true); // ⬅️ start loading
+     // setLoading(true); // ⬅️ start loading
       await Promise.all([
-        dispatch(getBookinglist()),
+       // dispatch(getBookinglist()),
         dispatch(listCustomerUsers()),
         dispatch(getDrivers())
       ]);
@@ -107,17 +109,32 @@ export function BookingsTable({
     setAvailableDrivers(driversFromStore);
   }, [driversFromStore]);
 
-  const toggleRow = (bookingId: string) => {
-    if (onExpandRow) {
-      onExpandRow(bookingId);
-    } else {
+  useEffect(()=>{
+    toggleRow(toggleidfromNotification)
+  },[toggleidfromNotification])
+
+  // const toggleRow = (bookingId: string) => {
+    
+  //   if (onExpandRow) {
+  //     onExpandRow(bookingId);
+  //   } else {
+  //     setInternalExpandedRows(prev => ({
+  //       ...prev,
+  //       [bookingId]: !prev[bookingId]
+  //     }));
+  //   }
+  // };
+ const toggleRow = (bookingId: string) => {
+   
       setInternalExpandedRows(prev => ({
         ...prev,
         [bookingId]: !prev[bookingId]
       }));
-    }
-  };
+      setInterval(() => {
+   dispatch(clearnotification(bookingId))     
+      }, 2000);
 
+  };
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString("en-US");
 
@@ -144,7 +161,7 @@ export function BookingsTable({
     } else {
       await dispatch(AssignDriverthroughEmail({ driverId, bookingId }));
     }
-    await dispatch(getBookinglist());
+  // await dispatch(getBookinglist());
     await dispatch(getDrivers());
   };
 
