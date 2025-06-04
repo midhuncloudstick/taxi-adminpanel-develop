@@ -1,9 +1,14 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { BookingsTable } from "@/components/shared/BookingsTable";
 import { bookings, drivers } from "@/data/mockData";
 import { BookingsFilterBar } from "@/components/dashboard/BookingsFilterBar";
+import {Drivers} from '@/types/driver'
+import { Car, UserCheck } from "lucide-react";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
+import { getAvailableCars } from "@/redux/Slice/fleetSlice";
+import { getAvailableDrivers } from "@/redux/Slice/driverSlice";
 
 // Utility: sort bookings
 function sortBookings(bookings, sortKey, sortDirection) {
@@ -21,13 +26,20 @@ function sortBookings(bookings, sortKey, sortDirection) {
 
 export default function Dashboard() {
   // FILTER & SORT state
-  const [status, setStatus] = useState<"pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled" | "all">("all");
+  const [status, setStatus] = useState<"requested" | "waiting for driver confirmation" | "assigned driver" | "pickup" | "journey started" | "journey completed" | "cancelled"|"all">("all");
   const [driver, setDriver] = useState("all");
   const [location, setLocation] = useState("");
   const [customerId, setCustomerId] = useState("");
   const [sortKey, setSortKey] = useState<null | string>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [tableBookings, setTableBookings] = useState(bookings);
+
+
+
+
+
+
+
 
   // Handler to update driver for a booking
   const handleUpdateDriver = (bookingId: string, driverId: string) => {
@@ -39,7 +51,7 @@ export default function Dashboard() {
   };
 
   // Handler to update status for a booking
-  const handleUpdateStatus = (bookingId: string, newStatus: "pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled") => {
+  const handleUpdateStatus = (bookingId: string, newStatus: "requested" | "waiting for driver confirmation" | "assigned driver" | "pickup" | "journey started" | "journey completed" | "cancelled"|"all") => {
     setTableBookings(prev =>
       prev.map(b =>
         b.id === bookingId ? { ...b, status: newStatus } : b
@@ -76,11 +88,12 @@ export default function Dashboard() {
 
   // Type-safe setStatus handler
   const handleSetStatus = (value: string) => {
-    setStatus(value as "pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled" | "all");
+    setStatus(value as "requested" | "waiting for driver confirmation" | "assigned driver" | "pickup" | "journey started" | "journey completed" | "cancelled");
   };
 
   return (
-    <PageContainer title="Dashboard">
+    <PageContainer title="">
+     
       <div className="space-y-4">
         <div>
           <h3 className="text-lg font-semibold mb-2 text-taxi-blue">Bookings</h3>
@@ -98,7 +111,7 @@ export default function Dashboard() {
           />
           <BookingsTable
             bookings={filteredBookings}
-            drivers={drivers}
+            drivers={driver}
             showCustomer
             showDriverSelect
             onUpdateDriver={handleUpdateDriver}

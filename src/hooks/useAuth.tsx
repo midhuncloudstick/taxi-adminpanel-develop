@@ -1,7 +1,5 @@
-
 import { useState, useEffect, createContext, useContext } from "react";
 
-// Create a context for authentication
 interface AuthContextType {
   isAuthenticated: boolean;
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
@@ -9,23 +7,42 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Provider component
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  // In a real app, this would check localStorage, cookies, or a context
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  
-  // For development, allow toggle with keyboard shortcut (Ctrl+Alt+L)
+  const [isAuthenticated, _setIsAuthenticated] = useState(false);
+
+  // On initial load, read from localStorage
+  useEffect(() => {
+    const storedAuth = localStorage.getItem("isAuthenticated");
+    if (storedAuth === "true") {
+      _setIsAuthenticated(true);
+    }
+  }, []);
+
+  // Custom setter that works like useState setter
+  const setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>> = (value) => {
+    if (typeof value === "function") {
+      _setIsAuthenticated((prev) => {
+        const newValue = (value as (prev: boolean) => boolean)(prev);
+        localStorage.setItem("isAuthenticated", newValue.toString());
+        return newValue;
+      });
+    } else {
+      localStorage.setItem("isAuthenticated", value.toString());
+      _setIsAuthenticated(value);
+    }
+  };
+
+  // Development toggle shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.altKey && e.key === 'l') {
-        setIsAuthenticated(prev => !prev);
-        console.log('Authentication toggled:', !isAuthenticated);
+      if (e.ctrlKey && e.altKey && e.key === "l") {
+        setIsAuthenticated((prev) => !prev);
+        console.log("Authentication toggled");
       }
     };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isAuthenticated]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated }}>
@@ -34,11 +51,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Hook for components to use authentication context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

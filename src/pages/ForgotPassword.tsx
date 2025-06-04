@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,12 +14,17 @@ import {
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { KeyRound, ArrowLeft } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { forgotPassword } from "@/redux/Slice/userSlice";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const dispatch = useDispatch<AppDispatch>()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +38,29 @@ export default function ForgotPassword() {
       return;
     }
 
+
+
     setIsLoading(true);
+
+   try {
+       const result = await dispatch(forgotPassword({ email })).unwrap();
+   
+       toast({
+         title: "Success",
+         description: result.message || "You have successfully logged in",
+       });
+   
+       // Redirect to dashboard or home
+       navigate("/login");
+     } catch (error: any) {
+       toast({
+         title: "Error",
+         description: error?.message || "Invalid email or password",
+         variant: "destructive",
+       });
+     } finally {
+       setIsLoading(false);
+     }
     
     // Mock password reset process - in a real app, this would call an API
     setTimeout(() => {

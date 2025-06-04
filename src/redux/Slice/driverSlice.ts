@@ -108,7 +108,27 @@ export const UpdateDrivers = createAsyncThunk(
 
 
 
+export const getAvailableDrivers = createAsyncThunk(
+  "driver/available",
+  async (
+    _,
+  ) => {
 
+    try {
+      //   const userId = localStorage.getItem("userid");
+      const url = "/api/v1/driver/available";
+
+      const response = await api.getEvents(url);
+      const driversData = response.data;
+      return driversData;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error || "driver details fetching failed";
+      }
+      return "An unexpected error occurred.";
+    }
+  }
+);
 
 
 
@@ -210,6 +230,19 @@ const driverSlice = createSlice({
         )
       })
       .addCase(UpdateDrivers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(getAvailableDrivers.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+       .addCase(getAvailableDrivers.fulfilled, (state, action) => {
+        state.loading = false; 
+        state.drivers = action.payload.message
+      })
+      .addCase(getAvailableDrivers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

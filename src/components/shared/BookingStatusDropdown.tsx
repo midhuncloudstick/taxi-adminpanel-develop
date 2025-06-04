@@ -1,34 +1,46 @@
-
 import { useState } from "react";
 import { Button } from "../ui/button";
-import { ArrowDown, Check, X, MessageCircle } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { getBookinglist, updateBookingStatus } from "@/redux/Slice/bookingSlice";
 
 interface BookingStatusDropdownProps {
-  status: "pending" | "waiting for confirmation" | "upcoming" | "completed" | "cancelled";
-  onApprove?: () => void;
-  onCancel?: () => void;
-  onSetWaiting?: () => void;
+  bookingId: string;
+  status: 'requested'|'waiting for driver confirmation'|'assigned driver'|'journey started'|'pickup'|'journey completed'|'cancelled';
 }
 
+const statusOptions = [
+  { value: "requested", label: "Requested" },
+  { value: "waiting for driver confirmation", label: "Waiting for Driver Confirmation" },
+  { value: "assigned driver", label: "Assigned Driver" },
+  { value: "journey started", label: "Journey Started" },
+  { value: "pickup", label: "Pickup" },
+  { value: "journey completed", label: "Journey Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
 export function BookingStatusDropdown({
+  bookingId,
   status,
-  onApprove,
-  onCancel,
-  onSetWaiting,
 }: BookingStatusDropdownProps) {
   const [open, setOpen] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
 
-  // Colors for each status
   function getStatusUI(s: string) {
     switch (s) {
-      case "pending":
+      case "requested":
         return "bg-yellow-50 text-yellow-800";
-      case "waiting for confirmation":
+      case "waiting for driver confirmation":
         return "bg-blue-50 text-blue-800";
-      case "upcoming":
+      case "assigned driver":
         return "bg-taxi-teal/20 text-taxi-teal";
-      case "completed":
+      case "journey started":
+        return "bg-purple-100 text-purple-700";
+      case "pickup":
+        return "bg-orange-100 text-orange-700";
+      case "journey completed":
         return "bg-green-100 text-green-700";
       case "cancelled":
         return "bg-red-100 text-red-700";
@@ -37,77 +49,13 @@ export function BookingStatusDropdown({
     }
   }
 
-  // Dropdown content for each relevant status
-  let dropdownContent = null;
-  if (status === "pending") {
-    dropdownContent = (
-      <div className="absolute z-20 mt-2 min-w-[190px] right-0 bg-white border shadow rounded [&>*]:flex [&>*]:px-4 [&>*]:py-2">
-        <button
-          className="hover:bg-blue-50 w-full flex items-center gap-2"
-          onClick={() => {
-            setOpen(false);
-            onSetWaiting?.();
-          }}
-        >
-          <Check size={16} className="text-blue-600" />
-          Set to Waiting for Confirmation
-        </button>
-        <button
-          className="hover:bg-red-50 w-full flex items-center gap-2"
-          onClick={() => {
-            setOpen(false);
-            onCancel?.();
-          }}
-        >
-          <X size={16} className="text-taxi-red" />
-          Cancel Booking
-        </button>
-      </div>
-    );
-  } else if (status === "waiting for confirmation") {
-    dropdownContent = (
-      <div className="absolute z-20 mt-2 min-w-[140px] right-0 bg-white border shadow rounded [&>*]:flex [&>*]:px-4 [&>*]:py-2">
-        <button
-          className="hover:bg-green-50 w-full flex items-center gap-2"
-          onClick={() => {
-            setOpen(false);
-            onApprove?.();
-          }}
-        >
-          <Check size={16} className="text-green-600" />
-          Approve Booking
-        </button>
-        <button
-          className="hover:bg-red-50 w-full flex items-center gap-2"
-          onClick={() => {
-            setOpen(false);
-            onCancel?.();
-          }}
-        >
-          <X size={16} className="text-taxi-red" />
-          Cancel Booking
-        </button>
-      </div>
-    );
-  } else if (status === "upcoming") {
-    dropdownContent = (
-      <div className="absolute z-20 mt-2 min-w-[140px] right-0 bg-white border shadow rounded">
-        <button
-          className="flex items-center gap-2 w-full px-4 py-2 hover:bg-red-50"
-          onClick={() => {
-            setOpen(false);
-            onCancel?.();
-          }}
-        >
-          <X size={16} className="text-taxi-red" />
-          Cancel Booking
-        </button>
-      </div>
-    );
-  }
-
-  const showDropdown = status === "pending" || status === "waiting for confirmation" || status === "upcoming";
-  const displayText = status.charAt(0).toUpperCase() + status.slice(1);
+  const handleSelect = async (newStatus: BookingStatusDropdownProps["status"]) => {
+    if (newStatus !== status) {
+      await dispatch(updateBookingStatus({ bookingId, status: newStatus }));
+      await dispatch(getBookinglist());
+    }
+    setOpen(false);
+  };
 
   return (
     <div className="relative">
@@ -117,21 +65,33 @@ export function BookingStatusDropdown({
         className={cn(
           "px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 group focus:bg-gray-100",
           getStatusUI(status),
-          showDropdown && "cursor-pointer"
+          "cursor-pointer"
         )}
         type="button"
-        onClick={() => showDropdown && setOpen(o => !o)}
+        onClick={() => setOpen(o => !o)}
         tabIndex={0}
       >
-        <span>{displayText}</span>
-        {showDropdown && (
-          <ArrowDown size={14} className="inline ml-1 group-hover:opacity-60" />
-        )}
+        <span>{statusOptions.find(opt => opt.value === status)?.label || status}</span>
+        {/* <ArrowDown size={14} className="inline ml-1 group-hover:opacity-60" /> */}
       </Button>
       {open && (
-        <div className="absolute z-50 right-0 top-full">{dropdownContent}</div>
+        <div className="absolute z-50 right-0 top-full bg-white border shadow rounded p-2 min-w-[180px]">
+          <ul>
+            {statusOptions.map(opt => (
+              <li
+                key={opt.value}
+                className={cn(
+                  "px-4 py-2 hover:bg-blue-50 cursor-pointer rounded",
+                  opt.value === status && "font-semibold bg-blue-100"
+                )}
+                onClick={() => handleSelect(opt.value as BookingStatusDropdownProps["status"])}
+              >
+                {opt.label}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
-      {/* Background overlay to close on outside click */}
       {open && (
         <div
           className="fixed inset-0 z-40"

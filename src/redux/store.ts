@@ -6,14 +6,24 @@ import fleetReducer from "./Slice/fleetSlice";
 import driverReducer from "./Slice/driverSlice"
 import customerReducer from './Slice/customerSlice'
 import bookingReducer from './Slice/bookingSlice'
-import { drivers } from "@/data/mockData";
-
+import historyReducer from './Slice/historySlice'
+import formReducer from './Slice/formSlice'
+import messageReducer from './Slice/messageSlice'
+import pricingReducer  from '@/redux/Slice/pricingSlice';
+import notificationReducer from '@/redux/Slice/notificationSlice'
 // Combine all reducers
 const rootReducer = combineReducers({
   fleet: fleetReducer,
   driver: driverReducer,
   customer:customerReducer,
   booking:bookingReducer,
+  form:formReducer,
+  pricing:pricingReducer,
+  message:messageReducer,
+  history:historyReducer, 
+
+  notification :notificationReducer
+  // Assuming you have a historyReducer
   // Add other slices here like `user: userReducer`
 });
 

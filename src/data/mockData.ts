@@ -3,7 +3,7 @@ export interface Booking {
   id: string;
   date: string;
   pickupTime: string;
-  status: 'pending' | 'waiting for confirmation' | 'upcoming' | 'completed' | 'cancelled';
+  status: 'requested' | 'waiting for driver confirmation' | 'driver assigned' | ' journey completed' | 'cancelled'|'pickup' |'journey started';
   kilometers: number;
   pickupLocation: string;
   dropLocation: string;
@@ -70,7 +70,7 @@ export const bookings: Booking[] = [
     id: 'BK-1001',
     date: '2025-04-22',
     pickupTime: '08:30',
-    status: 'pending',
+    status: 'requested',
     kilometers: 25,
     pickupLocation: 'Brisbane Airport Terminal 1',
     dropLocation: 'Marriott Hotel, Brisbane CBD',
@@ -83,7 +83,7 @@ export const bookings: Booking[] = [
     id: 'BK-1002',
     date: '2025-04-22',
     pickupTime: '10:15',
-    status: 'waiting for confirmation',
+    status: 'waiting for driver confirmation',
     kilometers: 32,
     pickupLocation: 'Brisbane Airport Terminal 2',
     dropLocation: 'South Bank Parklands',
@@ -96,7 +96,7 @@ export const bookings: Booking[] = [
     id: 'BK-1003',
     date: '2025-04-21',
     pickupTime: '14:45',
-    status: 'completed',
+    status: 'driver assigned',
     kilometers: 18,
     pickupLocation: 'Brisbane Airport Terminal 1',
     dropLocation: 'The Gabba',
@@ -109,7 +109,7 @@ export const bookings: Booking[] = [
     id: 'BK-1004',
     date: '2025-04-21',
     pickupTime: '16:30',
-    status: 'completed',
+    status: 'waiting for driver confirmation',
     kilometers: 45,
     pickupLocation: 'Brisbane Airport Terminal 1',
     dropLocation: 'Gold Coast',
@@ -134,7 +134,7 @@ export const bookings: Booking[] = [
     id: 'BK-1006',
     date: '2025-04-23',
     pickupTime: '11:45',
-    status: 'pending',
+    status: 'driver assigned',
     kilometers: 28,
     pickupLocation: 'Brisbane Airport Terminal 1',
     dropLocation: 'University of Queensland',
@@ -147,7 +147,7 @@ export const bookings: Booking[] = [
     id: 'BK-1007',
     date: '2025-04-23',
     pickupTime: '13:15',
-    status: 'upcoming',
+    status: 'requested',
     kilometers: 15,
     pickupLocation: 'Brisbane Airport Terminal 2',
     dropLocation: 'Fortitude Valley',
@@ -432,5 +432,5 @@ export const getBookingsByCustomerId = (customerId: string): Booking[] => {
 };
 
 export const getCompletedBookings = (): Booking[] => {
-  return bookings.filter(booking => booking.status === 'completed');
+  return bookings.filter(booking => booking.status === 'journey completed');
 };

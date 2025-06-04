@@ -120,7 +120,27 @@ export const Deletecars = createAsyncThunk(
 );
 
 
+export const getAvailableCars = createAsyncThunk(
+  "cars/available",
+  async (
+   _,
+  ) => {
+    
+    try {
+    //   const userId = localStorage.getItem("userid");
+    const url = "/api/v1/cars/available";
 
+      const response = await api.getEvents(url);
+      const fleetsData = response.data;
+      return fleetsData;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error|| "car details fetching failed";
+      }
+      return "An unexpected error occurred.";
+    }
+  }
+);
 
 
 
@@ -238,7 +258,21 @@ const fleetSlice = createSlice({
             state.loading = false;
             state.error = action.payload as string;
           }) 
-
+          .addCase(getAvailableCars.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+          })
+          .addCase(getAvailableCars.fulfilled, (state, action) => {
+            state.loading = false;
+           
+           
+            console.log("action.payload", action.payload);
+            state.error = null;
+          })
+          .addCase(getAvailableCars.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload as string;
+          }) 
 
 
         

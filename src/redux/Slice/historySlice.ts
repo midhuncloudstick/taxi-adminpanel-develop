@@ -1,18 +1,19 @@
 
 
 import { api } from "@/services/EventServices";
-import { Customer } from "@/types/customer";
-// import { Cars } from "@/types/fleet";
+import { Cars } from "@/types/fleet";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 
 
+interface History{
+
+}
 
 
-
-interface CustomerState {
-  customers:Customer[];
-  selectedCustomers: Customer [];
+interface CarState {
+  history:History[];
+  selectedHistory: History | null;
   loading: boolean;
   error: string | null;
  
@@ -20,11 +21,11 @@ interface CustomerState {
 //   // Define the correct type here
 }
 
-const initialState: CustomerState = {
-  customers: [],
+const initialState: CarState = {
+  history: [],
   loading: false,
   error: null,
-  selectedCustomers: null,
+  selectedHistory: null,
 };
 
 
@@ -34,19 +35,19 @@ const initialState: CustomerState = {
 
 
 
-export const listCustomerUsers = createAsyncThunk(
-  "customers/get",
+export const histories = createAsyncThunk(
+  "cars/get",
   async (
-  _,
+   _,
   ) => {
     
     try {
     //   const userId = localStorage.getItem("userid");
-    const url = "/api/v1/user/list";
+    const url = "/api/v1/history";
 
       const response = await api.getEvents(url);
-      const customerData = await response.data;
-      return customerData;
+      const fleetData = response.data;
+      return fleetData;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return error|| "car details fetching failed";
@@ -56,18 +57,6 @@ export const listCustomerUsers = createAsyncThunk(
   }
 );
 
-export const listBookingBycustomerId = createAsyncThunk(
-  'booking/listByCustomerId',
-  async (userId: string, { rejectWithValue }) => {
-    try {
-      const url = `/api/v1/user/booking/${userId}`;
-      const response = await api.getEvents(url);
-      return response.data;
-    } catch (err: any) {
-      return rejectWithValue(err.response?.data || 'Something went wrong');
-    }
-  }
-);
 
 
 
@@ -81,11 +70,12 @@ export const listBookingBycustomerId = createAsyncThunk(
 
 
 
-const customerSlice = createSlice({
-  name: "customer",
+
+const historySlice = createSlice({
+  name: "history",
   initialState,
   reducers: {
-    addCars: (state, action: PayloadAction<Customer>) => {
+    addCars: (state, action: PayloadAction<History>) => {
     //   state.tasks.push({
     //     ...action.payload,
     //     startDate: new Date(action.payload.startDate).toISOString(),
@@ -94,7 +84,7 @@ const customerSlice = createSlice({
     //     taskCost: action.payload.taskCost || "0",
     //   });
     },
-    updateCars: (state, action: PayloadAction<Customer>) => {
+    updateCars: (state, action: PayloadAction<History>) => {
     //   const index = state.tasks.findIndex((task) => task.ID === action.payload.ID);
     //   if (index !== -1) {
     //     state.tasks[index] = {
@@ -109,7 +99,7 @@ const customerSlice = createSlice({
     deleteCars: (state, action: PayloadAction<number>) => {
     //   state.tasks = state.tasks.filter((task) => task.ID !== action.payload);
     },
-    setCars: (state, action: PayloadAction<Customer[]>) => {
+    setCars: (state, action: PayloadAction<History[]>) => {
     //   state.tasks = action.payload.map((task) => ({
     //     ...task,
     //     startDate: task.startDate ? new Date(task.startDate).toISOString() : null, // Validate start_date
@@ -129,39 +119,26 @@ const customerSlice = createSlice({
 
  extraReducers: (builder) => {
      builder
-        .addCase(listCustomerUsers.pending, (state) => {
+    
+
+        .addCase(histories.pending, (state) => {
             state.loading = true;
             state.error = null;
           })
-          .addCase(listCustomerUsers.fulfilled, (state, action) => {
+          .addCase(histories.fulfilled, (state, action) => {
             state.loading = false;
-            state.customers = action.payload.message;
+            state.history = action.payload.message;
            
             console.log("action.payload", action.payload);
             state.error = null;
           })
-          .addCase(listCustomerUsers.rejected, (state, action) => {
+          .addCase(histories.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload as string;
           }) 
 
-          
-        .addCase(listBookingBycustomerId.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-          })
-          .addCase(listBookingBycustomerId.fulfilled, (state, action) => {
-            state.loading = false;
-            state.customers = action.payload.message;
-           
-            console.log("action.payload", action.payload);
-            state.error = null;
-          })
-          .addCase(listBookingBycustomerId.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.payload as string;
-          }) 
-     
+ 
+
 
 
         
@@ -173,5 +150,5 @@ const customerSlice = createSlice({
    } 
 });
 
-export const { addCars, updateCars, setCars } = customerSlice.actions;
-export default customerSlice.reducer;
+export const { addCars, updateCars, setCars } = historySlice.actions;
+export default historySlice.reducer;

@@ -2,10 +2,10 @@
 
 export interface Cars {
   id:string;
-  car_images:"",
+ car_images: string;
   model: string;
   description: string;
-  features:string;
+  features:[]| string[];
   plate: string;
   type: "sedan" | "suv" | "luxury";
   capacity: number;

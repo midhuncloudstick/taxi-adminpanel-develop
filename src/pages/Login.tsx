@@ -17,6 +17,9 @@ import { Eye, EyeOff, LogIn } from "lucide-react";
 
 // Import the useAuth hook from App.tsx
 import { useAuth } from "@/hooks/useAuth";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { AdminLogin } from "@/redux/Slice/userSlice";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -24,48 +27,52 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  
+  const dispatch = useDispatch<AppDispatch>()
   // Get the setIsAuthenticated function from useAuth
-  const { setIsAuthenticated } = useAuth();
+
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
-    }
+const { setIsAuthenticated } = useAuth(); // ✅ make sure you have this
 
-    setIsLoading(true);
-    
-    // Mock authentication - in a real app, this would call an API
-    setTimeout(() => {
-      // For demo purposes, accept any email with a password longer than 5 chars
-      if (password.length >= 6) {
-        toast({
-          title: "Success",
-          description: "You have successfully logged in",
-        });
-        
-        // Set authentication state to true
-        setIsAuthenticated(true);
-        
-        // Navigate to the dashboard
-        navigate("/");
-      } else {
-        toast({
-          title: "Error",
-          description: "Invalid email or password",
-          variant: "destructive",
-        });
-      }
-      setIsLoading(false);
-    }, 1500);
-  };
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (!email || !password) {
+    toast({
+      title: "Error",
+      description: "Please fill in all fields",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    const result = await dispatch(AdminLogin({ email, password })).unwrap();
+
+    // ✅ Update authentication state
+    setIsAuthenticated(true);
+
+    // ✅ Then navigate
+    navigate("/");
+
+    toast({
+      title: "Success",
+      description: result.message || "You have successfully logged in",
+    });
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description: error?.message || "Invalid email or password",
+      variant: "destructive",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
 
   const togglePasswordVisibility = () => setShowPassword(!showPassword);
 

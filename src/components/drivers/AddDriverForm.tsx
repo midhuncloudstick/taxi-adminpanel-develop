@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,7 +36,8 @@ const InternalDriverSchema = z.object({
   type: z.literal("internal"),
   name: z.string().min(2, { message: "Name must be at least 8 characters." }),
   email: z.string().optional(),
-  phone: z.string().min(10, { message: "Please enter a valid phone number." }),
+  phone: z.string()
+  .regex(/^\+\d{1,4}\d{6,12}$/, { message: "Phone number must start with country code (e.g., +61) and be valid." }),
   licenceNumber: z.string().min(5, { message: "Please enter a valid license number." }),
   carId: z.string().min(1, { message: "Please select a vehicle." }),
   status: z.enum(["active", "inactive"]),
@@ -48,7 +48,8 @@ const ExternalDriverSchema = z.object({
   type: z.literal("external"),
   name: z.string().min(2, { message: "Name must be at least 8 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
-  phone: z.string().optional(),
+ phone: z.string()
+  .regex(/^\+\d{1,4}\d{6,12}$/, { message: "Phone number must start with country code (e.g., +61) and be valid." }),
   licenceNumber: z.string().optional(),
   carId: z.string().min(1, { message: "Please select a vehicle." }),
   status: z.enum(["active", "inactive"]),
@@ -90,81 +91,8 @@ const [photoFile, setPhotoFile] = useState<File | null>(null);
 
 
 
-  //   const form = useForm<FormValues>({
-  //     resolver: zodResolver(formSchema),
-  //     defaultValues: {
-  //       name: "",
-  //       email: "",
-  //       phone: "",
-  //       licenseNumber: "",
-  //       carId: "",
-  //       status: "active",
-  //       photo: "",
-
-  //     },
-
-  //   });
-
-
-
-  //   const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  //     const file = event.target.files?.[0];
-  //     if (!file) return;
-
-  //     // In a real app, this would be an API call to upload the image
-  //     const reader = new FileReader();
-  //     reader.onload = () => {
-  //       if (typeof reader.result === "string") {
-  //         setPhotoPreview(reader.result);
-  //         form.setValue("photo", reader.result);
-  //       }
-  //     };
-  //     reader.readAsDataURL(file);
-  //   };
-
-  //   const onSubmit = (values: FormValues) => {
-  //     const formData = new FormData();
-  //     formData.append("data", JSON.stringify(values));
-
-  //     try {
-
-  //       await dispatch(CreateDrivers({ data: formData })).unwrap();
-  //       await dispatch(getDrivers())
-  //       toast.success("Car created successfully");
-
-  //       onSuccess();
-  //       toast.success("New car added to fleet successfully");
-
-  //       ({
-  //         name: "",
-  //         email: "",
-  //         phone: "",
-  //         licenseNumber: "",
-  //         carId: "",
-  //         status: "active",
-  //         photo: "",
-  //       });
-
-  //       setIsOpen(false);
-  //     } catch (error) {
-  //       console.error("Create Car Error:", error);
-
-  //       let errorMessage = "Failed to create Car";
-  //       if (typeof error === "object" && error && "error" in error) {
-  //         errorMessage = (error as any).error;
-  //       } else if (typeof error === "string") {
-  //         errorMessage = error;
-  //       }
-
-  //       toast.error(errorMessage);
-  //     }
-  //   };
-  //   // In a real app, this would be an API call to save the driver
-  //   console.log(values);
-
-  //   toast.success("Driver added successfully");
-  //   onSuccess();
-  // };
+  
+ 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -221,30 +149,30 @@ const onSubmit = async (values: FormValues) => {
   formData.append("data", JSON.stringify(values));
 
   if (photoFile) {
-    formData.append("photo", photoFile); // append actual file here
+    formData.append("photo", photoFile); 
   }
 
-  try {
-    await dispatch(CreateDrivers({ data: formData })).unwrap();
-    await dispatch(getDrivers());
+try {
+  await dispatch(CreateDrivers({ data: formData })).unwrap();
+  await dispatch(getDrivers()); 
 
-    toast.success("Driver added successfully");
-    onSuccess();
+  toast.success("Driver added successfully");
+  onSuccess();
 
-    form.reset({
-      name: "",
-      email: "",
-      phone: "",
-      licenceNumber: "",
-      carId: "",
-      status: "active",
-      photo: "",
-      type: "internal",
-    });
+  form.reset({
+    name: "",
+    email: "",
+    phone: "",
+    licenceNumber: "",
+    carId: "",
+    status: "active",
+    photo: "",
+    type: "internal",
+  });
 
-    setPhotoFile(null);
-    setPhotoPreview(null);
-    setIsAddDriverOpen(false);
+  setPhotoFile(null);
+  setPhotoPreview(null);
+  setIsAddDriverOpen(false);
   } catch (error) {
     console.error("Create Driver Error:", error);
 
