@@ -10,7 +10,7 @@ import historyReducer from './Slice/historySlice'
 import formReducer from './Slice/formSlice'
 import messageReducer from './Slice/messageSlice'
 import pricingReducer  from '@/redux/Slice/pricingSlice';
-
+import notificationReducer from '@/redux/Slice/notificationSlice'
 // Combine all reducers
 const rootReducer = combineReducers({
   fleet: fleetReducer,
@@ -20,7 +20,10 @@ const rootReducer = combineReducers({
   form:formReducer,
   pricing:pricingReducer,
   message:messageReducer,
-  history:historyReducer, // Assuming you have a historyReducer
+  history:historyReducer, 
+
+  notification :notificationReducer
+  // Assuming you have a historyReducer
   // Add other slices here like `user: userReducer`
 });
 

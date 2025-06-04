@@ -6,11 +6,11 @@ const WebSocketListener = () => {
   const [message, setMessage] = useState([])
   useEffect(() => {
     ws.current = new WebSocket("wss://brisbane.cloudhousetechnologies.com/ws/events");
-    console.log("dataaaaaaaaaa")
+   
     ws.current.onopen = () => {
       console.log("✅ WebSocket connected");
 
-      ws.current?.send(JSON.stringify({ token: "123" }));
+      //ws.current?.send(JSON.stringify({ token: "123" }));
     };
 
     ws.current.onmessage = (event) => {
@@ -21,11 +21,11 @@ const WebSocketListener = () => {
 
         if (data.message) {
 
-          toast(`📢 ${data.message}`);
+          alert(`📢 ${data.message}`);
         }
 
       } catch (err) {
-        toast(`📢 ${event.data}`);
+        alert(`📢 ${event.data}`);
         console.warn("⚠️ Received non-JSON WebSocket message:", event.data);
       }
     };

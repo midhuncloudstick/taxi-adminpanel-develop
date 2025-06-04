@@ -1,39 +1,32 @@
-import {  createSlice } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-// Interfaces
-
-
-interface notificationState {
-  loading: boolean;
-  error: string | null;
- notification:{}
-  
- 
+export interface Alert {
+  bookingId: string;
+  pickupTime: string;
+  message: string;
 }
 
-// Initial state
-const initialState: notificationState = {
-  loading: false,
-  error: null,
- notification:null
- 
+interface NotificationState {
+  messages: Alert[];
 }
 
+const initialState: NotificationState = {
+  messages: [],
+};
 
-
-
-// Slice
 const notificationSlice = createSlice({
-  name: 'notification',
+  name: 'alert',
   initialState,
   reducers: {
-  
-    getNotification : (state,data)=>{
-  state.notification = data
-    }
+    addMessage: (state, action: PayloadAction<Alert>) => {
+      console.log("webbbbbbbbbbbbbbbbbb")
+      state.messages.push(action.payload);
+    },
+    clearMessages: (state) => {
+      state.messages = [];
+    },
   },
-  
 });
-export const { getNotification} = notificationSlice.actions
 
+export const { addMessage, clearMessages } = notificationSlice.actions;
 export default notificationSlice.reducer;
