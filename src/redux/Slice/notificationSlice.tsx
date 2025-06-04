@@ -15,13 +15,15 @@ export interface notifictiontype {
 interface NotificationState {
   messages: Alert[];
   notification: notifictiontype[];
-  toglelistId :string,
+  toglelistId :string;
+  ringnotification:boolean;
 }
 
 const initialState: NotificationState = {
   messages: [],
   notification: [],
-  toglelistId:''
+  toglelistId:'',
+  ringnotification:false,
 };
 
 const notificationSlice = createSlice({
@@ -49,12 +51,16 @@ const notificationSlice = createSlice({
       };
 
       state.notification.push(notification);
+      state.ringnotification = true
     },
     setToggleid :(state,action)=>{
       state.toglelistId = action.payload
     },
     clearMessages: (state) => {
       state.messages = [];
+    },
+    setnotificationsoundfasle :(state)=>{
+      state.ringnotification =false
     },
    clearnotification: (state, action) => {
   const itemIndex = state.notification.findIndex(
@@ -67,6 +73,6 @@ const notificationSlice = createSlice({
   },
 });
 
-export const { addMessage, clearMessages, addNotification ,setToggleid,clearnotification } =
+export const { addMessage, clearMessages, addNotification ,setToggleid,clearnotification ,setnotificationsoundfasle} =
   notificationSlice.actions;
 export default notificationSlice.reducer;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell, Car, Search, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,6 +7,7 @@ import { UpcomingTripsDropdown } from "./UpcomingTripsDropdown";
 import { getAvailableCars } from "@/redux/Slice/fleetSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { getAvailableDrivers } from "@/redux/Slice/driverSlice";
+import { setnotificationsoundfasle } from "@/redux/Slice/notificationSlice";
 
 interface HeaderProps {
   title: string;
@@ -17,12 +18,33 @@ export function Header({ title }: HeaderProps) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [showCarList, setShowCarList] = useState(false);
   const [showDriverList, setShowDriverList] = useState(false);
+ const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const dispatch = useAppDispatch();
 
   const availablecarslist = useAppSelector((state) => state.fleet.cars) ?? [];
   const availabledriverslist = useAppSelector((state) => state.driver.drivers) ?? [];
      const upcoming = useAppSelector((state) => state.notification.notification) || [];
+      const playsound =useAppSelector((state)=>state.notification.ringnotification)
+useEffect(()=>{
+  if(playsound){
+     audioRef.current = new Audio('/notification.mp3');
+      if (audioRef.current) {
+          audioRef.current.play().catch(error => {
+            console.warn("Audio playback failed:", error);
+          });
+          setTimeout(() => {
+           audioRef.current = null;  
+          }, 500);
+        }
+
+        dispatch(setnotificationsoundfasle())
+  }
+   
+
+},[playsound])
+
+
   useEffect(() => {
     dispatch(getAvailableCars());
     dispatch(getAvailableDrivers());

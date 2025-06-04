@@ -60,7 +60,28 @@ useEffect(() => {
 
 
   return (
+    <div className="flex flex-row justify-between w-full">
+
+    
+ <Select value={status} onValueChange={setStatus}>
+        <SelectTrigger className="w-[160px]">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Statuses</SelectItem>
+          {showPending && <SelectItem value="requested">Requested</SelectItem>}
+          <SelectItem value="waiting for driver confirmation">Waiting for driver Confirmation</SelectItem>
+          <SelectItem value="assigned driver">Assigned Driver</SelectItem>
+          <SelectItem value="journey started">Journey Started</SelectItem>
+          <SelectItem value="pickup">Pickup</SelectItem>
+          <SelectItem value="journey completed">Journey Completed</SelectItem>
+          <SelectItem value="cancelled">Cancelled</SelectItem>
+        </SelectContent>
+      </Select>
+
     <div className="flex flex-col md:flex-row gap-2 mb-4">
+
+
       <Select value={status} onValueChange={setStatus}>
         <SelectTrigger className="w-[160px]">
           <SelectValue placeholder="Status" />
@@ -101,6 +122,10 @@ useEffect(() => {
         onChange={e => setCustomerId(e.target.value)}
         placeholder="Customer ID"
       />
+
+      
+    </div>
+   
     </div>
   );
 }
