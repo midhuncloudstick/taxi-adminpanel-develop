@@ -14,7 +14,7 @@ interface CarState {
   selectedCars: Cars | null;
   loading: boolean;
   error: string | null;
- 
+ AvailableCars :Cars[];
  
 //   // Define the correct type here
 }
@@ -24,6 +24,7 @@ const initialState: CarState = {
   loading: false,
   error: null,
   selectedCars: null,
+  AvailableCars:null
 };
 
 
@@ -265,7 +266,7 @@ const fleetSlice = createSlice({
           .addCase(getAvailableCars.fulfilled, (state, action) => {
             state.loading = false;
            
-           
+           state.AvailableCars = action.payload.cars;
             console.log("action.payload", action.payload);
             state.error = null;
           })

@@ -110,8 +110,8 @@ export default function Dashboard() {
             showPending
           />
           <BookingsTable
-            bookings={filteredBookings}
-            drivers={driver}
+           // bookings={filteredBookings}
+            // drivers={driver}
             showCustomer
             showDriverSelect
             onUpdateDriver={handleUpdateDriver}

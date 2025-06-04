@@ -17,7 +17,9 @@ interface BookingState {
   selectedBooking: Booking[] | null;
   loading: boolean;
   error: string | null;
-
+ page:any;
+ limit:any;
+ total_pages:any;
 
   //   // Define the correct type here
 }
@@ -28,30 +30,41 @@ const initialState: BookingState = {
   loading: false,
   error: null,
   selectedBooking: null,
+  page:null,
+  limit:null,
+  total_pages:null
 };
 
 
 
-export const getBookinglist = createAsyncThunk(
-  "booking/get",
-  async (
-    _,
-  ) => {
+// interface BookingListParams {
+//   page: number;
+//   limit: number;
+//   total_pages:number
+// }
 
-    try {
-      const url = "/api/v1/booking/list";
 
-      const response = await api.getEvents(url);
-      const bookingData = response.data;
-      return bookingData;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return error || "booking details fetching failed";
-      }
-      return "An unexpected error occurred.";
-    }
-  }
-);
+
+// export const getBookinglist = createAsyncThunk(
+//   "booking/get",
+//   async (
+//     _,
+//   ) => {
+
+//     try {
+//       const url = "/api/v1/booking/list";
+
+//       const response = await api.getEvents(url);
+//       const bookingData = response.data;
+//       return bookingData;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return error || "booking details fetching failed";
+//       }
+//       return "An unexpected error occurred.";
+//     }
+//   }
+// );
 
 export const bookingInChat = createAsyncThunk(
   "booking/chat",
@@ -142,8 +155,8 @@ export const sortingInBooking = createAsyncThunk(
       pickup_time,
       page,
       limit,
-      sortBy,      // e.g. "customerID", "status", "date", "pickup_time", "bookingId"
-      sortOrder,   // "asc" or "desc"
+      sortBy,    
+      sortOrder,  
     }: {
       search: string,
       customerID: string,
@@ -168,8 +181,8 @@ export const sortingInBooking = createAsyncThunk(
       if (bookingId !== undefined && bookingId !== null && bookingId !== "") queryParams.append('bookingId', String(bookingId));
       if (date !== undefined && date !== null && date !== "") queryParams.append('date', String(date));
       if (pickup_time !== undefined && pickup_time !== null && pickup_time !== "") queryParams.append('bookingId', String(pickup_time));
-      // if (typeof page === "number") queryParams.append('page', String(page));
-      // if (typeof limit === "number") queryParams.append('limit', String(limit));
+      if (typeof page === "number") queryParams.append('page', String(page));
+      if (typeof limit === "number") queryParams.append('limit', String(limit));
       if (sortBy !== undefined && sortBy !== null && sortBy !== "") queryParams.append('bookingId', String(sortBy));
       if (sortOrder) queryParams.append('sortOrder', sortOrder);
 
@@ -177,7 +190,8 @@ export const sortingInBooking = createAsyncThunk(
 
       const url = `${baseUrl}?${queryParams.toString()}`;
       const response = await api.getEvents(url);
-      return response.data;
+       return  response.data
+      
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return error || "booking details fetching failed";
@@ -185,6 +199,7 @@ export const sortingInBooking = createAsyncThunk(
       return "An unexpected error occurred.";
     }
   }
+ 
 );
 
 export const getnotification = createAsyncThunk(
@@ -233,21 +248,6 @@ const bookingSlice = createSlice({
     builder
 
 
-      .addCase(getBookinglist.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getBookinglist.fulfilled, (state, action) => {
-        state.loading = false;
-        state.selectedBooking = action.payload.message;
-
-        console.log("action.payload.booking", action.payload);
-        state.error = null;
-      })
-      .addCase(getBookinglist.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
 
       .addCase(bookingInChat.pending, (state) => {
         state.loading = true;
@@ -335,10 +335,11 @@ const bookingSlice = createSlice({
         state.error = null;
       })
 
-      .addCase(sortingInBooking.fulfilled, (state, action) => {
+  .addCase(sortingInBooking.fulfilled, (state, action) => {
         state.loading = false;
-        state.selectedBooking = action.payload.message;
-
+         state.selectedBooking = action.payload.message;
+         state.page = action.payload.page;
+        state.total_pages = 10
         console.log("sortingggggg", action.payload);
         state.error = null;
       })

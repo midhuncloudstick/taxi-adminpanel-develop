@@ -74,7 +74,7 @@ dispatch(getDrivers())
           </TableRow>
         </TableHeader>
         <TableBody>
-          {Array.isArray(driverData)&& driverData?.map((d) => (
+          {[...driverData].reverse().map((d) => (
             <TableRow
               key={d.id}
               data-selected={selectedId === d.id}

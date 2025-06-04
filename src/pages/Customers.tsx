@@ -74,7 +74,9 @@ const filteredCustomers = Array.isArray(customerlist)
             <h3 className="text-lg font-semibold text-taxi-blue mt-8 mb-2">
               Past Trips for {customerlist.find(c => c.id === selectedCustomerId)?.username}
             </h3>
-            <BookingsTable bookings={selectedBookings as any} />
+            <BookingsTable 
+            //bookings={selectedBookings as any}
+             />
           </div>
         )}
       </div>

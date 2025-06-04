@@ -27,14 +27,15 @@ import {
 import { Button } from "../ui/button";
 import { BookingStatusDropdown } from "./BookingStatusDropdown";
 import { ChatDialog } from "./ChatDialog";
-import { Drivers } from "@/types/driver";
+// import { Drivers } from "@/types/driver";
 import { Booking } from "@/types/booking";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import {
   AssignDriverthroughEmail,
   AssignDriverthroughSMS,
-  getBookinglist
+  sortingInBooking,
+
 } from "@/redux/Slice/bookingSlice";
 import { useAppSelector } from "@/redux/hook";
 import {
@@ -43,10 +44,12 @@ import {
 import { getDrivers } from "@/redux/Slice/driverSlice";
 import { Customer } from "@/types/customer";
 import { clearnotification } from "@/redux/Slice/notificationSlice";
+import Search from "@/pages/Search";
+import { Pagination } from "../ui/paginationNew";
+import { Drivers} from '@/types/driver'
 
 interface BookingsTableProps {
-  bookings: Booking[];
-  drivers?: string;
+  
   showCustomer?: boolean;
   showDriver?: boolean;
   showDriverSelect?: boolean;
@@ -60,8 +63,8 @@ interface BookingsTableProps {
 }
 
 export function BookingsTable({
-  bookings,
-  drivers = '',
+
+  
   showCustomer,
   showDriver,
   showDriverSelect,
@@ -81,25 +84,39 @@ export function BookingsTable({
   const [loading, setLoading] = useState(false); // ⬅️ added loading state
 
   const bookinglist = useAppSelector((state) => state.booking.selectedBooking);
-  const toggleidfromNotification = useAppSelector((state)=>state.notification.toglelistId)
+  const toggleidfromNotification = useAppSelector((state) => state.notification.toglelistId)
   const customersFromStore = useAppSelector(state => state.customer.customers || []);
   const driversFromStore = useAppSelector(state => state.driver.drivers || []);
-
+  const current_Page = useAppSelector((state) => state.booking.page || 1);
+  const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
+  const [localPage, setLocalPage] = useState(current_Page);
   const dispatch = useDispatch<AppDispatch>();
+  const limit = 10;
 
   useEffect(() => {
     const fetchData = async () => {
-     // setLoading(true); // ⬅️ start loading
+      // setLoading(true); // ⬅️ start loading
       await Promise.all([
-       // dispatch(getBookinglist()),
-        dispatch(listCustomerUsers()),
-        dispatch(getDrivers())
+        dispatch(sortingInBooking({
+          search: "",          // or your current search term
+          customerID: "",      // or current customer id filter
+          status: "",          // or current status filter
+          driver: "",          // or current driver filter
+          bookingId: "",       // or current booking id filter
+          date: "",            // or current date filter
+          pickup_time: "",     // or current pickup time filter
+          page: current_Page,
+          limit: limit,
+          // sortBy: sortKey,
+          // sortOrder: sortDirection,
+        }))
+
       ]);
       setLoading(false); // ⬅️ end loading
     };
 
     fetchData();
-  }, [dispatch]);
+  }, [Search]);
 
   useEffect(() => {
     setAvailableCustomers(customersFromStore);
@@ -109,30 +126,24 @@ export function BookingsTable({
     setAvailableDrivers(driversFromStore);
   }, [driversFromStore]);
 
-  useEffect(()=>{
+  useEffect(() => {
     toggleRow(toggleidfromNotification)
-  },[toggleidfromNotification])
+  }, [toggleidfromNotification])
 
-  // const toggleRow = (bookingId: string) => {
-    
-  //   if (onExpandRow) {
-  //     onExpandRow(bookingId);
-  //   } else {
-  //     setInternalExpandedRows(prev => ({
-  //       ...prev,
-  //       [bookingId]: !prev[bookingId]
-  //     }));
-  //   }
-  // };
- const toggleRow = (bookingId: string) => {
-   
-      setInternalExpandedRows(prev => ({
-        ...prev,
-        [bookingId]: !prev[bookingId]
-      }));
-      setInterval(() => {
-   dispatch(clearnotification(bookingId))     
-      }, 2000);
+  useEffect(() => {
+    dispatch(listCustomerUsers()),
+      dispatch(getDrivers())
+  }, [])
+
+  const toggleRow = (bookingId: string) => {
+
+    setInternalExpandedRows(prev => ({
+      ...prev,
+      [bookingId]: !prev[bookingId]
+    }));
+    setInterval(() => {
+      dispatch(clearnotification(bookingId))
+    }, 2000);
 
   };
   const formatDate = (date: string) =>
@@ -156,19 +167,50 @@ export function BookingsTable({
     bookingId: string;
     driverType: "internal" | "external";
   }) => {
-    if (driverType === "internal") {
-      await dispatch(AssignDriverthroughSMS({ driverId, bookingId }));
-    } else {
-      await dispatch(AssignDriverthroughEmail({ driverId, bookingId }));
+    try {
+      if (driverType === "internal") {
+        await dispatch(AssignDriverthroughSMS({ driverId, bookingId }));
+      } else {
+        await dispatch(AssignDriverthroughEmail({ driverId, bookingId }));
+      }
+      handlePageChange(1)
+    } catch (error) {
+      console.log("assigned driver error")
     }
-  // await dispatch(getBookinglist());
-    await dispatch(getDrivers());
+
+
+
+    // await dispatch(getDrivers());
   };
 
   const getSortSymbol = (col: string) =>
     sortKey === col ? (sortDirection === "asc" ? "▲" : "▼") : "";
 
-  // ⏳ Loading UI
+
+  const handlePageChange = async (newPage: number) => {
+    try {
+      setLoading(true);
+      await dispatch(sortingInBooking({
+        search: "",
+        customerID: "",
+        status: "",
+        driver: "",
+        bookingId: "",
+        date: "",
+        pickup_time: "",
+        page: newPage,  // Use newPage instead of current_Page
+        limit: limit,
+        sortBy: sortKey,       // Include current sort key
+        sortOrder: sortDirection // Include current sort order
+      }));
+      setLocalPage(newPage); // Update local page state
+    } catch (error) {
+      console.error("Error changing page:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center p-10">
@@ -178,7 +220,7 @@ export function BookingsTable({
   }
 
   return (
-    
+
     <div className="overflow-auto rounded-lg shadow bg-white">
       <Table>
         <TableHeader>
@@ -255,7 +297,7 @@ export function BookingsTable({
                   <TableCell>
                     <BookingStatusDropdown
                       bookingId={b.id}
-                      status={b.status as "requested"| "assigned driver"|"pickup"|"waiting for driver confirmation" | "journey started"| "journey completed"|"cancelled"}
+                      status={b.status as "requested" | "assigned driver" | "pickup" | "waiting for driver confirmation" | "journey started" | "journey completed" | "cancelled"}
                     />
                   </TableCell>
                   <TableCell>${b.amount.toFixed(2)}</TableCell>
@@ -323,6 +365,14 @@ export function BookingsTable({
           })}
         </TableBody>
       </Table>
+      <div className="py-4">
+        <Pagination
+          currentPage={current_Page}
+          itemsPerPage={limit}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      </div>
     </div>
   );
 }

@@ -15,6 +15,7 @@ interface CarState {
   selectedDrivers: Drivers | null;
   loading: boolean;
   error: string | null;
+  AvailableDrivers:Drivers[]
 
 
   //   // Define the correct type here
@@ -25,6 +26,7 @@ const initialState: CarState = {
   loading: false,
   error: null,
   selectedDrivers: null,
+  AvailableDrivers:null,
 };
 
 
@@ -240,7 +242,7 @@ const driverSlice = createSlice({
       })
        .addCase(getAvailableDrivers.fulfilled, (state, action) => {
         state.loading = false; 
-        state.drivers = action.payload.message
+        state.AvailableDrivers = action.payload.drivers;
       })
       .addCase(getAvailableDrivers.rejected, (state, action) => {
         state.loading = false;
