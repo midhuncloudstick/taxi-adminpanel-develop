@@ -94,7 +94,7 @@ getlist
   const [availableDrivers, setAvailableDrivers] = useState<Drivers[]>([]);
   const [availableCustomers, setAvailableCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false); // ⬅️ added loading state
-
+ const [searchQuery,setSearchQuery] = useState("")
   const bookinglist = useAppSelector((state) => state.booking.selectedBooking);
   const toggleidfromNotification = useAppSelector(
     (state) => state.notification.toglelistId
@@ -167,8 +167,10 @@ getlist
 useEffect(()=>{
   setpage(current_Page)
 },[current_Page])
+
   useEffect(() => {
-    dispatch(listCustomerUsers()), dispatch(getDrivers());
+    dispatch(listCustomerUsers({page:current_Page,limit,search:searchQuery})), 
+    dispatch(getDrivers({page:current_Page,limit,search:searchQuery}));
   }, []);
 
   const toggleRow = (bookingId: string) => {

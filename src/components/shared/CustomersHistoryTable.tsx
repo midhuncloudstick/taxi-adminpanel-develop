@@ -1,28 +1,28 @@
 import React, { useEffect, useState } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow
 } from "../ui/table";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from "../ui/select";
 import {
-  getCustomerById
+    getCustomerById
 } from "@/data/mockData";
 import {
-  ChevronDown,
-  ChevronUp,
-  MapPin,
-  Calendar,
-  Clock
+    ChevronDown,
+    ChevronUp,
+    MapPin,
+    Calendar,
+    Clock
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { BookingStatusDropdown } from "./BookingStatusDropdown";
@@ -32,200 +32,200 @@ import { Booking } from "@/types/booking";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import {
-  AssignDriverthroughEmail,
-  AssignDriverthroughSMS,
-  sortingInBooking,
+    AssignDriverthroughEmail,
+    AssignDriverthroughSMS,
+    sortingInBooking,
 
 } from "@/redux/Slice/bookingSlice";
 import { useAppSelector } from "@/redux/hook";
 import {
-  listCustomerUsers
+    listCustomerUsers
 } from "@/redux/Slice/customerSlice";
 import { getDrivers } from "@/redux/Slice/driverSlice";
 import { Customer } from "@/types/customer";
 import { clearnotification } from "@/redux/Slice/notificationSlice";
 import Search from "@/pages/Search";
 import { Pagination } from "../ui/paginationNew";
-import { Drivers} from '@/types/driver'
+import { Drivers } from '@/types/driver'
 
 interface BookingsTableProps {
-  list : Booking[]
+    list: Booking[]
 
 }
 
 export function CustomersHistoryTable({
-  list
+    list
 }: BookingsTableProps) {
-  const [internalExpandedRows, setInternalExpandedRows] = useState<Record<string, boolean>>({});
- 
-  const [availableDrivers, setAvailableDrivers] = useState<Drivers[]>([]);
-  const [availableCustomers, setAvailableCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(false); // ⬅️ added loading state
+    const [internalExpandedRows, setInternalExpandedRows] = useState<Record<string, boolean>>({});
 
-  const bookinglist = useAppSelector((state) => state.booking.selectedBooking);
-  const toggleidfromNotification = useAppSelector((state) => state.notification.toglelistId)
-  const customersFromStore = useAppSelector(state => state.customer.customers || []);
-  const driversFromStore = useAppSelector(state => state.driver.drivers || []);
-  const current_Page = useAppSelector((state) => state.booking.page || 1);
-  const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
-  const [localPage, setLocalPage] = useState(current_Page);
-  const dispatch = useDispatch<AppDispatch>();
-  const limit = 10;
+    const [availableDrivers, setAvailableDrivers] = useState<Drivers[]>([]);
+    const [availableCustomers, setAvailableCustomers] = useState<Customer[]>([]);
+    const [loading, setLoading] = useState(false); // ⬅️ added loading state
 
-  useEffect(() => {
-    const fetchData = async () => {
-      // setLoading(true); // ⬅️ start loading
-      await Promise.all([
-        dispatch(sortingInBooking({
-          search: "",          // or your current search term
-          customerID: "",      // or current customer id filter
-          status: "",          // or current status filter
-          driver: "",          // or current driver filter
-          bookingId: "",       // or current booking id filter
-          date: "",            // or current date filter
-          pickup_time: "",     // or current pickup time filter
-          page: current_Page,
-          limit: limit,
-          // sortBy: sortKey,
-          // sortOrder: sortDirection,
-        }))
+    // const bookinglist = useAppSelector((state) => state.booking.selectedBooking);
+    const toggleidfromNotification = useAppSelector((state) => state.notification.toglelistId)
+    const customersFromStore = useAppSelector(state => state.customer.customers || []);
+    const driversFromStore = useAppSelector(state => state.driver.drivers || []);
+    const current_Page = useAppSelector((state) => state.customer.page || 1);
+    const totalPages = useAppSelector((state) => state.customer.total_pages || 1);
+    const [localPage, setLocalPage] = useState(current_Page);
+    const dispatch = useDispatch<AppDispatch>();
+    const limit = 10;
 
-      ]);
-      setLoading(false); // ⬅️ end loading
+    useEffect(() => {
+        const fetchData = async () => {
+            // setLoading(true); // ⬅️ start loading
+            await Promise.all([
+                dispatch(sortingInBooking({
+                    search: "",          // or your current search term
+                    customerID: "",      // or current customer id filter
+                    status: "",          // or current status filter
+                    driver: "",          // or current driver filter
+                    bookingId: "",       // or current booking id filter
+                    date: "",            // or current date filter
+                    pickup_time: "",     // or current pickup time filter
+                    page: current_Page,
+                    limit: limit,
+                    // sortBy: sortKey,
+                    // sortOrder: sortDirection,
+                }))
+
+            ]);
+            setLoading(false); // ⬅️ end loading
+        };
+
+        fetchData();
+    }, [Search]);
+
+    useEffect(() => {
+        setAvailableCustomers(customersFromStore);
+    }, [customersFromStore]);
+
+    useEffect(() => {
+        setAvailableDrivers(driversFromStore);
+    }, [driversFromStore]);
+
+    useEffect(() => {
+        toggleRow(toggleidfromNotification)
+    }, [toggleidfromNotification])
+
+
+
+    const toggleRow = (bookingId: string) => {
+
+        setInternalExpandedRows(prev => ({
+            ...prev,
+            [bookingId]: !prev[bookingId]
+        }));
+        setInterval(() => {
+            dispatch(clearnotification(bookingId))
+        }, 2000);
+
+    };
+    const formatDate = (date: string) =>
+        new Date(date).toLocaleDateString("en-US");
+
+    const formatTime = (time: string) => {
+        const localTimeString = time.replace(/Z$/, ""); // removes Z if it's there
+        return new Date(localTimeString).toLocaleTimeString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+        });
     };
 
-    fetchData();
-  }, [Search]);
+    const assignDriver = async ({
+        driverId,
+        bookingId,
+        driverType,
+    }: {
+        driverId: number;
+        bookingId: string;
+        driverType: "internal" | "external";
+    }) => {
+        try {
+            if (driverType === "internal") {
+                await dispatch(AssignDriverthroughSMS({ driverId, bookingId }));
+            } else {
+                await dispatch(AssignDriverthroughEmail({ driverId, bookingId }));
+            }
+            handlePageChange(1)
+        } catch (error) {
+            console.log("assigned driver error")
+        }
 
-  useEffect(() => {
-    setAvailableCustomers(customersFromStore);
-  }, [customersFromStore]);
-
-  useEffect(() => {
-    setAvailableDrivers(driversFromStore);
-  }, [driversFromStore]);
-
-  useEffect(() => {
-    toggleRow(toggleidfromNotification)
-  }, [toggleidfromNotification])
 
 
+        // await dispatch(getDrivers());
+    };
 
-  const toggleRow = (bookingId: string) => {
 
-    setInternalExpandedRows(prev => ({
-      ...prev,
-      [bookingId]: !prev[bookingId]
-    }));
-    setInterval(() => {
-      dispatch(clearnotification(bookingId))
-    }, 2000);
+    const handlePageChange = async (newPage: number) => {
 
-  };
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString("en-US");
+    };
 
-  const formatTime = (time: string) => {
-    const localTimeString = time.replace(/Z$/, ""); // removes Z if it's there
-    return new Date(localTimeString).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true
-    });
-  };
-
-  const assignDriver = async ({
-    driverId,
-    bookingId,
-    driverType,
-  }: {
-    driverId: number;
-    bookingId: string;
-    driverType: "internal" | "external";
-  }) => {
-    try {
-      if (driverType === "internal") {
-        await dispatch(AssignDriverthroughSMS({ driverId, bookingId }));
-      } else {
-        await dispatch(AssignDriverthroughEmail({ driverId, bookingId }));
-      }
-      handlePageChange(1)
-    } catch (error) {
-      console.log("assigned driver error")
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center p-10">
+                <span className="text-gray-600 text-lg">Loading bookings...</span>
+            </div>
+        );
     }
 
-
-
-    // await dispatch(getDrivers());
-  };
-
-
-  const handlePageChange = async (newPage: number) => {
-  
-  };
-
-  if (loading) {
     return (
-      <div className="flex justify-center items-center p-10">
-        <span className="text-gray-600 text-lg">Loading bookings...</span>
-      </div>
-    );
-  }
 
-  return (
+        <div className="overflow-auto rounded-lg shadow bg-white">
+            <Table>
 
-    <div className="overflow-auto rounded-lg shadow bg-white">
-      <Table>
-        
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-10" />
-            <TableHead >Booking ID </TableHead>
-            <TableHead >Date </TableHead>
-            <TableHead >Pickup Time</TableHead>
-            <TableHead>KMs</TableHead>
-            <TableHead  >Pickup</TableHead>
-            <TableHead >Drop</TableHead>
-             <TableHead  >Customer </TableHead>
-          <TableHead >Driver </TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead >Amount ($) </TableHead>
-            <TableHead>Chat</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {Array.isArray(list) && list.map((b) => {
-            const customer = getCustomerById(b.customerId);
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="w-10" />
+                        <TableHead >Booking ID </TableHead>
+                        <TableHead >Date </TableHead>
+                        <TableHead >Pickup Time</TableHead>
+                        <TableHead>KMs</TableHead>
+                        <TableHead  >Pickup</TableHead>
+                        <TableHead >Drop</TableHead>
+                        <TableHead  >Customer </TableHead>
+                        <TableHead >Driver </TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead >Amount ($) </TableHead>
+                        <TableHead>Chat</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {Array.isArray(list) && list.map((b) => {
+                        const customer = getCustomerById(b.customerId);
 
-            return (
-              <React.Fragment key={b.id}>
-                <TableRow >
-                  <TableCell className="p-2 text-center">
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleRow(b.id)}>
-                      
-                    </Button>
-                  </TableCell>
-                  <TableCell className="font-medium">{b.id}</TableCell>
-                  <TableCell>{formatDate(b.date)}</TableCell>
-                  <TableCell>{formatTime(b.pickupTime)}</TableCell>
-                  <TableCell>{b.kilometers}</TableCell>
-                  <TableCell>{b.pickupLocation}</TableCell>
-                  <TableCell>{b.dropLocation}</TableCell>
-               
-                
-                    <TableCell>
-                      {b.driver_name}
-                    </TableCell>
-                  
-                  <TableCell>
-                  {b.status}
-                  </TableCell>
-                  <TableCell>${b.amount.toFixed(2)}</TableCell>
-                  <TableCell>
-                    <ChatDialog bookingId={b.id} />
-                  </TableCell>
-                </TableRow>
-                {/* {expandedRows?.[b.id] && (
+                        return (
+                            <React.Fragment key={b.id}>
+                                <TableRow >
+                                    <TableCell className="p-2 text-center">
+                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => toggleRow(b.id)}>
+
+                                        </Button>
+                                    </TableCell>
+                                    <TableCell className="font-medium">{b.id}</TableCell>
+                                    <TableCell>{formatDate(b.date)}</TableCell>
+                                    <TableCell>{formatTime(b.pickupTime)}</TableCell>
+                                    <TableCell>{b.kilometers}</TableCell>
+                                    <TableCell>{b.pickupLocation}</TableCell>
+                                    <TableCell>{b.dropLocation}</TableCell>
+                                    <TableCell>{b.user_firstname + b.user_lastname}</TableCell>
+
+                                    <TableCell>
+                                        {b.driver_name? b.driver_name: "Driver not assigned"}
+                                    </TableCell>
+
+                                    <TableCell>
+                                        {b.status}
+                                    </TableCell>
+                                    <TableCell>${b.amount.toFixed(2)}</TableCell>
+                                    <TableCell>
+                                        <ChatDialog bookingId={b.id} />
+                                    </TableCell>
+                                </TableRow>
+                                {/* {expandedRows?.[b.id] && (
                   <TableRow>
                     <TableCell colSpan={12} className="bg-gray-50 p-0">
                       <div className="p-4 space-y-4">
@@ -280,19 +280,19 @@ export function CustomersHistoryTable({
                     </TableCell>
                   </TableRow>
                 )} */}
-              </React.Fragment>
-            );
-          })}
-        </TableBody>
-      </Table>
-      <div className="py-4">
-        <Pagination
-          currentPage={current_Page}
-          itemsPerPage={limit}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-        />
-      </div>
-    </div>
-  );
+                            </React.Fragment>
+                        );
+                    })}
+                </TableBody>
+            </Table>
+            <div className="py-4">
+                <Pagination
+                    currentPage={current_Page}
+                    itemsPerPage={limit}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                />
+            </div>
+        </div>
+    );
 }

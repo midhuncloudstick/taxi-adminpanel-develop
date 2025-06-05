@@ -71,7 +71,13 @@ export const getDrivers = createAsyncThunk(
     { page, limit , search  }: { page: number; limit: number,search:string}
   ) => {
     try {
-      const url = `/api/v1/driver/list?page=${page}&limit=${limit}&page=${search}`;
+      console.log("serach",search)
+      let url = `/api/v1/driver/list?page=${page}&limit=${limit}`;
+      console.log("searchhhdriverrrr",search)
+    if(search){
+    url=`/api/v1/driver/list?page=${page}&limit=${limit}&search=${search}`
+    }
+      
       const response = await api.getEvents(url);
       const driverData = response.data;
       return driverData;
@@ -219,8 +225,8 @@ const driverSlice = createSlice({
         state.loading = false;
         state.drivers = action.payload.message;
         state.page = action.payload.page;
-        state.total_pages=10
-        console.log("action.payload.driver", action.payload);
+        state.total_pages = action.payload.total_pages
+        // console.log("action.payload.driver", action.payload);
         state.error = null;
       })
       .addCase(getDrivers.rejected, (state, action) => {

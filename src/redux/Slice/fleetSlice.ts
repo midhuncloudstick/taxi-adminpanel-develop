@@ -64,14 +64,23 @@ export const CreateCars = createAsyncThunk(
 
 export const getCars = createAsyncThunk(
   "car/get",
-  async ({ page, limit, search }: { page: number; limit: number; search: string }) => {
+  async (
+    { page, limit , search  }: { page: number; limit: number,search:string}
+  ) => {
     try {
-      const url = `/api/v1/cars/list?page=${page}&limit=${limit}&search=${search}`;
+      console.log("serach",search)
+      let url = `/api/v1/cars/list?page=${page}&limit=${limit}`;
+      console.log("searchhhcars",search)
+    if(search){
+    url=`/api/v1/cars/list?page=${page}&limit=${limit}&search=${search}`
+    }
+      
       const response = await api.getEvents(url);
-      return response.data;
+      const driverData = response.data;
+      return driverData;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        return error || "Driver fetching failed";
+        return error || "Driver details fetching failed";
       }
       return "An unexpected error occurred.";
     }
@@ -221,7 +230,7 @@ const fleetSlice = createSlice({
             state.loading = false;
             state.cars = action.payload.message;
             state.page = action.payload.page;
-            state.total_pages = 10
+             state.total_pages = action.payload.total_pages
            
             console.log("action.payload", action.payload);
             state.error = null;

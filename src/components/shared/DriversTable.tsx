@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { getCarById } from "@/data/mockData";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../ui/table";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
-import { Edit, User } from "lucide-react";
+import { Edit, User, Search } from "lucide-react";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import { EditDriverForm } from "../drivers/EditDriverForm";
 import { Cars } from "@/types/fleet";
 import { useDispatch } from "react-redux";
@@ -11,6 +12,7 @@ import { AppDispatch } from "@/redux/store";
 import { getDrivers } from "@/redux/Slice/driverSlice";
 import { Pagination } from "../ui/paginationNew";
 import { useAppSelector } from "@/redux/hook";
+import { toast } from "sonner";
 
 type Drivers = {
   id: number;
@@ -24,18 +26,19 @@ type Drivers = {
   completedTrips: number;
   photo?: string;
   car: Cars[];
-  type:"internal"|"external";
+  type: "internal" | "external";
 };
 
 interface DriversTableProps {
   drivers: Drivers[];
   selectedId: number | null;
   onSelect: (id: number) => void;
-  onEdit: (driver: Drivers) => void; // accepts a single driver
+  onEdit: (driver: Drivers) => void;
 }
 
 export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversTableProps) {
-  const [driverData, setDriversData] = useState<Drivers[]>(drivers);
+  const [driverData, setDriversData] = useState<Drivers[]>([]);
+  const driverDatah = useAppSelector((state) => state.driver.drivers);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [driverToEdit, setDriverToEdit] = useState<Drivers | null>(null);
   const current_Page = useAppSelector((state) => state.driver.page || 1);
@@ -43,16 +46,23 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
   const [localPage, setLocalPage] = useState(current_Page);
   const dispatch = useDispatch<AppDispatch>();
   const limit = 10;
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
 
+  useEffect(() => {
+    setDriversData(driverDatah);
+  }, [driverDatah]);
 
+  useEffect(() => {
+    console.log("Fetching drivers...");
+    dispatch(getDrivers({ page: current_Page, limit, search: searchQuery }));
+  }, [dispatch, current_Page, limit, searchQuery]);
 
-// useEffect(() => {
-// console.log("reached the driverlisting")
-// dispatch(getDrivers({page:current_Page,limit}))
-// }, [dispatch]);
+  // const handleSearch = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   dispatch(getDrivers({ page: 1, limit, search: searchQuery }));
+  //   setLocalPage(1);
+  // };
 
   const handleSaveEditedDriver = (editedDriver: Drivers) => {
     setDriversData((prev) =>
@@ -66,21 +76,37 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
     setIsEditFormOpen(true);
   };
 
-    const handlePageChange = async (newPage: number) => {
-      try {
-        setLoading(true);
-        await dispatch(getDrivers({page:current_Page,limit,search:searchQuery}))
-         
-        setLocalPage(newPage); // Update local page state
-      } catch (error) {
-        console.error("Error changing page:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handlePageChange = async (newPage: number) => {
+    try {
+      setLoading(true);
+      await dispatch(getDrivers({ page: newPage, limit, search: searchQuery }));
+      setLocalPage(newPage);
+    } catch (error) {
+      console.error("Error changing page:", error);
+      toast.error("Failed to load drivers");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="overflow-auto rounded-lg shadow bg-white">
+      <div className="flex justify-between items-center p-4 border-b">
+        <h2 className="text-xl font-semibold">Drivers Management</h2>
+       
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search drivers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
+         
+        
+      </div>
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -90,12 +116,12 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
             <TableHead>Phone</TableHead>
             <TableHead>Car</TableHead>
             <TableHead>Status</TableHead>
-             <TableHead>Type</TableHead>
+            <TableHead>Type</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {[...driverData].reverse().map((d) => (
+          {driverData.map((d) => (
             <TableRow
               key={d.id}
               data-selected={selectedId === d.id}
@@ -105,7 +131,11 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
               <TableCell>
                 <Avatar className="h-10 w-10">
                   {d.photo ? (
-                    <AvatarImage src={`https://brisbane.cloudhousetechnologies.com${d.photo}`} alt={d.name} />
+                    <AvatarImage 
+                      src={`https://brisbane.cloudhousetechnologies.com${d.photo}`} 
+                      alt={d.name}
+                      crossOrigin="anonymous"
+                    />
                   ) : (
                     <AvatarFallback className="bg-taxi-blue text-white">
                       <User size={16} />
@@ -128,9 +158,19 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
                   {d.status.charAt(0).toUpperCase() + d.status.slice(1)}
                 </span>
               </TableCell>
-              <TableCell>{d.type}</TableCell>
+              <TableCell>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs ${
+                    d.type === "internal"
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-purple-100 text-purple-700"
+                  }`}
+                >
+                  {d.type.charAt(0).toUpperCase() + d.type.slice(1)}
+                </span>
+              </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end gap-11">
+                <div className="flex justify-end gap-2">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -149,24 +189,26 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
         </TableBody>
       </Table>
 
-        <div className="py-4">
-              <Pagination
-                currentPage={current_Page}
-                itemsPerPage={limit}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            </div>
+      <div className="py-4 px-4">
+        <Pagination
+          currentPage={current_Page}
+          itemsPerPage={limit}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          isLoading={loading}
+        />
+      </div>
 
-      {/* Render the form just once outside the table */}
       {driverToEdit && (
         <EditDriverForm
           driver={driverToEdit}
           IsOpen={isEditFormOpen}
           onClose={() => setIsEditFormOpen(false)}
           onSave={handleSaveEditedDriver}
+          currentPage={current_Page}
+          searchQuery={searchQuery}
           onSuccess={() => {
-            console.log("Driver updated successfully");
+            dispatch(getDrivers({ page: current_Page, limit, search: searchQuery }));
           }}
         />
       )}

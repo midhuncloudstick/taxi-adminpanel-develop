@@ -1,7 +1,7 @@
-
 import { useEffect, useState } from "react";
 import { Car, cars } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Edit, Trash, User } from "lucide-react";
+import { Edit, Trash, User, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { useDispatch } from "react-redux";
@@ -33,13 +33,13 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
   const [carToDelete, setCarToDelete] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const Vehicle = useAppSelector((state) => state.fleet.cars)
-    const current_Page = useAppSelector((state) => state.booking.page || 1);
-    const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
-    const [localPage, setLocalPage] = useState(current_Page);
-    const [searchQuery, setSearchQuery ] = useState("");
-    const [loading, setLoading] = useState(false); // ⬅️ added loading state
-    
-    const limit= 10
+  const current_Page = useAppSelector((state) => state.booking.page || 1);
+  const totalPages = useAppSelector((state) => state.fleet.total_pages || 1);
+  const [localPage, setLocalPage] = useState(current_Page);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const limit = 10;
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "available":
@@ -68,27 +68,29 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
     }
   };
 
-
-
   useEffect(() => {
     console.log("reached the listing")
-    dispatch(getCars({search:searchQuery,page:current_Page,limit}))
-  }, [dispatch]);
-
+    dispatch(getCars({ search: searchQuery, page: current_Page, limit }))
+  }, [dispatch, current_Page, searchQuery, limit]);
 
   const handlePageChange = async (newPage: number) => {
     try {
       setLoading(true);
-     dispatch(getCars({search:searchQuery,page:current_Page,limit})) // Include current sort order
-    
-      setLocalPage(newPage); // Update local page state
+      await dispatch(getCars({ search: searchQuery, page: newPage, limit }));
+      setLocalPage(newPage);
     } catch (error) {
       console.error("Error changing page:", error);
+      toast.error("Failed to load page");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    dispatch(getCars({ search: searchQuery, page: 1, limit }));
+    setLocalPage(1);
+  };
 
   const handleDelete = (carId: string) => {
     setCarToDelete(carId);
@@ -101,7 +103,7 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
     try {
       console.log("deletedddddd")
       await dispatch(Deletecars({ carId: carToDelete })).unwrap();
-      await dispatch(getCars({page:current_Page,limit,search:searchQuery}));
+      await dispatch(getCars({ page: current_Page, limit, search: searchQuery }));
 
       setCarsData(carsData.filter((car) => car.id !== carToDelete));
       onDelete(carToDelete);
@@ -115,9 +117,26 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
     }
   };
 
-
   return (
     <>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Fleet Management</h2>
+        <form onSubmit={handleSearch} className="flex gap-2 items-center">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search cars..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
+          {/* <Button type="submit" variant="outline">
+            Search
+          </Button> */}
+        </form>
+      </div>
+
       <Table>
         <TableCaption>Fleet inventory of Brisbane Airport Taxi Service</TableCaption>
         <TableHeader>
@@ -142,15 +161,13 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
                 <Avatar className="h-1 w-1">
                   {Array.isArray(car.car_images) && car.car_images.length > 0 ? (
                     car.car_images.map((image, index) => (
-                         <AvatarImage
-                      src={`https://brisbane.cloudhousetechnologies.com${image.image_url} `}
-                       crossOrigin="anonymous"
-
+                      <AvatarImage
+                        src={`https://brisbane.cloudhousetechnologies.com${image.image_url} `}
+                        crossOrigin="anonymous"
                         alt={image.Car?.model || `Image ${index + 1}`}
-                       className="h-10 w-10 rounded-full object-cover border-2 border-gray-200 shadow"
-                    />
+                        className="h-10 w-10 rounded-full object-cover border-2 border-gray-200 shadow"
+                      />
                     ))
-                 
                   ) : (
                     <AvatarFallback className="bg-taxi-blue text-white">
                       <User size={16} />
@@ -191,17 +208,16 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
               </TableRow>
             ))}
         </TableBody>
-
       </Table>
 
-       <div className="py-4">
-              <Pagination
-                currentPage={current_Page}
-                itemsPerPage={limit}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-            </div>
+      <div className="py-4">
+        <Pagination
+          currentPage={current_Page}
+          itemsPerPage={limit}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      </div>
 
       <ConfirmDialog
         isOpen={isDeleteDialogOpen}

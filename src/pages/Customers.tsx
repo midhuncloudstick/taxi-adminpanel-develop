@@ -19,49 +19,50 @@ export default function Customers() {
   const allBookings = useAppSelector((state) => state.booking.booking);
   const current_Page = useAppSelector((state) => state.customer.page || 1);
   const totalPages = useAppSelector((state) => state.customer.total_pages || 1);
+  
   const [localPage, setLocalPage] = useState(current_Page);
   const limit = 10;
-  const [loading, setLoading] = useState(false); 
-const [customerID, setCustomerID] = useState<string>("");
-const [searchQuery , setSearchQuery] = useState("")
+  const [loading, setLoading] = useState(false);
+  const [customerID, setCustomerID] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("")
 
+  useEffect(() => {
+    dispatch(listCustomerUsers({ page: current_Page, limit, search: searchQuery }));
+  }, [dispatch]);
+
+  const historiesofCustomer = useAppSelector((state) => state.customer.customerhistory)
   // useEffect(() => {
-  //   dispatch(listCustomerUsers({page:current_Page,limit}));
-  // }, [dispatch]);
-
-  const historiesofCustomer = useAppSelector((state)=>state.customer.customerhistory)
-// useEffect(() => {
-//   if (customerID) { 
-//     dispatch(customerHistory({
-//       search: "", 
-//       customerID,
-//       page,
-//       limit
-//     }));
-//   }
-// }, [dispatch, customerID, page:current_Page, limit]);
+  //   if (customerID) { 
+  //     dispatch(customerHistory({
+  //       search: "", 
+  //       customerID,
+  //       page,
+  //       limit
+  //     }));
+  //   }
+  // }, [dispatch, customerID, page:current_Page, limit]);
 
 
-   const handlePageChange = async (newPage: number) => {
-      try {
-        setLoading(true);
-        await dispatch(listCustomerUsers({page:current_Page,limit,search :searchQuery}))
-       
-        setLocalPage(newPage); 
-      } catch (error) {
-        console.error("Error changing page:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handlePageChange = async (newPage: number) => {
+    try {
+      setLoading(true);
+      await dispatch(listCustomerUsers({ page: newPage, limit, search: searchQuery }))
+
+      setLocalPage(newPage);
+    } catch (error) {
+      console.error("Error changing page:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Filter customers based on search
   const filteredCustomers = Array.isArray(customerlist)
     ? customerlist.filter((c) =>
-        c.username?.toLowerCase().includes(search.toLowerCase()) ||
-        c.email?.toLowerCase().includes(search.toLowerCase()) ||
-        c.phone?.toLowerCase().includes(search.toLowerCase())
-      )
+      c.username?.toLowerCase().includes(search.toLowerCase()) ||
+      c.email?.toLowerCase().includes(search.toLowerCase()) ||
+      c.phone?.toLowerCase().includes(search.toLowerCase())
+    )
     : [];
 
   // Filter bookings for selected customer
@@ -101,19 +102,19 @@ const [searchQuery , setSearchQuery] = useState("")
               Past Trips for {customerlist.find((c) => c.id === selectedCustomerId)?.username}
             </h3>
             <CustomersHistoryTable
-            bookings={historiesofCustomer} 
+              list={historiesofCustomer}
             />
           </div>
         )}
       </div>
 
-        <Pagination
-                currentPage={current_Page}
-                itemsPerPage={limit}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-              />
-          
+      <Pagination
+        currentPage={current_Page}
+        itemsPerPage={limit}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
+
     </PageContainer>
   );
 }

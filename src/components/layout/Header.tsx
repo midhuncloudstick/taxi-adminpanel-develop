@@ -51,7 +51,7 @@ export function Header({ title }: HeaderProps) {
   useEffect(() => {
     dispatch(getAvailableCars());
     dispatch(getAvailableDrivers());
-  }, [dispatch]);
+  }, []);
 
 
   useEffect(() => {
@@ -149,7 +149,7 @@ export function Header({ title }: HeaderProps) {
 
       {/* Search and Notification Section */}
       <div className="flex items-center gap-4 ml-auto mr-4">
-        <div className={cn("relative flex items-center", "w-full sm:w-auto")}>
+        {/* <div className={cn("relative flex items-center", "w-full sm:w-auto")}>
           <Search className="absolute left-3 text-gray-400" size={18} />
           <Input
             type="text"
@@ -158,7 +158,7 @@ export function Header({ title }: HeaderProps) {
            onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 pr-4 py-2 w-full sm:w-64 text-sm bg-slate-50 border-slate-200 focus:ring-taxi-teal"
           />
-        </div>
+        </div> */}
 
         <div className="relative">
           <Button

@@ -6,7 +6,7 @@ import { useAppSelector } from "@/redux/hook";
 import { sortingInBooking } from "@/redux/Slice/bookingSlice";
 import { getDrivers } from "@/redux/Slice/driverSlice";
 import { AppDispatch } from "@/redux/store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
 interface BookingsFilterBarProps {
@@ -36,11 +36,17 @@ export function BookingsFilterBar({
   showPending,
 }: BookingsFilterBarProps) {
 
+  const current_Page = useAppSelector((state) => state.booking.page || 1);
+  const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
+  const [localPage, setLocalPage] = useState(current_Page);
+  const [ searchQuery, setSearchQuery] = useState("");
   const dispatch = useDispatch<AppDispatch>();
+  const limit = 10;
+
 
   const driverslist = useAppSelector(state => state.driver.drivers);
   useEffect(() => {
-    dispatch(getDrivers())
+    dispatch(getDrivers({page:current_Page,limit,search:searchQuery}))
   }, [dispatch])
 
 

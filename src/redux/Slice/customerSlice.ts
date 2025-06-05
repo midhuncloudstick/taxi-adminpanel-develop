@@ -1,6 +1,7 @@
 
 
 import { api } from "@/services/EventServices";
+import { Booking } from "@/types/booking";
 import { Customer } from "@/types/customer";
 // import { Cars } from "@/types/fleet";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -18,7 +19,7 @@ interface CustomerState {
   page:any;
  limit:any;
  total_pages:any;
- customerhistory:Customer[]
+ customerhistory:Booking[]
  search:string;
  
 //   // Define the correct type here
@@ -183,7 +184,7 @@ const customerSlice = createSlice({
             state.loading = false;
             state.customers = action.payload.message;
              state.page = action.payload.page;
-             state.total_pages = 10
+              state.total_pages = action.payload.total_pages
             console.log("action.payload", action.payload);
             state.error = null;
           })
