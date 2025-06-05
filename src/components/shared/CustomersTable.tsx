@@ -18,9 +18,9 @@ export function CustomersTable({ customers, selectedId, onSelect }: CustomersTab
 
   const dispatch = useDispatch<AppDispatch>()
 
-useEffect(()=>{
-  dispatch(listCustomerUsers())
-},[dispatch])
+// useEffect(()=>{
+//   dispatch(listCustomerUsers({page,limit}))
+// },[dispatch])
 
   return (
     <div className="overflow-auto rounded-lg shadow bg-white">

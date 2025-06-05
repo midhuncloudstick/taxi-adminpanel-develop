@@ -1,6 +1,7 @@
 
 
 import { api } from "@/services/EventServices";
+import { Booking } from "@/types/booking";
 import { Customer } from "@/types/customer";
 // import { Cars } from "@/types/fleet";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -15,7 +16,11 @@ interface CustomerState {
   selectedCustomers: Customer [];
   loading: boolean;
   error: string | null;
- 
+  page:any;
+ limit:any;
+ total_pages:any;
+ customerhistory:Booking[]
+ search:string;
  
 //   // Define the correct type here
 }
@@ -25,8 +30,12 @@ const initialState: CustomerState = {
   loading: false,
   error: null,
   selectedCustomers: null,
+  page:null,
+  limit:null,
+  total_pages:null,
+  customerhistory:null,
+  search :null
 };
-
 
 
 
@@ -36,20 +45,15 @@ const initialState: CustomerState = {
 
 export const listCustomerUsers = createAsyncThunk(
   "customers/get",
-  async (
-  _,
-  ) => {
-    
+  async ({ page, limit, search }: { page: number; limit: number, search:string}) => {
     try {
-    //   const userId = localStorage.getItem("userid");
-    const url = "/api/v1/user/list";
-
+      const url = `/api/v1/user/list?page=${page}&limit=${limit}&search=${search}`;
       const response = await api.getEvents(url);
       const customerData = await response.data;
       return customerData;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        return error|| "car details fetching failed";
+        return error || "car details fetching failed";
       }
       return "An unexpected error occurred.";
     }
@@ -71,7 +75,50 @@ export const listBookingBycustomerId = createAsyncThunk(
 
 
 
+export const customerHistory = createAsyncThunk(
+  "booking/sort",
+  async (
+    {
+      search,
+      customerID,
+      
+      page,
+      limit,
+     
+    }: {
+      search: string,
+      customerID: string,
+     
+      page: number,
+      limit: number,
+     
+    }
+  ) => {
+    try {
+      const baseUrl = "/api/v1/booking/list";
+      const queryParams = new URLSearchParams();
+      if (search !== undefined && search !== null && search !== "") queryParams.append('search', String(search));
+      if (customerID !== undefined && search !== null && search !== "") queryParams.append('customerID', String(customerID));
+     
+      if (typeof page === "number") queryParams.append('page', String(page));
+      if (typeof limit === "number") queryParams.append('limit', String(limit));
+     
 
+
+
+      const url = `${baseUrl}?${queryParams.toString()}`;
+      const response = await api.getEvents(url);
+       return  response.data
+      
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error || "booking details fetching failed";
+      }
+      return "An unexpected error occurred.";
+    }
+  }
+ 
+);
 
 
 
@@ -136,7 +183,8 @@ const customerSlice = createSlice({
           .addCase(listCustomerUsers.fulfilled, (state, action) => {
             state.loading = false;
             state.customers = action.payload.message;
-           
+             state.page = action.payload.page;
+              state.total_pages = action.payload.total_pages
             console.log("action.payload", action.payload);
             state.error = null;
           })
@@ -162,7 +210,21 @@ const customerSlice = createSlice({
             state.error = action.payload as string;
           }) 
      
-
+        .addCase(customerHistory.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+          })
+          .addCase(customerHistory.fulfilled, (state, action) => {
+            state.loading = false;
+            state.customerhistory = action.payload.message;
+           
+            console.log("action.payload", action.payload);
+            state.error = null;
+          })
+          .addCase(customerHistory.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload as string;
+          }) 
 
         
 

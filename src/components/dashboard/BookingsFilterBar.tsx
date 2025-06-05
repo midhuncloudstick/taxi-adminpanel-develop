@@ -6,7 +6,7 @@ import { useAppSelector } from "@/redux/hook";
 import { sortingInBooking } from "@/redux/Slice/bookingSlice";
 import { getDrivers } from "@/redux/Slice/driverSlice";
 import { AppDispatch } from "@/redux/store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
 interface BookingsFilterBarProps {
@@ -18,6 +18,7 @@ interface BookingsFilterBarProps {
   setDriver: (val: string) => void;
   setLocation: (val: string) => void;
   setCustomerId: (val: string) => void;
+    setpage: (val: number) => void;
   drivers: Driver[];
   showPending?: boolean;
 }
@@ -35,32 +36,46 @@ export function BookingsFilterBar({
   showPending,
 }: BookingsFilterBarProps) {
 
+  const current_Page = useAppSelector((state) => state.booking.page || 1);
+  const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
+  const [localPage, setLocalPage] = useState(current_Page);
+  const [ searchQuery, setSearchQuery] = useState("");
   const dispatch = useDispatch<AppDispatch>();
+  const limit = 10;
+
 
   const driverslist = useAppSelector(state => state.driver.drivers);
   useEffect(() => {
-    dispatch(getDrivers())
+    dispatch(getDrivers({page:current_Page,limit,search:searchQuery}))
   }, [dispatch])
 
 
-useEffect(() => {
-  dispatch(sortingInBooking({
-    status,
-    driver,
-    search: location,
-    customerID: customerId,
-    bookingId: "",      
-    date: "",           
-    pickup_time: "",    
-    page: 1,            
-    limit: 10           
-  }))
-}, [dispatch, status, driver, location, customerId])
 
 
 
   return (
+    <div className="flex flex-row justify-between w-full">
+
+    
+ <Select value={status} onValueChange={setStatus}>
+        <SelectTrigger className="w-[160px]">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Statuses</SelectItem>
+          {showPending && <SelectItem value="requested">Requested</SelectItem>}
+          <SelectItem value="waiting for driver confirmation">Waiting for driver Confirmation</SelectItem>
+          <SelectItem value="assigned driver">Assigned Driver</SelectItem>
+          <SelectItem value="journey started">Journey Started</SelectItem>
+          <SelectItem value="pickup">Pickup</SelectItem>
+          <SelectItem value="journey completed">Journey Completed</SelectItem>
+          <SelectItem value="cancelled">Cancelled</SelectItem>
+        </SelectContent>
+      </Select>
+
     <div className="flex flex-col md:flex-row gap-2 mb-4">
+
+
       <Select value={status} onValueChange={setStatus}>
         <SelectTrigger className="w-[160px]">
           <SelectValue placeholder="Status" />
@@ -99,8 +114,12 @@ useEffect(() => {
         className="w-[160px]"
         value={customerId}
         onChange={e => setCustomerId(e.target.value)}
-        placeholder="Customer ID"
+        placeholder="Customer Name"
       />
+
+      
+    </div>
+   
     </div>
   );
 }

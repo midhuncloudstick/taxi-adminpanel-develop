@@ -12,6 +12,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { Textarea } from "../ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useAppSelector } from "@/redux/hook";
 
 interface AddCarFormProps {
   onAddCar: (car: Omit<Cars, "id">) => void;
@@ -25,6 +26,11 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
   const [images, setImages] = useState<string[]>([]); // Store image previews (base64)
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [features, setFeatures] = useState<string[]>([""]);
+    const current_Page = useAppSelector((state) => state.booking.page || 1);
+    const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
+    const [localPage, setLocalPage] = useState(current_Page);
+    const [searchQuery, setSearchQuery ] = useState("");
+    const limit= 10
   const [CarForm, setCarForm] = useState<Cars>({
     id: "",
     car_images: "",
@@ -109,7 +115,7 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
     try {
       await dispatch(CreateCars({ data: formData })).unwrap();
-      await dispatch(getCars());
+      await dispatch(getCars({page:current_Page,limit,search:searchQuery}));
       toast.success("Car created successfully");
 
       onAddCar({
@@ -375,6 +381,7 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 <SelectItem value="available">Available</SelectItem>
                 <SelectItem value="in-use">In Use</SelectItem>
                 <SelectItem value="maintenance">Maintenance</SelectItem>
+                {/* <SelectItem value="cancelled">Cance</SelectItem> */}
               </SelectContent>
             </Select>
           </div>

@@ -82,7 +82,7 @@ const [photoFile, setPhotoFile] = useState<File | null>(null);
 
   // Load cars when component mounts
   useEffect(() => {
-    dispatch(getCars());
+    dispatch(getCars({page:1,limit:10,search:""}));
   }, [dispatch]);
 
   useEffect(() => {
@@ -154,7 +154,7 @@ const onSubmit = async (values: FormValues) => {
 
 try {
   await dispatch(CreateDrivers({ data: formData })).unwrap();
-  await dispatch(getDrivers()); 
+  await dispatch(getDrivers({page:1,limit:10,search :""})); 
 
   toast.success("Driver added successfully");
   onSuccess();
@@ -402,4 +402,3 @@ try {
     </Form>
   );
 }
-

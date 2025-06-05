@@ -9,6 +9,9 @@ import { Car, UserCheck } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { getAvailableCars } from "@/redux/Slice/fleetSlice";
 import { getAvailableDrivers } from "@/redux/Slice/driverSlice";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
+import { sortingInBooking, updatefilterstate } from "@/redux/Slice/bookingSlice";
 
 // Utility: sort bookings
 function sortBookings(bookings, sortKey, sortDirection) {
@@ -26,6 +29,9 @@ function sortBookings(bookings, sortKey, sortDirection) {
 
 export default function Dashboard() {
   // FILTER & SORT state
+
+  const dispatch = useDispatch<AppDispatch>();
+
   const [status, setStatus] = useState<"requested" | "waiting for driver confirmation" | "assigned driver" | "pickup" | "journey started" | "journey completed" | "cancelled"|"all">("all");
   const [driver, setDriver] = useState("all");
   const [location, setLocation] = useState("");
@@ -33,7 +39,7 @@ export default function Dashboard() {
   const [sortKey, setSortKey] = useState<null | string>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [tableBookings, setTableBookings] = useState(bookings);
-
+  const [page,setpage] =useState(1)
 
 
 
@@ -60,21 +66,6 @@ export default function Dashboard() {
   };
 
   // Filtering logic
-  const filteredBookings = useMemo(() => {
-    let filtered = tableBookings;
-    if (status !== "all") filtered = filtered.filter(b => b.status === status);
-    if (driver !== "all") filtered = filtered.filter(b => b.driver === driver);
-    if (location)
-      filtered = filtered.filter(
-        b =>
-          b.pickupLocation.toLowerCase().includes(location.toLowerCase()) ||
-          b.dropLocation.toLowerCase().includes(location.toLowerCase())
-      );
-    if (customerId)
-      filtered = filtered.filter(b => b.customerId.toLowerCase().includes(customerId.toLowerCase()));
-    if (sortKey) filtered = sortBookings(filtered, sortKey, sortDirection);
-    return filtered;
-  }, [tableBookings, status, driver, location, customerId, sortKey, sortDirection]);
 
   // Table column sorting handler
   const handleSort = (column: string) => {
@@ -88,8 +79,56 @@ export default function Dashboard() {
 
   // Type-safe setStatus handler
   const handleSetStatus = (value: string) => {
+    setpage(1)
     setStatus(value as "requested" | "waiting for driver confirmation" | "assigned driver" | "pickup" | "journey started" | "journey completed" | "cancelled");
   };
+
+ 
+
+useEffect(()=>{
+   dispatch(updatefilterstate({
+     page:page,
+  customerId:customerId,
+  location:location,
+  driver:driver,
+  status:status
+  }))
+},[status, driver, location, customerId,page])
+  useEffect(() => {
+  const controller = new AbortController();
+  const delayDebounce = setTimeout(() => {
+   getlist({optpage:1})
+  }, 400); // 400ms debounce
+  return () => {
+    controller.abort(); // cancels previous request
+    clearTimeout(delayDebounce);
+  };
+  
+  }, [dispatch, status, driver, location, customerId])
+  
+const getlist = async ({ optpage }: { optpage?: number } = {}) => {
+  try {
+    await dispatch(
+      sortingInBooking({
+        status,
+        driver,
+        search: location,
+        customerID: customerId,
+        bookingId: "",
+        date: "",
+        pickup_time: "",
+        page: optpage ?? page,
+        limit: 10,
+      })
+    );
+  } catch (error) {
+    console.log('====================================');
+    console.log(error);
+    console.log('====================================');
+  }
+};
+
+
 
   return (
     <PageContainer title="">
@@ -107,11 +146,23 @@ export default function Dashboard() {
             setLocation={setLocation}
             setCustomerId={setCustomerId}
             drivers={drivers}
+             setpage={setpage}
             showPending
           />
           <BookingsTable
-            bookings={filteredBookings}
-            drivers={driver}
+           // bookings={filteredBookings}
+            // drivers={driver}
+          page={page}
+          setpage={setpage}
+          status={status}
+            driver={driver}
+            location={location}
+            customerId={customerId}
+            setStatus={handleSetStatus}
+            setDriver={setDriver}
+            setLocation={setLocation}
+            setCustomerId={setCustomerId}
+            getlist ={getlist}
             showCustomer
             showDriverSelect
             onUpdateDriver={handleUpdateDriver}

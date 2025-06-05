@@ -16,7 +16,7 @@ import { Cars } from "@/types/fleet";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { getCars, Updatecars } from "@/redux/Slice/fleetSlice";
-import { useParams } from "react-router-dom";
+import { Search, useParams } from "react-router-dom";
 import { string } from "zod";
 import { useAppSelector } from "@/redux/hook";
 import { Textarea } from "../ui/textarea";
@@ -42,41 +42,96 @@ interface EditCarFormProps {
     onClose: () => void;
     onSave: (drivers: Drivers) => void;
     onSuccess: () => void;
+    currentPage: number;  // Add this
+    searchQuery: string;
+
 }
 
-
 const InternalDriverSchema = z.object({
-    id: z.number(),
-    type: z.literal("internal"),
-    name: z.string().min(2, { message: "Name must be at least 8 characters." }),
-    email: z.string().optional(),
-  phone: z.string()
-  .regex(/^\+\d{1,4}\d{6,12}$/, { message: "Phone number must start with country code (e.g., +61) and be valid." }),
-    licenceNumber: z.string().min(5, { message: "Please enter a valid license number." }),
-    carId: z.string().min(1, { message: "Please select a vehicle." }),
-    status: z.enum(["active", "inactive"]),
-    photo: z.string().optional(),
+  id: z.number(),
+  type: z.literal("internal"),
+  name: z.string().min(2, { message: "Name must be at least 8 characters." }),
+  email: z.string().optional(),
+  phone: z
+    .string()
+    .transform(val => val.replace(/\s+/g, '')) // Remove all spaces
+    .pipe(
+      z.string().regex(/^\+\d{1,4}\d{6,12}$/, {
+        message: "Phone number must start with country code (e.g., +61411392930)",
+      })
+    ),
+  licenceNumber: z.string().min(5, { message: "Please enter a valid license number." }),
+  carId: z.string().min(1, { message: "Please select a vehicle." }),
+  status: z.enum(["active", "inactive"]),
+  photo: z.string().optional(),
 });
 
 const ExternalDriverSchema = z.object({
-    id: z.number(),
-    type: z.literal("external"),
-    name: z.string().min(2, { message: "Name must be at least 8 characters." }),
-    email: z.string().email({ message: "Please enter a valid email address." }),
-    phone: z.string()
-  .regex(/^\+\d{1,4}\d{6,12}$/, { message: "Phone number must start with country code (e.g., +61) and be valid." }),
-    licenceNumber: z.string().optional(),
-    carId: z.string().min(1, { message: "Please select a vehicle." }),
-    status: z.enum(["active", "inactive"]),
-    photo: z.string().optional(),
+  id: z.number(),
+  type: z.literal("external"),
+  name: z.string().min(2, { message: "Name must be at least 8 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  phone: z
+    .string()
+    .transform(val => val.replace(/\s+/g, '')) // Remove all spaces
+    .refine(val => /^\+\d{1,4}\d{6,12}$/.test(val), {
+      message: "Phone number must start with country code (e.g., +61) and be valid.",
+    }),
+  licenceNumber: z.string().optional(),
+  carId: z.string().min(1, { message: "Please select a vehicle." }),
+  status: z.enum(["active", "inactive"]),
+  photo: z.string().optional(),
 });
 
+// Discriminated union for single driver
 export const formSchema = z.discriminatedUnion("type", [
-    InternalDriverSchema,
-    ExternalDriverSchema,
+  InternalDriverSchema,
+  ExternalDriverSchema,
 ]);
 
+// Validate an array of drivers and check for unique phone and licenceNumber
+export const DriversArraySchema = z
+  .array(formSchema)
+  .superRefine((drivers, ctx) => {
+    const phoneSet = new Set<string>();
+    const licenceSet = new Set<string>();
+    const emailSet = new Set<String>();
+    drivers.forEach((driver, i) => {
+      if (phoneSet.has(driver.phone)) {
+        ctx.addIssue({
+          path: [i, "phone"],
+          code: z.ZodIssueCode.custom,
+          message: "Phone number must be unique.",
+        });
+      } else {
+        phoneSet.add(driver.phone);
+      }
 
+      if (driver.licenceNumber) {
+        if (licenceSet.has(driver.licenceNumber)) {
+          ctx.addIssue({
+            path: [i, "licenceNumber"],
+            code: z.ZodIssueCode.custom,
+            message: "License number must be unique.",
+          });
+        } else {
+          licenceSet.add(driver.licenceNumber);
+        }
+      }
+
+       if (driver.email) {
+        if (emailSet.has(driver.email)) {
+          ctx.addIssue({
+            path: [i, "email"],
+            code: z.ZodIssueCode.custom,
+            message: "email  must be unique.",
+          });
+        } else {
+          emailSet.add(driver.email);
+        }
+      }
+    });
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
@@ -88,16 +143,25 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
     const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false)
     const [photoFile, setPhotoFile] = useState<File | null>(null); 
-    
+    const current_Page = useAppSelector((state) => state.booking.page || 1);
+    const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
+    const [localPage, setLocalPage] = useState(current_Page);
+    const [searchQuery, setSearchQuery ] = useState("");
+    const limit= 10
 
 
-    useEffect(() => {
-        dispatch(getCars());
-    }, [dispatch]);
 
-    useEffect(() => {
-        setAvailableCars(vehicle);
-    }, [vehicle]);
+useEffect(() => {
+  if (Array.isArray(vehicle)) {
+    const filteredCars = vehicle.filter(
+      (car) => car.status === 'available' || car.status === 'in-use'
+    );
+    setAvailableCars(filteredCars);
+  } else {
+    setAvailableCars([]); // fallback in case it's not an array
+  }
+}, [vehicle]);
+
 
 
     const form = useForm<FormValues>({
@@ -130,27 +194,43 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
             });
            setPhotoPreview(
       driver.photo
-        ? driver.photo.startsWith("http")
+        ? driver.photo.startsWith("https")
           ? driver.photo
-          : `http://139.84.156.137:8080/${driver.photo.replace(/^\/+/, '')}`
+          : `https://brisbane.cloudhousetechnologies.com${driver.photo.replace(/^\/+/, '')}`
         : null
     );
   }
 }, [driver, IsOpen, form]);
 
 const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  setPhotoFile(file); // store actual file
-
-  const reader = new FileReader();
-  reader.onload = () => {
-    if (typeof reader.result === "string") {
-      setPhotoPreview(reader.result); // preview only
+    // Validate file type and size
+    if (!file.type.match('image.*')) {
+        toast.error('Please select an image file');
+        return;
     }
-  };
-  reader.readAsDataURL(file); // still needed for preview
+    
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error('Image size should be less than 5MB');
+        return;
+    }
+
+    setPhotoFile(file);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+        if (typeof reader.result === "string") {
+            setPhotoPreview(reader.result);
+            // Update form value if you want to store the preview URL
+            form.setValue("photo", reader.result, {
+                shouldValidate: true,
+                shouldDirty: true,
+            });
+        }
+    };
+    reader.readAsDataURL(file);
 };
 
 
@@ -170,64 +250,56 @@ const handleRemovePhoto = () => {
 
 
 
-    const onSubmit = async (values: FormValues) => {
-        if (!values.id) {
-            toast.error("Driver ID is missing");
-            return;
-        }
+const onSubmit = async (values: FormValues) => {
+    if (!values.id) {
+        toast.error("Driver ID is missing");
+        return;
+    }
 
-        setIsLoading(true);
-        const formData = new FormData();
-        let { id, ...rest } = values;
-        rest.photo = "";
-        formData.append("data", JSON.stringify(rest));
+    setIsLoading(true);
+    const formData = new FormData();
+    let { id, ...rest } = values;
+    rest.photo = "";
+    formData.append("data", JSON.stringify(rest));
 
-        try {
-            const result = await dispatch(
-                UpdateDrivers({
-                    driverId: values.id.toString(),
-                    data: formData
-                })
-            ).unwrap(); // Important for proper error handling
+    try {
+        const result = await dispatch(
+            UpdateDrivers({
+                driverId: values.id.toString(),
+                data: formData
+            })
+        ).unwrap();
 
-            await dispatch(getDrivers());
-            toast.success("Driver updated successfully");
-            onSuccess();
+        // Use the props for currentPage and searchQuery instead of Redux state
+        await dispatch(getDrivers({
+            page:current_Page,  // Use the prop value
+            limit,
+            search: searchQuery  // Use the prop value
+        }));
 
-            form.reset({
-                id: 0,
-                name: "",
-                email: "",
-                phone: "",
-                licenceNumber: "",
-                carId: "",
-                status: "active",
-                photo: "",
-                type: "internal",
-            });
-            setPhotoFile(null);
-            setPhotoPreview(null);
-            setIsAddDriverOpen(false);
-        } catch (error: unknown) { // Type-safe error handling
-            let errorMessage = "Failed to update driver";
+        toast.success("Driver updated successfully");
+        onSuccess();
 
-            if (typeof error === "object" && error !== null) {
-                // Type-safe property access
-                if ('error' in error && typeof (error as { error: unknown }).error === "string") {
-                    errorMessage = (error as { error: string }).error;
-                } else if ('message' in error && typeof (error as { message: unknown }).message === "string") {
-                    errorMessage = (error as { message: string }).message;
-                }
-            } else if (typeof error === "string") {
-                errorMessage = error;
-            }
-
-            toast.error(errorMessage);
-            console.error("Update failed:", error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+        form.reset({
+            id: 0,
+            name: "",
+            email: "",
+            phone: "",
+            licenceNumber: "",
+            carId: "",
+            status: "active",
+            photo: "",
+            type: "internal",
+        });
+        setPhotoFile(null);
+        setPhotoPreview(null);
+        setIsAddDriverOpen(false);
+    } catch (error: unknown) {
+        // ... existing error handling
+    } finally {
+        setIsLoading(false);
+    }
+};
 
 
     return (

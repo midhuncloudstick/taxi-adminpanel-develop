@@ -14,7 +14,11 @@ interface CarState {
   selectedCars: Cars | null;
   loading: boolean;
   error: string | null;
- 
+ AvailableCars :Cars[];
+ page:any;
+ limit:any;
+ total_pages:any;
+ search:any;
  
 //   // Define the correct type here
 }
@@ -24,6 +28,11 @@ const initialState: CarState = {
   loading: false,
   error: null,
   selectedCars: null,
+  AvailableCars:null,
+  page:null,
+  limit:null,
+  search:null,
+  total_pages:null
 };
 
 
@@ -54,21 +63,24 @@ export const CreateCars = createAsyncThunk(
 );
 
 export const getCars = createAsyncThunk(
-  "cars/get",
+  "car/get",
   async (
-   _,
+    { page, limit , search  }: { page: number; limit: number,search:string}
   ) => {
-    
     try {
-    //   const userId = localStorage.getItem("userid");
-    const url = "/api/v1/cars/list";
-
+      console.log("serach",search)
+      let url = `/api/v1/cars/list?page=${page}&limit=${limit}`;
+      console.log("searchhhcars",search)
+    if(search){
+    url=`/api/v1/cars/list?page=${page}&limit=${limit}&search=${search}`
+    }
+      
       const response = await api.getEvents(url);
-      const fleetData = response.data;
-      return fleetData;
+      const driverData = response.data;
+      return driverData;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        return error|| "car details fetching failed";
+        return error || "Driver details fetching failed";
       }
       return "An unexpected error occurred.";
     }
@@ -217,6 +229,8 @@ const fleetSlice = createSlice({
           .addCase(getCars.fulfilled, (state, action) => {
             state.loading = false;
             state.cars = action.payload.message;
+            state.page = action.payload.page;
+             state.total_pages = action.payload.total_pages
            
             console.log("action.payload", action.payload);
             state.error = null;
@@ -265,7 +279,7 @@ const fleetSlice = createSlice({
           .addCase(getAvailableCars.fulfilled, (state, action) => {
             state.loading = false;
            
-           
+           state.AvailableCars = action.payload.cars;
             console.log("action.payload", action.payload);
             state.error = null;
           })

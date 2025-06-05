@@ -55,7 +55,7 @@ const AppRoutes = () => {
            {/* <Route path="/pricing" element={<Pricing />} /> */}
           <Route path="/customers" element={<Customers />} />
           <Route path="/drivers" element={<Drivers />} />
-          <Route path="/history" element={<History />} />
+          {/* <Route path="/history" element={<History />} /> */}
           <Route path="/message" element={<Message />} />
           
           {/* Redirect / to /login if not authenticated */}
@@ -76,10 +76,11 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <WebSocketBookingListener />
           <NotificationSocket />
-       <WebSocketListener/>
+           <WebSocketListener/>
         
-       <WebSocketBookingListener />
+       
           <BrowserRouter>
             <AppRoutes />
           </BrowserRouter>

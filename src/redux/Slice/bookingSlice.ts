@@ -17,7 +17,16 @@ interface BookingState {
   selectedBooking: Booking[] | null;
   loading: boolean;
   error: string | null;
-
+ page:any;
+ limit:any;
+ total_pages:any;
+ filterstate :{
+  page:number,
+  customerId:string,
+  location:string,
+  driver:string,
+  status:string
+ }
 
   //   // Define the correct type here
 }
@@ -27,31 +36,49 @@ const initialState: BookingState = {
   chats: [],
   loading: false,
   error: null,
-  selectedBooking: null,
+  selectedBooking: [],
+  page:null,
+  limit:null,
+  total_pages:null,
+  filterstate:{
+     page:1,
+  customerId:'',
+  location:'',
+  driver:'all',
+  status:'all'
+  }
 };
 
 
 
-export const getBookinglist = createAsyncThunk(
-  "booking/get",
-  async (
-    _,
-  ) => {
+// interface BookingListParams {
+//   page: number;
+//   limit: number;
+//   total_pages:number
+// }
 
-    try {
-      const url = "/api/v1/booking/list";
 
-      const response = await api.getEvents(url);
-      const bookingData = response.data;
-      return bookingData;
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        return error || "booking details fetching failed";
-      }
-      return "An unexpected error occurred.";
-    }
-  }
-);
+
+// export const getBookinglist = createAsyncThunk(
+//   "booking/get",
+//   async (
+//     _,
+//   ) => {
+
+//     try {
+//       const url = "/api/v1/booking/list";
+
+//       const response = await api.getEvents(url);
+//       const bookingData = response.data;
+//       return bookingData;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return error || "booking details fetching failed";
+//       }
+//       return "An unexpected error occurred.";
+//     }
+//   }
+// );
 
 export const bookingInChat = createAsyncThunk(
   "booking/chat",
@@ -142,8 +169,8 @@ export const sortingInBooking = createAsyncThunk(
       pickup_time,
       page,
       limit,
-      sortBy,      // e.g. "customerID", "status", "date", "pickup_time", "bookingId"
-      sortOrder,   // "asc" or "desc"
+      sortBy,    
+      sortOrder,  
     }: {
       search: string,
       customerID: string,
@@ -162,14 +189,14 @@ export const sortingInBooking = createAsyncThunk(
       const baseUrl = "/api/v1/booking/list";
       const queryParams = new URLSearchParams();
       if (search !== undefined && search !== null && search !== "") queryParams.append('search', String(search));
-      if (customerID !== undefined && search !== null && search !== "") queryParams.append('customerID', String(customerID));
+      if (customerID !== undefined && customerID !== null && customerID !== "") queryParams.append('customerID', String(customerID));
       if (status !== undefined && status !== null && status !== "" && status!=="all") queryParams.append('status', String(status));
       if (driver !== undefined && driver !== null && driver !== "" && driver !=="all") queryParams.append('driver', String(driver));
       if (bookingId !== undefined && bookingId !== null && bookingId !== "") queryParams.append('bookingId', String(bookingId));
       if (date !== undefined && date !== null && date !== "") queryParams.append('date', String(date));
       if (pickup_time !== undefined && pickup_time !== null && pickup_time !== "") queryParams.append('bookingId', String(pickup_time));
-      // if (typeof page === "number") queryParams.append('page', String(page));
-      // if (typeof limit === "number") queryParams.append('limit', String(limit));
+      if (typeof page === "number") queryParams.append('page', String(page));
+      if (typeof limit === "number") queryParams.append('limit', String(limit));
       if (sortBy !== undefined && sortBy !== null && sortBy !== "") queryParams.append('bookingId', String(sortBy));
       if (sortOrder) queryParams.append('sortOrder', sortOrder);
 
@@ -177,7 +204,8 @@ export const sortingInBooking = createAsyncThunk(
 
       const url = `${baseUrl}?${queryParams.toString()}`;
       const response = await api.getEvents(url);
-      return response.data;
+       return  response.data
+      
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return error || "booking details fetching failed";
@@ -185,6 +213,7 @@ export const sortingInBooking = createAsyncThunk(
       return "An unexpected error occurred.";
     }
   }
+ 
 );
 
 export const getnotification = createAsyncThunk(
@@ -213,45 +242,47 @@ const bookingSlice = createSlice({
   name: "booking",
   initialState,
   reducers: {
-    addBooking: (state, action: PayloadAction<Booking>) => {
-      //   state.tasks.push({
-      //     ...action.payload,
-      //     startDate: new Date(action.payload.startDate).toISOString(),
-      //     endDate: new Date(action.payload.endDate).toISOString(),
-      //     status: action.payload.status, // Ensure this matches "NotStarted" | "InProgress" | "Completed"
-      //     taskCost: action.payload.taskCost || "0",
-      //   });
-    },
-    updateBooking: (state, action: PayloadAction<Booking>) => {
-      //   const index = state.tasks.findIndex((task) => task.ID === action.payload.ID);
-      //   if (index !== -1) {
-      //     state.tasks[index] = {
-      //       ...action.payload,
-      //       startDate: new Date(action.payload.startDate).toISOString(),
-      //       endDate: new Date(action.payload.endDate).toISOString(),
-      //       status: action.payload.status, // Ensure this matches "NotStarted" | "InProgress" | "Completed"
-      //       taskCost: action.payload.taskCost || "0",
-      //     };
-      //   }
-    },
-    deleteBooking: (state, action: PayloadAction<number>) => {
-      //   state.tasks = state.tasks.filter((task) => task.ID !== action.payload);
-    },
-    setBooking: (state, action: PayloadAction<Booking[]>) => {
-      //   state.tasks = action.payload.map((task) => ({
-      //     ...task,
-      //     startDate: task.startDate ? new Date(task.startDate).toISOString() : null, // Validate start_date
-      //     endDate: task.endDate ? new Date(task.endDate).toISOString() : null,       // Validate end_date
-      //     status: task.status === "NotStarted"
-      //       ? "NotStarted"
-      //       : task.status === "InProgress"
-      //       ? "InProgress"
-      //       : task.status === "Completed"
-      //       ? "Completed"
-      //       : task.status, // Map status values
-      //     taskCost: task.taskCost || "0",
-      //   }));
-    },
+    updatelist: (state, action) => {
+      console.log('====================================');
+      console.log('called');
+      console.log('====================================');
+  const newBooking = action.payload;
+  const existingIndex = state.selectedBooking.findIndex(
+    (b) => b.id === newBooking.id
+  );
+  const {page,customerId,location,driver,status}=state.filterstate
+  console.log(page==1 &&( newBooking.customerId ==customerId|| customerId=='')&&( newBooking.pickupLocation==location|| location=='')&& (newBooking.driver_name==driver ||driver=='all' ) && (newBooking.status==status && status=='all'));
+  console.log(newBooking.customerId ==customerId|| customerId=='');
+  console.log(newBooking.pickupLocation==location|| location=='');
+  console.log(newBooking.driver_name==driver ||driver=='all' );
+  console.log( newBooking.status==status && status=='all');
+  console.log();
+  
+  if(  page==1 &&( newBooking.customerId ==customerId|| customerId=='')&&( newBooking.pickupLocation==location|| location=='')&& (newBooking.driver_name==driver ||driver=='all' ) && (newBooking.status==status || status=='all')){
+    console.log('thisssssss');
+    
+    if (existingIndex !== -1) {
+    state.selectedBooking[existingIndex] = newBooking;
+  } else {
+    state.selectedBooking.unshift(newBooking);
+    if(state.selectedBooking.length ==10){
+       state.selectedBooking.pop()
+    }
+   
+  } 
+  }else{
+
+    console.log('====================================');
+    console.log('klklklklklkkl');
+    console.log('====================================');
+  }
+ 
+
+
+},
+updatefilterstate:(state,action)=>{
+state.filterstate =action.payload
+}
   },
 
 
@@ -259,21 +290,6 @@ const bookingSlice = createSlice({
     builder
 
 
-      .addCase(getBookinglist.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(getBookinglist.fulfilled, (state, action) => {
-        state.loading = false;
-        state.selectedBooking = action.payload.message;
-
-        console.log("action.payload.booking", action.payload);
-        state.error = null;
-      })
-      .addCase(getBookinglist.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
 
       .addCase(bookingInChat.pending, (state) => {
         state.loading = true;
@@ -361,9 +377,11 @@ const bookingSlice = createSlice({
         state.error = null;
       })
 
-      .addCase(sortingInBooking.fulfilled, (state, action) => {
+  .addCase(sortingInBooking.fulfilled, (state, action) => {
         state.loading = false;
-        state.selectedBooking = action.payload.message;
+         state.selectedBooking = action.payload.message;
+         state.page = action.payload.page;
+        state.total_pages = action.payload.total_pages
 
         console.log("sortingggggg", action.payload);
         state.error = null;
@@ -375,5 +393,5 @@ const bookingSlice = createSlice({
   }
 });
 
-export const { addBooking, updateBooking, setBooking } = bookingSlice.actions;
+export const { updatelist,updatefilterstate } = bookingSlice.actions;
 export default bookingSlice.reducer;

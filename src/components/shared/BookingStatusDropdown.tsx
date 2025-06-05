@@ -4,11 +4,13 @@ import { ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
-import { getBookinglist, updateBookingStatus } from "@/redux/Slice/bookingSlice";
+import {  sortingInBooking, updateBookingStatus } from "@/redux/Slice/bookingSlice";
+import { useAppSelector } from "@/redux/hook";
 
 interface BookingStatusDropdownProps {
   bookingId: string;
   status: 'requested'|'waiting for driver confirmation'|'assigned driver'|'journey started'|'pickup'|'journey completed'|'cancelled';
+ getlist: () => void;
 }
 
 const statusOptions = [
@@ -24,10 +26,13 @@ const statusOptions = [
 export function BookingStatusDropdown({
   bookingId,
   status,
+  getlist
 }: BookingStatusDropdownProps) {
   const [open, setOpen] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-
+  const page = 1;
+  const limit = 10;
+  const current_Page = useAppSelector((state) => state.booking.page || 1);
   function getStatusUI(s: string) {
     switch (s) {
       case "requested":
@@ -52,7 +57,22 @@ export function BookingStatusDropdown({
   const handleSelect = async (newStatus: BookingStatusDropdownProps["status"]) => {
     if (newStatus !== status) {
       await dispatch(updateBookingStatus({ bookingId, status: newStatus }));
-      await dispatch(getBookinglist());
+
+ await getlist()
+//  await dispatch(sortingInBooking({
+//   search: "",          // or your current search term
+//   customerID: "",      // or current customer id filter
+//   status: "",          // or current status filter
+//   driver: "",          // or current driver filter
+//   bookingId: "",       // or current booking id filter
+//   date: "",            // or current date filter
+//   pickup_time: "",     // or current pickup time filter
+//   page: current_Page,
+//   limit: limit,
+//   // sortBy: sortKey,
+//   // sortOrder: sortDirection,
+// }));
+
     }
     setOpen(false);
   };
