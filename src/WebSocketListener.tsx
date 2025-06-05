@@ -15,13 +15,16 @@ const WebSocketListener = () => {
 
     ws.current.onmessage = (event) => {
       try {
+        console.log('====================================');
+        console.log(event.data);
+        console.log('====================================');
         const data = JSON.parse(event.data);
         setMessage((prev) => [...prev, event.data])
 
 
         if (data.message) {
 
-          alert(`📢 ${data.message}`);
+          alert(`📢sssss ${data.message}`);
         }
 
       } catch (err) {

@@ -18,6 +18,7 @@ interface BookingsFilterBarProps {
   setDriver: (val: string) => void;
   setLocation: (val: string) => void;
   setCustomerId: (val: string) => void;
+    setpage: (val: number) => void;
   drivers: Driver[];
   showPending?: boolean;
 }
@@ -43,19 +44,6 @@ export function BookingsFilterBar({
   }, [dispatch])
 
 
-useEffect(() => {
-  dispatch(sortingInBooking({
-    status,
-    driver,
-    search: location,
-    customerID: customerId,
-    bookingId: "",      
-    date: "",           
-    pickup_time: "",    
-    page: 1,            
-    limit: 10           
-  }))
-}, [dispatch, status, driver, location, customerId])
 
 
 
@@ -120,7 +108,7 @@ useEffect(() => {
         className="w-[160px]"
         value={customerId}
         onChange={e => setCustomerId(e.target.value)}
-        placeholder="Customer ID"
+        placeholder="Customer Name"
       />
 
       

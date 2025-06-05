@@ -17,11 +17,8 @@ const BookingWebsocket = () => {
     ws.current.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-    
-
-
+  
       dispatch(updatelist(data))
-
       } catch (err) {
        
         console.warn("⚠️ Received non-JSON WebSocket message:", event.data);

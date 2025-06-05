@@ -22,10 +22,6 @@ const NotificationSocket = () => {
     ws.current.onmessage = (event) => {
       try {
         dispatch(addNotification(event.data));
-        
-        // Play notification sound
-      
-        
       } catch (err) {
         alert(`📢 ${event.data}`);
         console.warn("⚠️ Received non-JSON WebSocket message:", event.data);
