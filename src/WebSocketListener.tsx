@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
 import { toast } from "sonner";
+import { addAlert } from "./redux/Slice/notificationSlice";
 
 const WebSocketListener = () => {
   const ws = useRef<WebSocket | null>(null);
   const [message, setMessage] = useState([])
+  const dispatch=useDispatch()
   useEffect(() => {
     ws.current = new WebSocket("wss://brisbane.cloudhousetechnologies.com/ws/events");
    
@@ -19,16 +22,12 @@ const WebSocketListener = () => {
         console.log(event.data);
         console.log('====================================');
         const data = JSON.parse(event.data);
-        setMessage((prev) => [...prev, event.data])
 
+        dispatch(addAlert(data.bookings))
 
-        if (data.message) {
-
-          alert(`📢sssss ${data.message}`);
-        }
-
+     
       } catch (err) {
-        alert(`📢 ${event.data}`);
+      
         console.warn("⚠️ Received non-JSON WebSocket message:", event.data);
       }
     };

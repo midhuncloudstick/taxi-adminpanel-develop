@@ -1,3 +1,4 @@
+import { Booking } from "@/types/booking";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { stat } from "fs";
 
@@ -17,6 +18,7 @@ interface NotificationState {
   notification: notifictiontype[];
   toglelistId :string;
   ringnotification:boolean;
+  alretList:Booking[];
 }
 
 const initialState: NotificationState = {
@@ -24,6 +26,7 @@ const initialState: NotificationState = {
   notification: [],
   toglelistId:'',
   ringnotification:false,
+  alretList:[]
 };
 
 const notificationSlice = createSlice({
@@ -53,6 +56,12 @@ const notificationSlice = createSlice({
       state.notification.push(notification);
       state.ringnotification = true
     },
+    addAlert:(state,action)=>{
+      console.log('====================================');
+      console.log('alretclaaed',action.payload);
+      console.log('====================================');
+      state.alretList=action.payload 
+    },
     setToggleid :(state,action)=>{
       state.toglelistId = action.payload
     },
@@ -73,6 +82,6 @@ const notificationSlice = createSlice({
   },
 });
 
-export const { addMessage, clearMessages, addNotification ,setToggleid,clearnotification ,setnotificationsoundfasle} =
+export const { addMessage, clearMessages, addNotification ,setToggleid,clearnotification ,setnotificationsoundfasle,addAlert} =
   notificationSlice.actions;
 export default notificationSlice.reducer;
