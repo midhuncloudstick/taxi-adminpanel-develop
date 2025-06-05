@@ -20,6 +20,13 @@ interface BookingState {
  page:any;
  limit:any;
  total_pages:any;
+ filterstate :{
+  page:number,
+  customerId:string,
+  location:string,
+  driver:string,
+  status:string
+ }
 
   //   // Define the correct type here
 }
@@ -29,10 +36,17 @@ const initialState: BookingState = {
   chats: [],
   loading: false,
   error: null,
-  selectedBooking: null,
+  selectedBooking: [],
   page:null,
   limit:null,
-  total_pages:null
+  total_pages:null,
+  filterstate:{
+     page:1,
+  customerId:'',
+  location:'',
+  driver:'all',
+  status:'all'
+  }
 };
 
 
@@ -175,7 +189,7 @@ export const sortingInBooking = createAsyncThunk(
       const baseUrl = "/api/v1/booking/list";
       const queryParams = new URLSearchParams();
       if (search !== undefined && search !== null && search !== "") queryParams.append('search', String(search));
-      if (customerID !== undefined && search !== null && search !== "") queryParams.append('customerID', String(customerID));
+      if (customerID !== undefined && customerID !== null && customerID !== "") queryParams.append('customerID', String(customerID));
       if (status !== undefined && status !== null && status !== "" && status!=="all") queryParams.append('status', String(status));
       if (driver !== undefined && driver !== null && driver !== "" && driver !=="all") queryParams.append('driver', String(driver));
       if (bookingId !== undefined && bookingId !== null && bookingId !== "") queryParams.append('bookingId', String(bookingId));
@@ -229,18 +243,46 @@ const bookingSlice = createSlice({
   initialState,
   reducers: {
     updatelist: (state, action) => {
+      console.log('====================================');
+      console.log('called');
+      console.log('====================================');
   const newBooking = action.payload;
   const existingIndex = state.selectedBooking.findIndex(
     (b) => b.id === newBooking.id
   );
-  if (existingIndex !== -1) {
+  const {page,customerId,location,driver,status}=state.filterstate
+  console.log(page==1 &&( newBooking.customerId ==customerId|| customerId=='')&&( newBooking.pickupLocation==location|| location=='')&& (newBooking.driver_name==driver ||driver=='all' ) && (newBooking.status==status && status=='all'));
+  console.log(newBooking.customerId ==customerId|| customerId=='');
+  console.log(newBooking.pickupLocation==location|| location=='');
+  console.log(newBooking.driver_name==driver ||driver=='all' );
+  console.log( newBooking.status==status && status=='all');
+  console.log();
+  
+  if(  page==1 &&( newBooking.customerId ==customerId|| customerId=='')&&( newBooking.pickupLocation==location|| location=='')&& (newBooking.driver_name==driver ||driver=='all' ) && (newBooking.status==status || status=='all')){
+    console.log('thisssssss');
+    
+    if (existingIndex !== -1) {
     state.selectedBooking[existingIndex] = newBooking;
   } else {
     state.selectedBooking.unshift(newBooking);
+    if(state.selectedBooking.length ==10){
+       state.selectedBooking.pop()
+    }
+   
+  } 
+  }else{
+
+    console.log('====================================');
+    console.log('klklklklklkkl');
+    console.log('====================================');
   }
+ 
 
 
 },
+updatefilterstate:(state,action)=>{
+state.filterstate =action.payload
+}
   },
 
 
@@ -339,7 +381,8 @@ const bookingSlice = createSlice({
         state.loading = false;
          state.selectedBooking = action.payload.message;
          state.page = action.payload.page;
-        state.total_pages = 10
+        state.total_pages = action.payload.total_pages
+
         console.log("sortingggggg", action.payload);
         state.error = null;
       })
@@ -350,5 +393,5 @@ const bookingSlice = createSlice({
   }
 });
 
-export const { updatelist } = bookingSlice.actions;
+export const { updatelist,updatefilterstate } = bookingSlice.actions;
 export default bookingSlice.reducer;
