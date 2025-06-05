@@ -9,6 +9,8 @@ import { Cars } from "@/types/fleet";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { getDrivers } from "@/redux/Slice/driverSlice";
+import { Pagination } from "../ui/paginationNew";
+import { useAppSelector } from "@/redux/hook";
 
 type Drivers = {
   id: number;
@@ -36,15 +38,21 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
   const [driverData, setDriversData] = useState<Drivers[]>(drivers);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [driverToEdit, setDriverToEdit] = useState<Drivers | null>(null);
-  const dispatch = useDispatch<AppDispatch>()
+  const current_Page = useAppSelector((state) => state.driver.page || 1);
+  const totalPages = useAppSelector((state) => state.driver.total_pages || 1);
+  const [localPage, setLocalPage] = useState(current_Page);
+  const dispatch = useDispatch<AppDispatch>();
+  const limit = 10;
+  const [loading, setLoading] = useState(false); 
+  const [searchQuery, setSearchQuery] = useState("");
   
 
 
 
-useEffect(() => {
-console.log("reached the driverlisting")
-dispatch(getDrivers())
-}, [dispatch]);
+// useEffect(() => {
+// console.log("reached the driverlisting")
+// dispatch(getDrivers({page:current_Page,limit}))
+// }, [dispatch]);
 
   const handleSaveEditedDriver = (editedDriver: Drivers) => {
     setDriversData((prev) =>
@@ -57,6 +65,19 @@ dispatch(getDrivers())
     setDriverToEdit(driver);
     setIsEditFormOpen(true);
   };
+
+    const handlePageChange = async (newPage: number) => {
+      try {
+        setLoading(true);
+        await dispatch(getDrivers({page:current_Page,limit,search:searchQuery}))
+         
+        setLocalPage(newPage); // Update local page state
+      } catch (error) {
+        console.error("Error changing page:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
   return (
     <div className="overflow-auto rounded-lg shadow bg-white">
@@ -127,6 +148,15 @@ dispatch(getDrivers())
           ))}
         </TableBody>
       </Table>
+
+        <div className="py-4">
+              <Pagination
+                currentPage={current_Page}
+                itemsPerPage={limit}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
 
       {/* Render the form just once outside the table */}
       {driverToEdit && (

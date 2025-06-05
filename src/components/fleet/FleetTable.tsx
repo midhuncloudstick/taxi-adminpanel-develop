@@ -20,6 +20,7 @@ import { Deletecars, getCars } from "@/redux/Slice/fleetSlice";
 import { useAppSelector } from "@/redux/hook";
 import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import { Pagination } from "../ui/paginationNew";
 
 interface FleetTableProps {
   onEdit: (car: Car) => void;
@@ -32,7 +33,13 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
   const [carToDelete, setCarToDelete] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const Vehicle = useAppSelector((state) => state.fleet.cars)
-
+    const current_Page = useAppSelector((state) => state.booking.page || 1);
+    const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
+    const [localPage, setLocalPage] = useState(current_Page);
+    const [searchQuery, setSearchQuery ] = useState("");
+    const [loading, setLoading] = useState(false); // ⬅️ added loading state
+    
+    const limit= 10
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "available":
@@ -41,6 +48,8 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
         return <Badge className="bg-yellow-500">In Use</Badge>;
       case "maintenance":
         return <Badge className="bg-red-500">Maintenance</Badge>;
+      case "cancelled":
+        return <Badge className="bg-red-900">Cancelled</Badge>;
       default:
         return <Badge className="bg-gray-500">Unknown</Badge>;
     }
@@ -63,10 +72,22 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
 
   useEffect(() => {
     console.log("reached the listing")
-    dispatch(getCars())
+    dispatch(getCars({search:searchQuery,page:current_Page,limit}))
   }, [dispatch]);
 
 
+  const handlePageChange = async (newPage: number) => {
+    try {
+      setLoading(true);
+     dispatch(getCars({search:searchQuery,page:current_Page,limit})) // Include current sort order
+    
+      setLocalPage(newPage); // Update local page state
+    } catch (error) {
+      console.error("Error changing page:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const handleDelete = (carId: string) => {
@@ -80,7 +101,7 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
     try {
       console.log("deletedddddd")
       await dispatch(Deletecars({ carId: carToDelete })).unwrap();
-      await dispatch(getCars());
+      await dispatch(getCars({page:current_Page,limit,search:searchQuery}));
 
       setCarsData(carsData.filter((car) => car.id !== carToDelete));
       onDelete(carToDelete);
@@ -172,6 +193,15 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
         </TableBody>
 
       </Table>
+
+       <div className="py-4">
+              <Pagination
+                currentPage={current_Page}
+                itemsPerPage={limit}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            </div>
 
       <ConfirmDialog
         isOpen={isDeleteDialogOpen}

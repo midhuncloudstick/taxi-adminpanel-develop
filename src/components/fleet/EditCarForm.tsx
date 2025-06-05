@@ -37,7 +37,11 @@ export function EditCarForm({ car, IsOpen, onClose, onSave }: EditCarFormProps) 
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [images, setImages] = useState<string[]>([]); // Store image previews (base64)
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-
+    const current_Page = useAppSelector((state) => state.booking.page || 1);
+    const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
+    const [localPage, setLocalPage] = useState(current_Page);
+    const [searchQuery, setSearchQuery ] = useState("");
+    const limit= 10
 
 useEffect(() => {
   if (car) {
@@ -52,12 +56,12 @@ useEffect(() => {
     );
     // Handle car_images as array of objects with image_url
     if (Array.isArray(car.car_images) && car.car_images.length > 0) {
-      const baseUrl = "http://139.84.156.137:8080";
+      const baseUrl = "https://brisbane.cloudhousetechnologies.com";
       setImages(
         car.car_images
           .map(imgObj =>
             imgObj && imgObj.image_url
-              ? imgObj.image_url.startsWith("http")
+              ? imgObj.image_url.startsWith("https")
                 ? imgObj.image_url
                 : `${baseUrl}${imgObj.image_url}`
               : ""
@@ -177,7 +181,7 @@ useEffect(() => {
     try {
       console.log("carsss", CarForm)
       await dispatch(Updatecars({ carId: CarForm.id, data: formData })).unwrap();
-      await dispatch(getCars())
+      await dispatch(getCars({page:current_Page,limit,search:searchQuery}))
       toast.success("Car created successfully");
 
       onSave(CarForm);
@@ -424,7 +428,7 @@ useEffect(() => {
             <Label htmlFor="status">Status</Label>
             <Select
               value={CarForm.status}
-              onValueChange={(value: "available" | "in-use" | "maintenance") =>
+              onValueChange={(value: "available" | "in-use" | "maintenance" ) =>
                 setCarForm({ ...CarForm, status: value as "available" | "in-use" | "maintenance" })
               }
             >
@@ -435,6 +439,7 @@ useEffect(() => {
                 <SelectItem value="available">Available</SelectItem>
                 <SelectItem value="in-use">In Use</SelectItem>
                 <SelectItem value="maintenance">Maintenance</SelectItem>
+                {/* <SelectItem value="cancelled">Cancelled</SelectItem> */}
               </SelectContent>
             </Select>
           </div>

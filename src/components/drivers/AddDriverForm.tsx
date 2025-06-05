@@ -33,11 +33,18 @@ import { drivers } from "@/data/mockData";
 
 
 const InternalDriverSchema = z.object({
+  id: z.number(),
   type: z.literal("internal"),
   name: z.string().min(2, { message: "Name must be at least 8 characters." }),
   email: z.string().optional(),
-  phone: z.string()
-  .regex(/^\+\d{1,4}\d{6,12}$/, { message: "Phone number must start with country code (e.g., +61) and be valid." }),
+  phone: z
+    .string()
+    .transform(val => val.replace(/\s+/g, '')) // Remove all spaces
+    .pipe(
+      z.string().regex(/^\+\d{1,4}\d{6,12}$/, {
+        message: "Phone number must start with country code (e.g., +61411392930)",
+      })
+    ),
   licenceNumber: z.string().min(5, { message: "Please enter a valid license number." }),
   carId: z.string().min(1, { message: "Please select a vehicle." }),
   status: z.enum(["active", "inactive"]),
@@ -45,22 +52,71 @@ const InternalDriverSchema = z.object({
 });
 
 const ExternalDriverSchema = z.object({
+  id: z.number(),
   type: z.literal("external"),
   name: z.string().min(2, { message: "Name must be at least 8 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
- phone: z.string()
-  .regex(/^\+\d{1,4}\d{6,12}$/, { message: "Phone number must start with country code (e.g., +61) and be valid." }),
+  phone: z
+    .string()
+    .transform(val => val.replace(/\s+/g, '')) // Remove all spaces
+    .refine(val => /^\+\d{1,4}\d{6,12}$/.test(val), {
+      message: "Phone number must start with country code (e.g., +61) and be valid.",
+    }),
   licenceNumber: z.string().optional(),
   carId: z.string().min(1, { message: "Please select a vehicle." }),
   status: z.enum(["active", "inactive"]),
   photo: z.string().optional(),
 });
 
-// Combine using discriminated union
+// Discriminated union for single driver
 export const formSchema = z.discriminatedUnion("type", [
   InternalDriverSchema,
   ExternalDriverSchema,
 ]);
+
+// Validate an array of drivers and check for unique phone and licenceNumber
+export const DriversArraySchema = z
+  .array(formSchema)
+  .superRefine((drivers, ctx) => {
+    const phoneSet = new Set<string>();
+    const licenceSet = new Set<string>();
+    const emailSet = new Set<String>();
+    drivers.forEach((driver, i) => {
+      if (phoneSet.has(driver.phone)) {
+        ctx.addIssue({
+          path: [i, "phone"],
+          code: z.ZodIssueCode.custom,
+          message: "Phone number must be unique.",
+        });
+      } else {
+        phoneSet.add(driver.phone);
+      }
+
+      if (driver.licenceNumber) {
+        if (licenceSet.has(driver.licenceNumber)) {
+          ctx.addIssue({
+            path: [i, "licenceNumber"],
+            code: z.ZodIssueCode.custom,
+            message: "License number must be unique.",
+          });
+        } else {
+          licenceSet.add(driver.licenceNumber);
+        }
+      }
+
+       if (driver.email) {
+        if (emailSet.has(driver.email)) {
+          ctx.addIssue({
+            path: [i, "email"],
+            code: z.ZodIssueCode.custom,
+            message: "email  must be unique.",
+          });
+        } else {
+          emailSet.add(driver.email);
+        }
+      }
+    });
+  });
 
 
 type FormValues = z.infer<typeof formSchema>;
@@ -71,7 +127,7 @@ interface AddDriverFormProps {
 
 export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
  
-  const [availableCars, setAvailableCars] = useState<Cars[]>([]);
+  
   const dispatch = useDispatch<AppDispatch>()
   const vehicle = useAppSelector((state) => state.fleet.cars)
   const driver = useAppSelector((state) => state.driver.drivers)
@@ -79,15 +135,20 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
   const [isLoading, setIsLoading] = useState(false);
 const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 const [photoFile, setPhotoFile] = useState<File | null>(null); 
+    const current_Page = useAppSelector((state) => state.booking.page || 1);
+    const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
+    const [localPage, setLocalPage] = useState(current_Page);
+    const [searchQuery, setSearchQuery ] = useState("");
+    const limit= 10
+const [availableCars, setAvailableCars] = useState([]);
 
-  // Load cars when component mounts
-  useEffect(() => {
-    dispatch(getCars());
-  }, [dispatch]);
+useEffect(() => {
+  const filteredCars = vehicle.filter(
+    (car) => car.status === 'available' || car.status === 'in-use'
+  );
+  setAvailableCars(filteredCars);
+}, [vehicle]);
 
-  useEffect(() => {
-    setAvailableCars(vehicle);
-  }, [vehicle]);
 
 
 
@@ -154,7 +215,7 @@ const onSubmit = async (values: FormValues) => {
 
 try {
   await dispatch(CreateDrivers({ data: formData })).unwrap();
-  await dispatch(getDrivers()); 
+  await dispatch(getDrivers({page:current_Page,limit, search:searchQuery})); 
 
   toast.success("Driver added successfully");
   onSuccess();
