@@ -16,6 +16,10 @@ interface CarState {
   loading: boolean;
   error: string | null;
   AvailableDrivers:Drivers[]
+  page:any;
+  limit:any;
+  total_pages:any;
+  search :any;
 
 
   //   // Define the correct type here
@@ -27,6 +31,11 @@ const initialState: CarState = {
   error: null,
   selectedDrivers: null,
   AvailableDrivers:null,
+  page:null,
+  limit:null,
+  total_pages:null,
+  search:null,
+
 };
 
 
@@ -59,24 +68,28 @@ export const CreateDrivers = createAsyncThunk(
 export const getDrivers = createAsyncThunk(
   "driver/get",
   async (
-    _,
+    { page, limit , search  }: { page: number; limit: number,search:string}
   ) => {
-
     try {
-      //   const userId = localStorage.getItem("userid");
-      const url = "/api/v1/driver/list";
-
+      console.log("serach",search)
+      let url = `/api/v1/driver/list?page=${page}&limit=${limit}`;
+      console.log("searchhhdriverrrr",search)
+    if(search){
+    url=`/api/v1/driver/list?page=${page}&limit=${limit}&search=${search}`
+    }
+      
       const response = await api.getEvents(url);
       const driverData = response.data;
       return driverData;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        return error || "driver details fetching failed";
+        return error || "Driver details fetching failed";
       }
       return "An unexpected error occurred.";
     }
   }
 );
+
 
 export const UpdateDrivers = createAsyncThunk(
   "driver/update",
@@ -211,8 +224,9 @@ const driverSlice = createSlice({
       .addCase(getDrivers.fulfilled, (state, action) => {
         state.loading = false;
         state.drivers = action.payload.message;
-
-        console.log("action.payload.driver", action.payload);
+        state.page = action.payload.page;
+        state.total_pages = action.payload.total_pages
+        // console.log("action.payload.driver", action.payload);
         state.error = null;
       })
       .addCase(getDrivers.rejected, (state, action) => {

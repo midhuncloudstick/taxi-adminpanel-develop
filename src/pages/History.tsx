@@ -1,6 +1,4 @@
-
 import { PageContainer } from "@/components/layout/PageContainer";
-import { getCompletedBookings } from "@/data/mockData";
 import { BookingsTable } from "@/components/shared/BookingsTable";
 import { AppDispatch } from "@/redux/store";
 import { useDispatch } from "react-redux";
@@ -9,14 +7,12 @@ import { histories } from "@/redux/Slice/historySlice";
 import { useAppSelector } from "@/redux/hook";
 
 export default function History() {
-  const completed = getCompletedBookings();
-  
+  const listhistorties = useAppSelector((state) => state.history.history);
+  const dispatch = useDispatch<AppDispatch>();
 
-const listhistorties = useAppSelector((state) => state.history.history)
-  const dispatch = useDispatch<AppDispatch>()
- useEffect(()=>{
-  dispatch(histories())
- },[dispatch])
+  useEffect(() => {
+    dispatch(histories());
+  }, [dispatch]);
 
   return (
     <PageContainer title="Booking History">
@@ -25,7 +21,11 @@ const listhistorties = useAppSelector((state) => state.history.history)
           <h2 className="text-xl font-semibold text-taxi-blue">Booking History</h2>
           <p className="text-sm text-gray-500">View all historical bookings and trip data.</p>
         </div>
-        <BookingsTable bookings={completed} showCustomer showDriver />
+        <BookingsTable 
+          bookings={listhistorties} 
+          showCustomer 
+          showDriver 
+        />
       </div>
     </PageContainer>
   );
