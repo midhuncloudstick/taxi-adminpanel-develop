@@ -46,14 +46,19 @@ export function BookingsFilterBar({
 
   const driverslist = useAppSelector((state) => state.driver.drivers);
   const alertlist = useAppSelector((state) => state.notification.alretList);
+  
   const [open, setopen] = useState(false);
   useEffect(() => {
+    
     dispatch(getDrivers());
   }, [dispatch]);
 
   const setid = (id: string) => {
     try {
       dispatch(setToggleid(id));
+      setTimeout(() => {
+        dispatch(setToggleid(''))
+      }, 5000);
     } catch (error) {
       console.log("====================================");
       console.log(error);
@@ -93,9 +98,13 @@ export function BookingsFilterBar({
           Over Due Booking{" "}
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}{" "}
         </span>
+        {
+          alertlist.length>0 &&
           <span className="absolute -top-1 -right-1 bg-taxi-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                {alertlist.length}
+                {alertlist?.length}
               </span>
+        }
+          
         {open && (
           <div className="absolute left-0 top-full mt-2 w-48 rounded shadow-lg z-40 bg-white border px-0 py-2 overflow-auto max-h-[360px]">
             <div className=" py-2 border-b font-medium text-taxi-blue flex items-center gap-2 w-full ">

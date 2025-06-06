@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import {  sortingInBooking, updateBookingStatus } from "@/redux/Slice/bookingSlice";
 import { useAppSelector } from "@/redux/hook";
+import { clearalert } from "@/redux/Slice/notificationSlice";
 
 interface BookingStatusDropdownProps {
   bookingId: string;
@@ -29,6 +30,7 @@ export function BookingStatusDropdown({
   getlist
 }: BookingStatusDropdownProps) {
   const [open, setOpen] = useState(false);
+  const alertdata =useAppSelector((state)=>state.notification.alretList)
   const dispatch = useDispatch<AppDispatch>();
   const page = 1;
   const limit = 10;
@@ -58,7 +60,21 @@ export function BookingStatusDropdown({
     if (newStatus !== status) {
       await dispatch(updateBookingStatus({ bookingId, status: newStatus }));
 
- await getlist()
+      if(status == 'assigned driver'){
+        console.log(alertdata ,alertdata.length ,bookingId);
+        
+       if(alertdata.length==1 && alertdata[0].id == bookingId ){
+        dispatch(clearalert(0))
+       }else{
+        const findeindex = alertdata.findIndex((item) => item.id == bookingId );
+      console.log('the index for status',findeindex);
+      
+      if(findeindex>-1){
+dispatch(clearalert(findeindex))
+      }
+       }
+         
+
 //  await dispatch(sortingInBooking({
 //   search: "",          // or your current search term
 //   customerID: "",      // or current customer id filter
@@ -74,6 +90,8 @@ export function BookingStatusDropdown({
 // }));
 
     }
+   await getlist()
+  }
     setOpen(false);
   };
 

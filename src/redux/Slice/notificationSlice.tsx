@@ -63,10 +63,18 @@ const notificationSlice = createSlice({
       state.alretList=action.payload 
     },
     setToggleid :(state,action)=>{
+
       state.toglelistId = action.payload
+   
     },
     clearMessages: (state) => {
       state.messages = [];
+    },
+    clearalert:(state,action)=>{
+ 
+         state.alretList.splice(action.payload, 1);
+    
+   
     },
     setnotificationsoundfasle :(state)=>{
       state.ringnotification =false
@@ -82,6 +90,6 @@ const notificationSlice = createSlice({
   },
 });
 
-export const { addMessage, clearMessages, addNotification ,setToggleid,clearnotification ,setnotificationsoundfasle,addAlert} =
+export const { addMessage, clearMessages, addNotification ,setToggleid,clearnotification ,setnotificationsoundfasle,addAlert,clearalert} =
   notificationSlice.actions;
 export default notificationSlice.reducer;
