@@ -569,12 +569,12 @@ export function BookingsTable({
                     {expandedRows?.[b.id] && (
                       <TableRow>
                         <TableCell colSpan={12} className="bg-gray-50 p-0">
-                          <div className="p-4 space-y-4">
+                          <div className="p-4 space-y-4 ">
                             <h4 className="font-medium text-lg">
                               Booking Details
                             </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div className="space-y-2">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="space-y-2 ">
                                 <div className="flex items-center gap-2">
                                   <Calendar
                                     size={16}
@@ -591,38 +591,20 @@ export function BookingsTable({
                                 <div className="flex items-center gap-2">
                                   <MapPin size={16} className="text-taxi-blue" />
                                   <span className="font-medium">
-                                    Pickup:
+                                    Trip:
                                   </span>{" "}
-                                  {b.pickupLocation}
+                                  {b.pickupLocation}- {b.dropLocation}
                                 </div>
-                                <div className="flex items-center gap-2">
+                                {/* <div className="flex items-center gap-2">
                                   <MapPin size={16} className="text-taxi-blue" />
                                   <span className="font-medium">
                                     Destination:
                                   </span>{" "}
-                                  {b.dropLocation}
-                                </div>
+                                 
+                                </div> */}
                               </div>
-                              <div className="space-y-2">
-                                {customer && (
-                                  <>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium">
-                                        Customer:
-                                      </span>{" "}
-                                      {customer.name}
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium">Phone:</span>{" "}
-                                      {customer.phone}
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-medium">Email:</span>{" "}
-                                      {customer.email}
-                                    </div>
-                                  </>
-                                )}
-                                <div className="flex items-center gap-2">
+                              <div className="space-y-2 ">
+                            <div className="flex items-center gap-2">
                                   <span className="font-medium">Distance:</span>{" "}
                                   {b.kilometers} km
                                 </div>
@@ -630,7 +612,63 @@ export function BookingsTable({
                                   <span className="font-medium">Fare:</span> $
                                   {b.amount.toFixed(2)}
                                 </div>
+                                    <div className="flex items-center gap-2">
+                                  <span className="font-medium">Fleet:</span> 
+                                  {b.car_type} - {b.car.model}
+                                </div>
                               </div>
+                                <div className="space-y-2 ">
+                                     <div className="flex items-center gap-2">
+                                  <span className="font-medium">Passengers:</span>{" "}
+                                  {b.passengers} 
+                                </div>
+                                {b.babyCapsule+b.babySeat+b.boosterseat == 0 &&
+                                
+                                 <div className="flex items-center gap-2">
+                                  <span className="font-medium">Children:</span>{" "}
+                                  0
+                                </div>
+                                }
+                                     
+                                {b.boosterseat >0 &&
+                                  <div className="flex items-center gap-2">
+                                  <span className="font-medium">Boosterseat:</span>{" "}
+                                  {b.boosterseat} 
+                                </div>
+                                }
+                          
+                               { b.babyCapsule >0 && <div className="flex items-center gap-2">
+                                  <span className="font-medium">BabyCapsule:</span> 
+                                  {b.babyCapsule}
+                                </div>}
+
+                                 { b.babySeat >0&&  <div className="flex items-center gap-2">
+                                  <span className="font-medium">BabySeat:</span> 
+                                  {b.babySeat} 
+                                </div>}
+                              </div>
+                              <div className="space-y-2">
+                     
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">
+                                        Customer:
+                                      </span>{" "}
+                                      {b.user_firstname} {' '}{b.user_lastname}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">Phone:</span>{" "}
+                                      {b.user_phonenumber}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium">Email:</span>{" "}
+                                      {b.user_email}
+                                    </div>
+                               
+                                
+                             
+                             
+                              </div>
+                              
                             </div>
                             {b.specialRequest && (
                               <div className="mt-2">
