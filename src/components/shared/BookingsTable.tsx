@@ -60,6 +60,7 @@ interface BookingsTableProps {
   setLocation?: (val: string) => void;
   setCustomerId?: (val: string) => void;
   getlist?: () => void;
+  onBookingSelect?: (bookingId: string) => void;  // ✅ callback
 }
 
 export function BookingsTable({
@@ -164,9 +165,9 @@ getlist
   }, [toggleidfromNotification]);
 
 
-useEffect(()=>{
-  setpage(current_Page)
-},[current_Page])
+// useEffect(()=>{
+//   setpage(current_Page)
+// },[current_Page])
 
   useEffect(() => {
     dispatch(listCustomerUsers({page:current_Page,limit,search:searchQuery})), 
@@ -323,7 +324,7 @@ useEffect(()=>{
         </TableHeader>
         <TableBody>
           {Array.isArray(bookinglist) &&
-            bookinglist.map((b) => {
+            bookinglist?.map((b) => {
               const customer = getCustomerById(b.customerId);
 
               return (
@@ -376,15 +377,15 @@ useEffect(()=>{
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Driver">
-                              {availableDrivers.find(
+                              {Array.isArray(availableDrivers) && availableDrivers?.find(
                                 (d) =>
                                   d.id?.toString() === b.driverId?.toString()
                               )?.name || ""}
                             </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
-                            {availableDrivers
-                              .filter((d) => d.status === "active")
+                            {Array.isArray(availableDrivers) && availableDrivers
+                              ?.filter((d) => d.status === "active")
                               .map((d) => (
                                 <SelectItem key={d.id} value={d.id.toString()}>
                                   {d.name}

@@ -1,7 +1,7 @@
 
 
 import { api } from "@/services/EventServices";
-import { Drivers } from "@/types/driver";
+import { BookingHistoryDrivers, Drivers } from "@/types/driver";
 import { Cars } from "@/types/fleet";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
@@ -10,7 +10,7 @@ import axios from "axios";
 
 
 
-interface CarState {
+interface DriversState {
   drivers: Drivers[];
   selectedDrivers: Drivers | null;
   loading: boolean;
@@ -20,12 +20,13 @@ interface CarState {
   limit:any;
   total_pages:any;
   search :any;
+  bookingHistory:BookingHistoryDrivers[]
 
 
   //   // Define the correct type here
 }
 
-const initialState: CarState = {
+const initialState: DriversState = {
   drivers: [],
   loading: false,
   error: null,
@@ -35,6 +36,7 @@ const initialState: CarState = {
   limit:null,
   total_pages:null,
   search:null,
+  bookingHistory:null,
 
 };
 
@@ -147,7 +149,27 @@ export const getAvailableDrivers = createAsyncThunk(
 
 
 
+export const gethistoryofdriverId = createAsyncThunk(
+  "driver/history",
+  async (
+    {driverId}:{driverId:number}
+  ) => {
 
+    try {
+      //   const userId = localStorage.getItem("userid");
+      const url = `/api/v1/driver/booking/${driverId}`;
+
+      const response = await api.getEvents(url);
+      const drivershistoryData = response.data;
+      return drivershistoryData;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error || "driver details fetching failed";
+      }
+      return "An unexpected error occurred.";
+    }
+  }
+);
 
 
 
@@ -259,6 +281,19 @@ const driverSlice = createSlice({
         state.AvailableDrivers = action.payload.drivers;
       })
       .addCase(getAvailableDrivers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(gethistoryofdriverId.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+       .addCase(gethistoryofdriverId.fulfilled, (state, action) => {
+        state.loading = false; 
+        state.bookingHistory = action.payload.message;
+      })
+      .addCase(gethistoryofdriverId.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

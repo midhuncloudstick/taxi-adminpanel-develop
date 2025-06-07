@@ -1,7 +1,5 @@
-
 import { useEffect, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { drivers, getBookingsByDriverId, Booking } from "@/data/mockData";
 import { DriversTable } from "@/components/shared/DriversTable";
 import { BookingsTable } from "@/components/shared/BookingsTable";
 import { Button } from "@/components/ui/button";
@@ -18,26 +16,83 @@ import {
 import { useAppSelector } from "@/redux/hook";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
-import { getDrivers } from "@/redux/Slice/driverSlice";
+import { getDrivers, gethistoryofdriverId } from "@/redux/Slice/driverSlice";
+
+interface Booking {
+  id: string;
+  date: string;
+  pickupTime: string;
+  dropLocation: string;
+  pickupLocation: string;
+  status: string;
+  driver_name: string;
+  user_firstname: string;
+  user_lastname: string;
+  // Add other properties as needed
+}
 
 export default function Drivers() {
   const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
   const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
-  const drivers = useAppSelector((state) => state.driver.drivers)
-  const dispatch = useDispatch<AppDispatch>()
-  const selectedTrips: Booking[] = selectedDriverId
-    ? getBookingsByDriverId(selectedDriverId.toString())
-    : [];
-
-
+  const drivers = useAppSelector((state) => state.driver.drivers);
+  // const driverHistoryResponse = useAppSelector((state) => state.driver.bookingHistory);
+  const currentPage = useAppSelector((state) => state.driver.page || 1);
+  const totalPages = useAppSelector((state) => state.driver.total_pages || 1);
+  const [localPage, setLocalPage] = useState(currentPage);
+  const dispatch = useDispatch<AppDispatch>();
+  const limit = 10;
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // Properly extract bookings from response
+  const driverHistory = useAppSelector((state)=>state.driver.bookingHistory)
+  
   const handleDriverAdded = () => {
     setIsAddDriverOpen(false);
-    // In a real app, we would refetch the drivers list here
+    dispatch(getDrivers({ page: currentPage, limit, search: searchQuery }));
   };
 
+  useEffect(() => {
+    console.log("Fetching drivers...");
+    dispatch(getDrivers({ page: localPage, limit, search: searchQuery }));
+  }, [dispatch, localPage, limit, searchQuery]);
 
+  useEffect(() => {
+    if (selectedDriverId) {
+      setLoadingHistory(true);
+      setHistoryError(null);
+      // Clear previous history before fetching new one
+      // dispatch(clearBookingHistory());
+      
+      dispatch(gethistoryofdriverId({ driverId: selectedDriverId }))
+        .unwrap()
+        .then((response) => {
+          console.log('API Response:', response); // Debug log
+          if (!response.success) {
+            setHistoryError("Failed to fetch booking history");
+          } else if (!response.message || response.message.length === 0) {
+            setHistoryError("No trips found for this driver");
+          }
+        })
+        .catch((error) => {
+          console.error('API Error:', error); // Debug log
+          setHistoryError("Failed to load booking history");
+        })
+        .finally(() => setLoadingHistory(false));
+    }
+  }, [dispatch, selectedDriverId]);
 
+  const handlePageChange = (newPage: number) => {
+    setLocalPage(newPage);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setLocalPage(1); // Reset to first page when searching
+  };
 
   return (
     <PageContainer title="Driver Management">
@@ -65,27 +120,48 @@ export default function Drivers() {
             </SheetContent>
           </Sheet>
         </div>
+
         <DriversTable
           drivers={drivers}
           selectedId={selectedDriverId}
           onSelect={setSelectedDriverId}
-          onEdit={(driver) => {
-          console.log("Editing driver", driver);
-          }}
+          onEdit={(driver) => console.log("Editing driver", driver)}
+          page={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onSearch={handleSearch}
+          loading={loading}
         />
 
-        {selectedDriverId && (
-          <div>
-            <h3 className="text-lg font-semibold text-taxi-blue mt-8 mb-2">
-              Trip History for {drivers?.find(d => d.id === selectedDriverId)?.name}
-            </h3>
-            <BookingsTable
-             //bookings={selectedTrips} 
-             showCustomer
-             // drivers={drivers} 
-             />
-          </div>
+      {selectedDriverId && (
+  <div>
+    <h3 className="text-lg font-semibold text-taxi-blue mt-8 mb-2">
+      Trip History for {drivers.find((d) => d.id === selectedDriverId)?.name}
+    </h3>
+
+    {loadingHistory ? (
+      <div className="flex justify-center py-4">Loading booking history...</div>
+    ) : historyError ? (
+      <div className="text-red-500 text-center py-4">{historyError}</div>
+    ) : driverHistory.length === 0 ? (
+      <div className="text-gray-500 text-center py-4">
+        No trips found for this driver
+      </div>
+    ) : (
+      <BookingsTable
+        bookings={driverHistory.filter(
+          (booking) =>
+            booking.driverId === selectedDriverId &&
+            (booking.status.toLowerCase() === "completed" ||
+             booking.status.toLowerCase() === "cancelled")
         )}
+        showCustomer
+        drivers={drivers}
+      />
+    )}
+  </div>
+)}
+
       </div>
     </PageContainer>
   );

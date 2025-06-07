@@ -19,35 +19,22 @@ export default function Customers() {
   const allBookings = useAppSelector((state) => state.booking.booking);
   const current_Page = useAppSelector((state) => state.customer.page || 1);
   const totalPages = useAppSelector((state) => state.customer.total_pages || 1);
+  const historiesofCustomer = useAppSelector((state) => state.customer.customerhistory);
   
   const [localPage, setLocalPage] = useState(current_Page);
   const limit = 10;
   const [loading, setLoading] = useState(false);
   const [customerID, setCustomerID] = useState<string>("");
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     dispatch(listCustomerUsers({ page: current_Page, limit, search: searchQuery }));
-  }, [dispatch]);
-
-  const historiesofCustomer = useAppSelector((state) => state.customer.customerhistory)
-  // useEffect(() => {
-  //   if (customerID) { 
-  //     dispatch(customerHistory({
-  //       search: "", 
-  //       customerID,
-  //       page,
-  //       limit
-  //     }));
-  //   }
-  // }, [dispatch, customerID, page:current_Page, limit]);
-
+  }, [dispatch, current_Page, limit, searchQuery]);
 
   const handlePageChange = async (newPage: number) => {
     try {
       setLoading(true);
-      await dispatch(listCustomerUsers({ page: newPage, limit, search: searchQuery }))
-
+      await dispatch(listCustomerUsers({ page: newPage, limit, search: searchQuery }));
       setLocalPage(newPage);
     } catch (error) {
       console.error("Error changing page:", error);
@@ -90,31 +77,54 @@ export default function Customers() {
           />
         </div>
 
-        <CustomersTable
-          customers={filteredCustomers}
-          selectedId={selectedCustomerId}
-          onSelect={setSelectedCustomerId}
-        />
-
-        {selectedCustomerId && (
-          <div>
-            <h3 className="text-lg font-semibold text-taxi-blue mt-8 mb-2">
-              Past Trips for {customerlist.find((c) => c.id === selectedCustomerId)?.username}
-            </h3>
-            <CustomersHistoryTable
-              list={historiesofCustomer}
+        <div className="space-y-4">
+          {/* Customers Table */}
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <CustomersTable
+              customers={filteredCustomers}
+              selectedId={selectedCustomerId}
+              onSelect={setSelectedCustomerId}
             />
           </div>
-        )}
+          
+          {/* Customers Pagination */}
+          <div className="flex justify-center">
+            <Pagination
+              currentPage={current_Page}
+              itemsPerPage={limit}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+
+          {/* Customer History Section */}
+          {selectedCustomerId && (
+            <div className="space-y-4">
+              {/* <h3 className="text-lg font-semibold text-taxi-blue">
+                Past Trips for {customerlist.find((c) => c.id === selectedCustomerId)?.username}
+              </h3> */}
+              
+              {/* <div className="bg-white rounded-lg shadow overflow-hidden">
+                <CustomersHistoryTable
+                  list={historiesofCustomer}
+                />
+              </div> */}
+              
+              {/* History Pagination - Only show if needed */}
+              {/* {historiesofCustomer?.length > 0 && (
+                <div className="flex justify-center">
+                  <Pagination
+                    currentPage={current_Page}
+                    itemsPerPage={limit}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              )} */}
+            </div>
+          )}
+        </div>
       </div>
-
-      <Pagination
-        currentPage={current_Page}
-        itemsPerPage={limit}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
-
     </PageContainer>
   );
 }

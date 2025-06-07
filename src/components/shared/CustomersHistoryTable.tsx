@@ -285,14 +285,14 @@ export function CustomersHistoryTable({
                     })}
                 </TableBody>
             </Table>
-            <div className="py-4">
+            {/* <div className="py-4">
                 <Pagination
                     currentPage={current_Page}
                     itemsPerPage={limit}
                     totalPages={totalPages}
                     onPageChange={handlePageChange}
                 />
-            </div>
+            </div> */}
         </div>
     );
 }

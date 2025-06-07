@@ -37,29 +37,28 @@ import { CreateDrivers, getDrivers, UpdateDrivers } from "@/redux/Slice/driverSl
 import { DialogDescription } from "@radix-ui/react-dialog";
 
 interface EditCarFormProps {
-    driver: Drivers | null; // Driver object, not Car
+    driver: Drivers | null;
     IsOpen: boolean;
     onClose: () => void;
     onSave: (drivers: Drivers) => void;
     onSuccess: () => void;
-    currentPage: number;  // Add this
+    currentPage: number;
     searchQuery: string;
-
 }
+
+const cleanPhone = (val: string) => val.replace(/\s+/gu, '');
 
 const InternalDriverSchema = z.object({
   id: z.number(),
   type: z.literal("internal"),
-  name: z.string().min(2, { message: "Name must be at least 8 characters." }),
+  name: z.string().min(8, { message: "Name must be at least 8 characters." }),
   email: z.string().optional(),
   phone: z
     .string()
-    .transform(val => val.replace(/\s+/g, '')) // Remove all spaces
-    .pipe(
-      z.string().regex(/^\+\d{1,4}\d{6,12}$/, {
-        message: "Phone number must start with country code (e.g., +61411392930)",
-      })
-    ),
+    .transform(cleanPhone)
+    .refine(val => /^\+\d{1,4}\d{6,12}$/.test(val), {
+      message: "Phone number must start with country code (e.g., +61411392930)",
+    }),
   licenceNumber: z.string().min(5, { message: "Please enter a valid license number." }),
   carId: z.string().min(1, { message: "Please select a vehicle." }),
   status: z.enum(["active", "inactive"]),
@@ -69,11 +68,11 @@ const InternalDriverSchema = z.object({
 const ExternalDriverSchema = z.object({
   id: z.number(),
   type: z.literal("external"),
-  name: z.string().min(2, { message: "Name must be at least 8 characters." }),
+  name: z.string().min(8, { message: "Name must be at least 8 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
   phone: z
     .string()
-    .transform(val => val.replace(/\s+/g, '')) // Remove all spaces
+    .transform(cleanPhone)
     .refine(val => /^\+\d{1,4}\d{6,12}$/.test(val), {
       message: "Phone number must start with country code (e.g., +61) and be valid.",
     }),
@@ -83,13 +82,11 @@ const ExternalDriverSchema = z.object({
   photo: z.string().optional(),
 });
 
-// Discriminated union for single driver
 export const formSchema = z.discriminatedUnion("type", [
   InternalDriverSchema,
   ExternalDriverSchema,
 ]);
 
-// Validate an array of drivers and check for unique phone and licenceNumber
 export const DriversArraySchema = z
   .array(formSchema)
   .superRefine((drivers, ctx) => {
@@ -124,7 +121,7 @@ export const DriversArraySchema = z
           ctx.addIssue({
             path: [i, "email"],
             code: z.ZodIssueCode.custom,
-            message: "email  must be unique.",
+            message: "email must be unique.",
           });
         } else {
           emailSet.add(driver.email);
@@ -135,39 +132,32 @@ export const DriversArraySchema = z
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: EditCarFormProps) {
+export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess, currentPage, searchQuery }: EditCarFormProps) {
     const vehicle = useAppSelector((state) => state.fleet.cars);
     const dispatch = useDispatch<AppDispatch>();
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [availableCars, setAvailableCars] = useState<Cars[]>([]);
-    const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(false);
     const [photoFile, setPhotoFile] = useState<File | null>(null); 
     const current_Page = useAppSelector((state) => state.booking.page || 1);
     const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
-    const [localPage, setLocalPage] = useState(current_Page);
-    const [searchQuery, setSearchQuery ] = useState("");
-    const limit= 10
+    const limit = 10;
 
-
-
-useEffect(() => {
-  if (Array.isArray(vehicle)) {
-    const filteredCars = vehicle.filter(
-      (car) => car.status === 'available' || car.status === 'in-use'
-    );
-    setAvailableCars(filteredCars);
-  } else {
-    setAvailableCars([]); // fallback in case it's not an array
-  }
-}, [vehicle]);
-
-
+    useEffect(() => {
+      if (Array.isArray(vehicle)) {
+        const filteredCars = vehicle.filter(
+          (car) => car.status === 'available' || car.status === 'in-use'
+        );
+        setAvailableCars(filteredCars);
+      } else {
+        setAvailableCars([]);
+      }
+    }, [vehicle]);
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            id: driver.id,
+            id: driver?.id || 0,
             name: driver?.name || "",
             email: driver?.email || "",
             phone: driver?.phone || "",
@@ -192,115 +182,125 @@ useEffect(() => {
                 photo: driver.photo,
                 type: driver.type,
             });
-           setPhotoPreview(
-      driver.photo
-        ? driver.photo.startsWith("https")
-          ? driver.photo
-          : `https://brisbane.cloudhousetechnologies.com${driver.photo.replace(/^\/+/, '')}`
-        : null
-    );
-  }
-}, [driver, IsOpen, form]);
 
-const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+            // Improved photo handling
+            if (driver.photo) {
+                // Check if photo is already a full URL
+                if (driver.photo.startsWith('http')) {
+                    setPhotoPreview(driver.photo);
+                } else {
+                    // Construct full URL from relative path
+                    const cleanedPath = driver.photo.replace(/^\/+/, '');
+                    const baseUrl = 'https://brisbane.cloudhousetechnologies.com';
+                    setPhotoPreview(`${baseUrl}/${cleanedPath}`);
+                }
+            } else {
+                setPhotoPreview(null);
+            }
+        }
+    }, [driver, IsOpen, form]);
 
-    // Validate file type and size
-    if (!file.type.match('image.*')) {
-        toast.error('Please select an image file');
-        return;
-    }
-    
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast.error('Image size should be less than 5MB');
-        return;
-    }
+    const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
 
-    setPhotoFile(file);
+        if (!file.type.match('image.*')) {
+            toast.error('Please select an image file');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Image size should be less than 5MB');
+            return;
+        }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-        if (typeof reader.result === "string") {
-            setPhotoPreview(reader.result);
-            // Update form value if you want to store the preview URL
-            form.setValue("photo", reader.result, {
-                shouldValidate: true,
-                shouldDirty: true,
+        setPhotoFile(file);
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (typeof reader.result === "string") {
+                setPhotoPreview(reader.result);
+                form.setValue("photo", reader.result, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                });
+            }
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleRemovePhoto = () => {
+        setPhotoPreview(null);
+        setPhotoFile(null);
+        const input = document.getElementById("photo-upload") as HTMLInputElement | null;
+        if (input) input.value = "";
+        form.setValue("photo", "", {
+            shouldValidate: true,
+            shouldDirty: true,
+        });
+    };
+
+    const onSubmit = async (values: FormValues) => {
+        if (!values.id) {
+            toast.error("Driver ID is missing");
+            return;
+        }
+
+        setIsLoading(true);
+        const formData = new FormData();
+        let { id, ...rest } = values;
+        
+        // Handle photo upload
+        if (photoFile) {
+            formData.append("photo", photoFile);
+        } else if (values.photo && values.photo.startsWith('data:')) {
+            // If it's a data URL from a new upload
+            const blob = await fetch(values.photo).then(r => r.blob());
+            formData.append("photo", blob, 'driver-photo.jpg');
+        }
+        
+        // Add other form data
+        rest.photo = ""; // Clear photo field as we're handling it separately
+        formData.append("data", JSON.stringify(rest));
+
+        try {
+            const result = await dispatch(
+                UpdateDrivers({
+                    driverId: values.id.toString(),
+                    data: formData
+                })
+            ).unwrap();
+
+            await dispatch(getDrivers({
+                page: current_Page,
+                limit,
+                search: searchQuery
+            }));
+
+            toast.success("Driver updated successfully");
+            onSuccess();
+
+            form.reset({
+                id: 0,
+                name: "",
+                email: "",
+                phone: "",
+                licenceNumber: "",
+                carId: "",
+                status: "active",
+                photo: "",
+                type: "internal",
             });
+            setPhotoFile(null);
+            setPhotoPreview(null);
+            onClose();
+        } catch (error: unknown) {
+            toast.error("Failed to update driver");
+            console.error("Update driver error:", error);
+        } finally {
+            setIsLoading(false);
         }
     };
-    reader.readAsDataURL(file);
-};
-
-
-const handleRemovePhoto = () => {
-  setPhotoPreview(null);
-  setPhotoFile(null); // clear the file
-
-  const input = document.getElementById("photo-upload") as HTMLInputElement | null;
-  if (input) input.value = "";
-
-  form.setValue("photo", "", {
-    shouldValidate: true,
-    shouldDirty: true,
-  });
-};
-
-
-
-
-const onSubmit = async (values: FormValues) => {
-    if (!values.id) {
-        toast.error("Driver ID is missing");
-        return;
-    }
-
-    setIsLoading(true);
-    const formData = new FormData();
-    let { id, ...rest } = values;
-    rest.photo = "";
-    formData.append("data", JSON.stringify(rest));
-
-    try {
-        const result = await dispatch(
-            UpdateDrivers({
-                driverId: values.id.toString(),
-                data: formData
-            })
-        ).unwrap();
-
-        // Use the props for currentPage and searchQuery instead of Redux state
-        await dispatch(getDrivers({
-            page:current_Page,  // Use the prop value
-            limit,
-            search: searchQuery  // Use the prop value
-        }));
-
-        toast.success("Driver updated successfully");
-        onSuccess();
-
-        form.reset({
-            id: 0,
-            name: "",
-            email: "",
-            phone: "",
-            licenceNumber: "",
-            carId: "",
-            status: "active",
-            photo: "",
-            type: "internal",
-        });
-        setPhotoFile(null);
-        setPhotoPreview(null);
-        setIsAddDriverOpen(false);
-    } catch (error: unknown) {
-        // ... existing error handling
-    } finally {
-        setIsLoading(false);
-    }
-};
-
 
     return (
         <Dialog open={IsOpen} onOpenChange={onClose}>
@@ -313,13 +313,15 @@ const onSubmit = async (values: FormValues) => {
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
                         <div className="flex justify-center mb-6">
-
-
                             <div className="relative space-y-2 flex flex-col items-center">
                                 <div className="relative">
                                     <Avatar className="w-32 h-32 border-2 border-gray-200">
                                         {photoPreview ? (
-                                            <AvatarImage src={photoPreview} alt="Driver photo preview" />
+                                            <AvatarImage 
+                                                src={photoPreview} 
+                                                alt="Driver photo preview"
+                                                className="object-cover w-full h-full"
+                                            />
                                         ) : (
                                             <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
                                                 <Upload className="w-12 h-12" />
@@ -342,7 +344,7 @@ const onSubmit = async (values: FormValues) => {
                                     htmlFor="photo-upload"
                                     className="cursor-pointer text-taxi-blue hover:text-taxi-teal text-sm underline"
                                 >
-                                    Upload Photo
+                                    {photoPreview ? "Change Photo" : "Upload Photo"}
                                 </label>
 
                                 <input
@@ -353,7 +355,6 @@ const onSubmit = async (values: FormValues) => {
                                     onChange={handlePhotoChange}
                                 />
                             </div>
-
                         </div>
 
                         <FormField
@@ -413,7 +414,6 @@ const onSubmit = async (values: FormValues) => {
                                 )}
                             />
 
-
                             <FormField
                                 control={form.control}
                                 name="carId"
@@ -433,7 +433,6 @@ const onSubmit = async (values: FormValues) => {
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
-
                                         </Select>
                                         <FormMessage />
                                     </FormItem>
@@ -462,6 +461,7 @@ const onSubmit = async (values: FormValues) => {
                                 </FormItem>
                             )}
                         />
+
                         <FormField
                             control={form.control}
                             name="type"
@@ -497,17 +497,26 @@ const onSubmit = async (values: FormValues) => {
                                 </FormItem>
                             )}
                         />
+
                         <div className="flex justify-end space-x-2 pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={onClose}
+                                disabled={isLoading}
+                            >
+                                Cancel
+                            </Button>
                             <Button
                                 type="submit"
                                 className={`
-                                        flex items-center gap-2
-                                        ${isLoading
+                                    flex items-center gap-2
+                                    ${isLoading
                                         ? 'bg-gray-400 cursor-not-allowed opacity-75'
                                         : 'bg-taxi-teal hover:bg-taxi-teal/90'
                                     }
-                                            transition-all duration-200
-                                        `}
+                                    transition-all duration-200
+                                `}
                                 disabled={isLoading}
                             >
                                 {isLoading ? (
