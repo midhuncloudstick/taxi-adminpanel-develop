@@ -16,7 +16,7 @@ import { Cars } from "@/types/fleet";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { getCars, Updatecars } from "@/redux/Slice/fleetSlice";
-import { useParams } from "react-router-dom";
+import { Search, useParams } from "react-router-dom";
 import { string } from "zod";
 import { useAppSelector } from "@/redux/hook";
 import { Textarea } from "../ui/textarea";
@@ -37,73 +37,127 @@ import { CreateDrivers, getDrivers, UpdateDrivers } from "@/redux/Slice/driverSl
 import { DialogDescription } from "@radix-ui/react-dialog";
 
 interface EditCarFormProps {
-    driver: Drivers | null; // Driver object, not Car
+    driver: Drivers | null;
     IsOpen: boolean;
     onClose: () => void;
     onSave: (drivers: Drivers) => void;
     onSuccess: () => void;
+    currentPage: number;
+    searchQuery: string;
 }
 
+const cleanPhone = (val: string) => val.replace(/\s+/gu, '');
 
 const InternalDriverSchema = z.object({
-    id: z.number(),
-    type: z.literal("internal"),
-    name: z.string().min(2, { message: "Name must be at least 8 characters." }),
-    email: z.string().optional(),
-  phone: z.string()
-  .regex(/^\+\d{1,4}\d{6,12}$/, { message: "Phone number must start with country code (e.g., +61) and be valid." }),
-    licenceNumber: z.string().min(5, { message: "Please enter a valid license number." }),
-    carId: z.string().min(1, { message: "Please select a vehicle." }),
-    status: z.enum(["active", "inactive"]),
-    photo: z.string().optional(),
+  id: z.number(),
+  type: z.literal("internal"),
+  name: z.string().min(8, { message: "Name must be at least 8 characters." }),
+  email: z.string().optional(),
+  phone: z
+    .string()
+    .transform(cleanPhone)
+    .refine(val => /^\+\d{1,4}\d{6,12}$/.test(val), {
+      message: "Phone number must start with country code (e.g., +61411392930)",
+    }),
+  licenceNumber: z.string().min(5, { message: "Please enter a valid license number." }),
+  carId: z.string().min(1, { message: "Please select a vehicle." }),
+  status: z.enum(["active", "inactive"]),
+  photo: z.string().optional(),
 });
 
 const ExternalDriverSchema = z.object({
-    id: z.number(),
-    type: z.literal("external"),
-    name: z.string().min(2, { message: "Name must be at least 8 characters." }),
-    email: z.string().email({ message: "Please enter a valid email address." }),
-    phone: z.string()
-  .regex(/^\+\d{1,4}\d{6,12}$/, { message: "Phone number must start with country code (e.g., +61) and be valid." }),
-    licenceNumber: z.string().optional(),
-    carId: z.string().min(1, { message: "Please select a vehicle." }),
-    status: z.enum(["active", "inactive"]),
-    photo: z.string().optional(),
+  id: z.number(),
+  type: z.literal("external"),
+  name: z.string().min(8, { message: "Name must be at least 8 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  phone: z
+    .string()
+    .transform(cleanPhone)
+    .refine(val => /^\+\d{1,4}\d{6,12}$/.test(val), {
+      message: "Phone number must start with country code (e.g., +61) and be valid.",
+    }),
+  licenceNumber: z.string().optional(),
+  carId: z.string().min(1, { message: "Please select a vehicle." }),
+  status: z.enum(["active", "inactive"]),
+  photo: z.string().optional(),
 });
 
 export const formSchema = z.discriminatedUnion("type", [
-    InternalDriverSchema,
-    ExternalDriverSchema,
+  InternalDriverSchema,
+  ExternalDriverSchema,
 ]);
 
+export const DriversArraySchema = z
+  .array(formSchema)
+  .superRefine((drivers, ctx) => {
+    const phoneSet = new Set<string>();
+    const licenceSet = new Set<string>();
+    const emailSet = new Set<String>();
+    drivers.forEach((driver, i) => {
+      if (phoneSet.has(driver.phone)) {
+        ctx.addIssue({
+          path: [i, "phone"],
+          code: z.ZodIssueCode.custom,
+          message: "Phone number must be unique.",
+        });
+      } else {
+        phoneSet.add(driver.phone);
+      }
 
+      if (driver.licenceNumber) {
+        if (licenceSet.has(driver.licenceNumber)) {
+          ctx.addIssue({
+            path: [i, "licenceNumber"],
+            code: z.ZodIssueCode.custom,
+            message: "License number must be unique.",
+          });
+        } else {
+          licenceSet.add(driver.licenceNumber);
+        }
+      }
+
+       if (driver.email) {
+        if (emailSet.has(driver.email)) {
+          ctx.addIssue({
+            path: [i, "email"],
+            code: z.ZodIssueCode.custom,
+            message: "email must be unique.",
+          });
+        } else {
+          emailSet.add(driver.email);
+        }
+      }
+    });
+  });
 
 type FormValues = z.infer<typeof formSchema>;
 
-export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: EditCarFormProps) {
+export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess, currentPage, searchQuery }: EditCarFormProps) {
     const vehicle = useAppSelector((state) => state.fleet.cars);
     const dispatch = useDispatch<AppDispatch>();
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [availableCars, setAvailableCars] = useState<Cars[]>([]);
-    const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
-    const [isLoading, setIsLoading] = useState(false)
+    const [isLoading, setIsLoading] = useState(false);
     const [photoFile, setPhotoFile] = useState<File | null>(null); 
-    
-
-
-    useEffect(() => {
-        dispatch(getCars());
-    }, [dispatch]);
+    const current_Page = useAppSelector((state) => state.booking.page || 1);
+    const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
+    const limit = 10;
 
     useEffect(() => {
-        setAvailableCars(vehicle);
+      if (Array.isArray(vehicle)) {
+        const filteredCars = vehicle.filter(
+          (car) => car.status === 'available' || car.status === 'in-use'
+        );
+        setAvailableCars(filteredCars);
+      } else {
+        setAvailableCars([]);
+      }
     }, [vehicle]);
-
 
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            id: driver.id,
+            id: driver?.id || 0,
             name: driver?.name || "",
             email: driver?.email || "",
             phone: driver?.phone || "",
@@ -128,47 +182,63 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess }: E
                 photo: driver.photo,
                 type: driver.type,
             });
-           setPhotoPreview(
-      driver.photo
-        ? driver.photo.startsWith("http")
-          ? driver.photo
-          : `http://139.84.156.137:8080/${driver.photo.replace(/^\/+/, '')}`
-        : null
-    );
-  }
-}, [driver, IsOpen, form]);
 
-const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-  const file = event.target.files?.[0];
-  if (!file) return;
+            // Improved photo handling
+            if (driver.photo) {
+                // Check if photo is already a full URL
+                if (driver.photo.startsWith('http')) {
+                    setPhotoPreview(driver.photo);
+                } else {
+                    // Construct full URL from relative path
+                    const cleanedPath = driver.photo.replace(/^\/+/, '');
+                    const baseUrl = 'https://brisbane.cloudhousetechnologies.com';
+                    setPhotoPreview(`${baseUrl}/${cleanedPath}`);
+                }
+            } else {
+                setPhotoPreview(null);
+            }
+        }
+    }, [driver, IsOpen, form]);
 
-  setPhotoFile(file); // store actual file
+    const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    if (typeof reader.result === "string") {
-      setPhotoPreview(reader.result); // preview only
-    }
-  };
-  reader.readAsDataURL(file); // still needed for preview
-};
+        if (!file.type.match('image.*')) {
+            toast.error('Please select an image file');
+            return;
+        }
+        
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Image size should be less than 5MB');
+            return;
+        }
 
+        setPhotoFile(file);
 
-const handleRemovePhoto = () => {
-  setPhotoPreview(null);
-  setPhotoFile(null); // clear the file
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (typeof reader.result === "string") {
+                setPhotoPreview(reader.result);
+                form.setValue("photo", reader.result, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                });
+            }
+        };
+        reader.readAsDataURL(file);
+    };
 
-  const input = document.getElementById("photo-upload") as HTMLInputElement | null;
-  if (input) input.value = "";
-
-  form.setValue("photo", "", {
-    shouldValidate: true,
-    shouldDirty: true,
-  });
-};
-
-
-
+    const handleRemovePhoto = () => {
+        setPhotoPreview(null);
+        setPhotoFile(null);
+        const input = document.getElementById("photo-upload") as HTMLInputElement | null;
+        if (input) input.value = "";
+        form.setValue("photo", "", {
+            shouldValidate: true,
+            shouldDirty: true,
+        });
+    };
 
     const onSubmit = async (values: FormValues) => {
         if (!values.id) {
@@ -179,7 +249,18 @@ const handleRemovePhoto = () => {
         setIsLoading(true);
         const formData = new FormData();
         let { id, ...rest } = values;
-        rest.photo = "";
+        
+        // Handle photo upload
+        if (photoFile) {
+            formData.append("photo", photoFile);
+        } else if (values.photo && values.photo.startsWith('data:')) {
+            // If it's a data URL from a new upload
+            const blob = await fetch(values.photo).then(r => r.blob());
+            formData.append("photo", blob, 'driver-photo.jpg');
+        }
+        
+        // Add other form data
+        rest.photo = ""; // Clear photo field as we're handling it separately
         formData.append("data", JSON.stringify(rest));
 
         try {
@@ -188,9 +269,14 @@ const handleRemovePhoto = () => {
                     driverId: values.id.toString(),
                     data: formData
                 })
-            ).unwrap(); // Important for proper error handling
+            ).unwrap();
 
-            await dispatch(getDrivers());
+            await dispatch(getDrivers({
+                page: current_Page,
+                limit,
+                search: searchQuery
+            }));
+
             toast.success("Driver updated successfully");
             onSuccess();
 
@@ -207,28 +293,14 @@ const handleRemovePhoto = () => {
             });
             setPhotoFile(null);
             setPhotoPreview(null);
-            setIsAddDriverOpen(false);
-        } catch (error: unknown) { // Type-safe error handling
-            let errorMessage = "Failed to update driver";
-
-            if (typeof error === "object" && error !== null) {
-                // Type-safe property access
-                if ('error' in error && typeof (error as { error: unknown }).error === "string") {
-                    errorMessage = (error as { error: string }).error;
-                } else if ('message' in error && typeof (error as { message: unknown }).message === "string") {
-                    errorMessage = (error as { message: string }).message;
-                }
-            } else if (typeof error === "string") {
-                errorMessage = error;
-            }
-
-            toast.error(errorMessage);
-            console.error("Update failed:", error);
+            onClose();
+        } catch (error: unknown) {
+            toast.error("Failed to update driver");
+            console.error("Update driver error:", error);
         } finally {
             setIsLoading(false);
         }
     };
-
 
     return (
         <Dialog open={IsOpen} onOpenChange={onClose}>
@@ -241,13 +313,15 @@ const handleRemovePhoto = () => {
                 <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
                         <div className="flex justify-center mb-6">
-
-
                             <div className="relative space-y-2 flex flex-col items-center">
                                 <div className="relative">
                                     <Avatar className="w-32 h-32 border-2 border-gray-200">
                                         {photoPreview ? (
-                                            <AvatarImage src={photoPreview} alt="Driver photo preview" />
+                                            <AvatarImage 
+                                                src={photoPreview} 
+                                                alt="Driver photo preview"
+                                                className="object-cover w-full h-full"
+                                            />
                                         ) : (
                                             <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
                                                 <Upload className="w-12 h-12" />
@@ -270,7 +344,7 @@ const handleRemovePhoto = () => {
                                     htmlFor="photo-upload"
                                     className="cursor-pointer text-taxi-blue hover:text-taxi-teal text-sm underline"
                                 >
-                                    Upload Photo
+                                    {photoPreview ? "Change Photo" : "Upload Photo"}
                                 </label>
 
                                 <input
@@ -281,7 +355,6 @@ const handleRemovePhoto = () => {
                                     onChange={handlePhotoChange}
                                 />
                             </div>
-
                         </div>
 
                         <FormField
@@ -341,7 +414,6 @@ const handleRemovePhoto = () => {
                                 )}
                             />
 
-
                             <FormField
                                 control={form.control}
                                 name="carId"
@@ -361,7 +433,6 @@ const handleRemovePhoto = () => {
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
-
                                         </Select>
                                         <FormMessage />
                                     </FormItem>
@@ -390,6 +461,7 @@ const handleRemovePhoto = () => {
                                 </FormItem>
                             )}
                         />
+
                         <FormField
                             control={form.control}
                             name="type"
@@ -425,17 +497,26 @@ const handleRemovePhoto = () => {
                                 </FormItem>
                             )}
                         />
+
                         <div className="flex justify-end space-x-2 pt-4">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={onClose}
+                                disabled={isLoading}
+                            >
+                                Cancel
+                            </Button>
                             <Button
                                 type="submit"
                                 className={`
-                                        flex items-center gap-2
-                                        ${isLoading
+                                    flex items-center gap-2
+                                    ${isLoading
                                         ? 'bg-gray-400 cursor-not-allowed opacity-75'
                                         : 'bg-taxi-teal hover:bg-taxi-teal/90'
                                     }
-                                            transition-all duration-200
-                                        `}
+                                    transition-all duration-200
+                                `}
                                 disabled={isLoading}
                             >
                                 {isLoading ? (

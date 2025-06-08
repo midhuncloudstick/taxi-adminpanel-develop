@@ -6,8 +6,10 @@ export interface Message {
   email: string;
   phone: string;
   password: string;
-
+  full_name:string
   address: string;
   message: string;
   subject: string;
+  created_at:string;
+
 }

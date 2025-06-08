@@ -41,7 +41,7 @@ export interface Car {
   plate: string;
   type: 'sedan' | 'suv' | 'luxury';
   capacity: number;
-  status: 'available' | 'in-use' | 'maintenance';
+  status: 'available' | 'in-use' | 'maintenance' |'cancelled';
   pricePerKm?: number;
   fixedCost?: number;
 }

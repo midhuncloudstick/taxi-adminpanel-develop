@@ -10,6 +10,8 @@ interface messageState {
   loading: boolean;
   error: string | null;
  messages:Message;
+ page:any;
+ total_pages:any;
   
  
 }
@@ -18,7 +20,10 @@ interface messageState {
 const initialState: messageState = {
   loading: false,
   error: null,
-  messages:null
+  messages:null,
+  page:null,
+  total_pages:null,
+
  
 };
 
@@ -27,12 +32,11 @@ const initialState: messageState = {
 export const getMessage = createAsyncThunk(
   "message/startjourney",
   async (
-  _,
+    { page, limit }: { page?: number; limit?: number },
     { rejectWithValue }
   ) => {
     try {
-     const url = "/api/v1/user/message/list";
-
+      const url = `/api/v1/user/message/list?page=${page}&limit=${limit}`;
       const response = await api.getEvents(url);
 
       return response.data;
@@ -41,6 +45,7 @@ export const getMessage = createAsyncThunk(
     }
   }
 );
+
 
 
 
@@ -59,6 +64,8 @@ const messageSlice = createSlice({
       .addCase(getMessage.fulfilled, (state, action) => {
         state.loading = false;
         state.messages = action.payload.message;
+          state.page = action.payload.page;
+        state.total_pages = action.payload.total_pages
         state.error = null;
       })
       .addCase(getMessage.rejected, (state, action) => {

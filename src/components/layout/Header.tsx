@@ -14,16 +14,19 @@ interface HeaderProps {
 }
 
 export function Header({ title }: HeaderProps) {
-  const [searchValue, setSearchValue] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [notifOpen, setNotifOpen] = useState(false);
   const [showCarList, setShowCarList] = useState(false);
   const [showDriverList, setShowDriverList] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const dispatch = useAppDispatch();
 
   const availablecarslist = useAppSelector((state) => state.fleet.AvailableCars) ?? [];
+  console.log('Available Cars:', availablecarslist);
   const availabledriverslist = useAppSelector((state) => state.driver.AvailableDrivers) ?? [];
+  console.log("AvaliableDrivers", availabledriverslist)
   const upcoming = useAppSelector((state) => state.notification.notification) || [];
   const playsound = useAppSelector((state) => state.notification.ringnotification)
   useEffect(() => {
@@ -48,78 +51,99 @@ export function Header({ title }: HeaderProps) {
   useEffect(() => {
     dispatch(getAvailableCars());
     dispatch(getAvailableDrivers());
-  }, [dispatch]);
+  }, []);
+
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowCarList(false);
+        setShowDriverList(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="py-4 px-6 border-b border-gray-200 bg-white flex flex-col sm:flex-row justify-between gap-4 relative">
       {/* Car Info Section */}
-
-      <div className="absolute z-10 flex flex-row  gap-56 " >
-        <div className="space-y-4 ">
-          <div>
-            <div
-              className="flex items-center gap-2 cursor-pointer hover:text-blue-600"
-              onClick={() => setShowCarList((prev) => !prev)}
-            >
-              <Car className="w-5 h-5" />
-              <span className="font-semibold text-taxi-blue">
-                Available cars: {availablecarslist?.length ?? 0}
-              </span>
-            </div>
-
-            {showCarList && (
-              <div className="mt-2 border rounded p-4 shadow-2xl max-h-60 overflow-y-auto space-y-2 bg-white">
-                <h4 className="font-semibold text-taxi-blue">Available Cars</h4>
-                <ul className="space-y-1">
-                  {Array.isArray(availablecarslist) &&
-                    availablecarslist.map((car) => (
-                      <li
-                        key={car.id}
-                        className="border p-2 rounded hover:bg-gray-100 transition"
-                      >
-                        <div className="font-medium">{car.model}</div>
-                        <div className="text-sm text-gray-500">{car.plate}</div>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            )}
+      <div className="absolute z-10 flex flex-row gap-8" ref={dropdownRef}>
+        {/* Available Cars Section */}
+        <div className="relative">
+          <div
+            className="flex items-center gap-2 cursor-pointer hover:text-blue-600"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDriverList(false);
+              setShowCarList((prev) => !prev);
+            }}
+          >
+            <Car className="w-5 h-5" />
+            <span className="font-semibold text-taxi-blue">
+              Available cars: {availablecarslist?.length ?? 0}
+            </span>
           </div>
+
+          {showCarList && (
+            <div className="absolute mt-2 border rounded p-4 shadow-lg max-h-60 overflow-y-auto space-y-2 bg-white z-20 w-64">
+              <h4 className="font-semibold text-taxi-blue">Available Cars</h4>
+              <ul className="space-y-1">
+                {Array.isArray(availablecarslist) &&
+                  availablecarslist.map((car) => (
+                    <li
+                      key={car.id}
+                      className="border p-2 rounded hover:bg-gray-100 transition"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="font-medium">{car.model}</div>
+                      <div className="text-sm text-gray-500">{car.plate}</div>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
         </div>
 
-        {/* Driver Info Section */}
-        <div className="space-y-4 shadow-2xl">
-          <div>
-            <div
-              className="flex items-center gap-2 cursor-pointer hover:text-blue-600"
-              onClick={() => setShowDriverList((prev) => !prev)}
-            >
-              <UserCheck className="w-5 h-5" />
-              <span className="font-semibold text-taxi-blue">
-                Available Drivers: {availabledriverslist?.length ?? 0}
-              </span>
-            </div>
-
-            {showDriverList && (
-              <div className="mt-2 border rounded p-4 shadow-2xl max-h-60 overflow-y-auto space-y-2 bg-white">
-                <h4 className="font-semibold text-taxi-blue">Available Drivers</h4>
-                <ul className="space-y-1">
-                  {Array.isArray(availabledriverslist) &&
-                    availabledriverslist.map((driver) => (
-                      <li
-                        key={driver.id}
-                        className="border p-2 rounded hover:bg-gray-100 transition"
-                      >
-                        <div className="font-medium">{driver.name}</div>
-                        <div className="text-sm text-gray-500">
-                          Licence: {driver.licenceNumber}
-                        </div>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            )}
+        {/* Available Drivers Section */}
+        <div className="relative">
+          <div
+            className="flex items-center gap-2 cursor-pointer hover:text-blue-600"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowCarList(false);
+              setShowDriverList((prev) => !prev);
+            }}
+          >
+            <UserCheck className="w-5 h-5" />
+            <span className="font-semibold text-taxi-blue">
+              Available Drivers: {availabledriverslist?.length ?? 0}
+            </span>
           </div>
+
+          {showDriverList && (
+            <div className="absolute mt-2 border rounded p-4 shadow-lg max-h-60 overflow-y-auto space-y-2 bg-white z-20 w-64">
+              <h4 className="font-semibold text-taxi-blue">Available Drivers</h4>
+              <ul className="space-y-1">
+                {Array.isArray(availabledriverslist) &&
+                  availabledriverslist.map((driver) => (
+                    <li
+                      key={driver.id}
+                      className="border p-2 rounded hover:bg-gray-100 transition"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <div className="font-medium">{driver.name}</div>
+                      <div className="text-sm text-gray-500">
+                        Licence: {driver.licenceNumber}
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
@@ -130,8 +154,8 @@ export function Header({ title }: HeaderProps) {
           <Input
             type="text"
             placeholder="Search..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
+            value={searchQuery}
+           onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 pr-4 py-2 w-full sm:w-64 text-sm bg-slate-50 border-slate-200 focus:ring-taxi-teal"
           />
         </div> */}
