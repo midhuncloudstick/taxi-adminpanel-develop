@@ -17,6 +17,7 @@ import { useAppSelector } from "@/redux/hook";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { getDrivers, gethistoryofdriverId } from "@/redux/Slice/driverSlice";
+import { CustomersHistoryTable } from "@/components/shared/CustomersHistoryTable";
 
 interface Booking {
   id: string;
@@ -148,16 +149,8 @@ export default function Drivers() {
         No trips found for this driver
       </div>
     ) : (
-      <BookingsTable
-        bookings={driverHistory.filter(
-          (booking) =>
-            booking.driverId === selectedDriverId &&
-            (booking.status.toLowerCase() === "completed" ||
-             booking.status.toLowerCase() === "cancelled")
-        )}
-        showCustomer
-        drivers={drivers}
-      />
+     <CustomersHistoryTable 
+     list={driverHistory}/>
     )}
   </div>
 )}

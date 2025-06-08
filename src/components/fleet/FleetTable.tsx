@@ -70,6 +70,8 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
 
   useEffect(() => {
     console.log("reached the listing")
+    console.log({ searchQuery, current_Page, limit });
+
     dispatch(getCars({ search: searchQuery, page: current_Page, limit }))
   }, [dispatch, current_Page, searchQuery, limit]);
 

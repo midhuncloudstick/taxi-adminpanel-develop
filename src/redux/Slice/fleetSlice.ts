@@ -68,7 +68,7 @@ export const getCars = createAsyncThunk(
     { page, limit , search  }: { page: number; limit: number,search:string}
   ) => {
     try {
-      console.log("serach",search)
+      console.log("seracccch  carsss",search)
       let url = `/api/v1/cars/list?page=${page}&limit=${limit}`;
       console.log("searchhhcars",search)
     if(search){

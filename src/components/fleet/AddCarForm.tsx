@@ -176,16 +176,17 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   <div className="flex flex-wrap gap-4 justify-center">
     {images.map((img, idx) => (
       <div key={idx} className="relative">
-        <Avatar className="w-24 h-24 border-2 border-gray-200">
-          <AvatarImage
-            src={img}
-            alt={`car image ${idx + 1}`}
-            className="w-full h-full object-cover"
-          />
-          <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
-            <Upload className="w-6 h-6" />
-          </AvatarFallback>
-        </Avatar>
+       <Avatar className="w-24 h-24 border-2 border-gray-200">
+  <AvatarImage
+    src={img}
+    alt={`car image ${idx + 1}`}
+    className="w-full h-full object-cover"
+  />
+  <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
+    <Upload className="w-6 h-6" />
+  </AvatarFallback>
+</Avatar>
+
         <button
           type="button"
           className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"

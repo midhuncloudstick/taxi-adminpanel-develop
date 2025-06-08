@@ -60,7 +60,8 @@ interface BookingsTableProps {
   setLocation?: (val: string) => void;
   setCustomerId?: (val: string) => void;
   getlist?: () => void;
-  onBookingSelect?: (bookingId: string) => void;  // ✅ callback
+  onBookingSelect?: (bookingId: string) => void; 
+  getDrivers?: ()=> void; // ✅ callback
 }
 
 export function BookingsTable({
@@ -84,7 +85,8 @@ export function BookingsTable({
   setCustomerId,
   page,
   setpage,
-getlist
+getlist,
+getDrivers
 
 }: BookingsTableProps) {
   const [internalExpandedRows, setInternalExpandedRows] = useState<
@@ -170,8 +172,7 @@ getlist
 // },[current_Page])
 
   useEffect(() => {
-    dispatch(listCustomerUsers({page:current_Page,limit,search:searchQuery})), 
-    dispatch(getDrivers({page:current_Page,limit,search:searchQuery}));
+    dispatch(listCustomerUsers({page:current_Page,limit,search:searchQuery}))
   }, []);
 
   const toggleRow = (bookingId: string) => {

@@ -128,7 +128,7 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
           </TableRow>
         </TableHeader>
         <TableBody>
-          {driverData.map((d) => (
+          {driverData?.map((d) => (
             <TableRow
               key={d.id}
               data-selected={selectedId === d.id}

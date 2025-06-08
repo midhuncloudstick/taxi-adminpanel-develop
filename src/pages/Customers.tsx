@@ -31,6 +31,13 @@ export default function Customers() {
     dispatch(listCustomerUsers({ page: current_Page, limit, search: searchQuery }));
   }, [dispatch, current_Page, limit, searchQuery]);
 
+
+useEffect(() => {
+  if (selectedCustomerId) {
+    dispatch(listBookingBycustomerId(Number(selectedCustomerId)));
+  }
+}, [dispatch, selectedCustomerId]);
+
   const handlePageChange = async (newPage: number) => {
     try {
       setLoading(true);
