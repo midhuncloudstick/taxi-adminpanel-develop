@@ -98,7 +98,7 @@ export function BookingsTable({
 
 
   const [availableDrivers, setAvailableDrivers] = useState<Drivers[]>([]);
-  const [availableCustomers, setAvailableCustomers] = useState<Customer[]>([]);
+  // const [availableCustomers, setAvailableCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(false); // ⬅️ added loading state
   const [loadingdiver, setLoadinngdriver] = useState(false)
   const [loadingDriverBookingId, setLoadingDriverBookingId] = useState<string | null>(null);
@@ -106,9 +106,7 @@ export function BookingsTable({
   const toggleidfromNotification = useAppSelector(
     (state) => state.notification.toglelistId
   );
-  const customersFromStore = useAppSelector(
-    (state) => state.customer.customers || []
-  );
+
   const driversFromStore = useAppSelector(
     (state) => state.driver.drivers || []
   );
@@ -119,9 +117,7 @@ export function BookingsTable({
   const limit = 10;
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    setAvailableCustomers(customersFromStore);
-  }, [customersFromStore]);
+
 
   useEffect(() => {
     setAvailableDrivers(driversFromStore);
@@ -168,9 +164,7 @@ export function BookingsTable({
   useEffect(() => {
     setpage(current_Page)
   }, [current_Page])
-  useEffect(() => {
-    dispatch(listCustomerUsers({page:current_Page,limit,search:searchQuery}))
-  }, []);
+
 
   const toggleRow = (bookingId: string) => {
     setInternalExpandedRows((prev) => ({

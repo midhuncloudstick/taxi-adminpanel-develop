@@ -73,12 +73,14 @@ export const getDrivers = createAsyncThunk(
     { page, limit , search  }: { page: number; limit: number,search:string}
   ) => {
     try {
-      console.log("serach",search)
-      let url = `/api/v1/driver/list?page=${page}&limit=${limit}`;
-      console.log("searchhhdriverrrr",search)
-    if(search){
-    url=`/api/v1/driver/list?page=${page}&limit=${limit}&search=${search}`
-    }
+       const baseUrl = "/api/v1/driver/list";
+      const queryParams = new URLSearchParams();
+if (search !== undefined && search !== null && search !== "") queryParams.append('search', String(search));
+ if (page !==0) queryParams.append('page', String(page));
+      if (limit !==0 ) queryParams.append('limit', String(limit));
+ 
+      const url = `${baseUrl}?${queryParams.toString()}`;
+  
       
       const response = await api.getEvents(url);
       const driverData = response.data;

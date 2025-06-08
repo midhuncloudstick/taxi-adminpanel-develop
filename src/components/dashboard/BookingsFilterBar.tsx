@@ -50,7 +50,7 @@ export function BookingsFilterBar({
   const [open, setopen] = useState(false);
   useEffect(() => {
     
-    dispatch(getDrivers());
+    dispatch(getDrivers({page:0,limit:0,search:''}));
   }, [dispatch]);
 
   const setid = (id: string) => {
