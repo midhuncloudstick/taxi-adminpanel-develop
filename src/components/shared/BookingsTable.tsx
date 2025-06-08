@@ -150,9 +150,11 @@ export function BookingsTable({
 
           setpage(targetPage <= 0 ? 1 : targetPage)
           handlePageChange(targetPage <= 0 ? 1 : targetPage)
+          
         }
 
         toggleRow(toggleidfromNotification)
+        dispatch(clearnotification(toggleidfromNotification))
       }
 
       ;
@@ -236,7 +238,7 @@ export function BookingsTable({
           sortOrder: sortDirection, // Include current sort order
         })
       );
-      setLocalPage(newPage); // Update local page state
+      setLocalPage(newPage); // Update local page state 
     } catch (error) {
       console.error("Error changing page:", error);
     } finally {
