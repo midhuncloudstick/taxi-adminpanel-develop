@@ -7,7 +7,7 @@ import { PeakDay, Pricing } from '@/types/pricing'
 
 
 interface PeakDayPriceState {
-  price: Pricing[];
+  price: Pricing;
 
   loading: boolean;
   error: string | null;
@@ -16,7 +16,7 @@ interface PeakDayPriceState {
 }
 
 const initialState: PeakDayPriceState = {
-  price: [],
+  price: null,
   loading: false,
   error: null,
 

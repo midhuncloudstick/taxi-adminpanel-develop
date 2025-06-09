@@ -115,10 +115,11 @@ export default function Customers() {
 
               <div className="bg-white rounded-lg shadow overflow-hidden">
                 {historiesofCustomer?.length > 0 ? (
-                  <CustomersHistoryTable list={historiesofCustomer} />
+                  <CustomersHistoryTable 
+                  list={historiesofCustomer} />
                 ) : (
                   <div className="p-6 text-center text-gray-500">
-                    No past trips found for {selectedCustomerId?.username || 'this customer'}
+                    {/* No past trips found for {selectedCustomerId?.username || 'this customer'} */}
                   </div>
                 )}
               </div>

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,8 @@ import { AppDispatch } from "@/redux/store";
 import { useDispatch } from "react-redux";
 import { getdriverinfo } from "@/redux/Slice/formSlice";
 import { useParams } from "react-router-dom";
+import { getBookingById } from "@/redux/Slice/bookingSlice";
+import { useAppSelector } from "@/redux/hook";
 
 export default function SendDriverinfo() {
     const [driverName, setDriverName] = useState("");
@@ -19,9 +21,10 @@ export default function SendDriverinfo() {
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
 
-    const dispatch = useDispatch<AppDispatch>();
-
+const dispatch = useDispatch<AppDispatch>()
   const { bookingId } = useParams();
+
+
 
 const handleSend = async () => {
     if (!driverName.trim() || !driverContact.trim()) {
@@ -80,8 +83,11 @@ const handleSend = async () => {
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
             <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 space-y-6">
                 <div className="text-center">
+                      <h1 className="text-3xl font-bold text-foreground font-serif text-taxi-blue">
+              <span className="text-primary text-yellow-600">Brisbane</span> Premium Transfer
+            </h1>
                     <h1 className="text-2xl font-bold text-gray-900">Send Driver Info</h1>
-                    <p className="text-gray-600 mt-2">Enter driver details to send information</p>
+                    <p className="text-gray-600 mt-2 text-sm">Enter driver details to send information</p>
                 </div>
 
                 <div className="space-y-4">

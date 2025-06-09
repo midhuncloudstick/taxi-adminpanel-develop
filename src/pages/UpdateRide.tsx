@@ -8,21 +8,35 @@ import { AppDispatch } from "@/redux/store";
 import { getjourneycompleted, getpickup, getstartjourney } from "@/redux/Slice/formSlice";
 import { useParams } from "react-router-dom";
 import { useAppSelector } from "@/redux/hook";
+import { getBookingById } from "@/redux/Slice/bookingSlice";
 
 export default function UpdateRide() {
   const [currentStep, setCurrentStep] = useState(0);
   const { toast } = useToast();
   const dispatch = useDispatch<AppDispatch>();
+  const { bookingid } = useParams<{ bookingid: string }>();
   
-  // Get ride details from Redux state
-  const rideDetails = useAppSelector((state) => state.form.updatedData);
+  const booking = useAppSelector((state) => state.booking.singleBooking);
   
-  const { bookingid } = useParams();
+  useEffect(() => {
+    if (booking) {
+      if (booking.status === "journey completed") {
+        setCurrentStep(3);
+      } else if (booking.status === "pickup") {
+        setCurrentStep(2);
+      } else if (booking.status === "journey started") {
+        setCurrentStep(1);
+      } else {
+        setCurrentStep(0);
+      }
+    }
+  }, [booking]);
 
   useEffect(() => {
-    // If bookingid is provided in URL, you might want to fetch the details here
-    // For example: dispatch(fetchRideDetails(bookingid));
-  }, [bookingid]);
+    if (bookingid) {
+      dispatch(getBookingById({ bookingid }));
+    }
+  }, [dispatch, bookingid]);
 
   const steps = [
     { id: 1, label: "Journey Started", description: "Mark when you start the journey" },
@@ -30,7 +44,7 @@ export default function UpdateRide() {
     { id: 3, label: "Journey Completed", description: "Mark when journey is finished" }
   ];
 
-  const handleStepToggle = (stepIndex: number, checked: boolean) => {
+  const handleStepToggle = async (stepIndex: number, checked: boolean) => {
     if (!bookingid) {
       toast({
         title: "Error",
@@ -46,18 +60,30 @@ export default function UpdateRide() {
     }
 
     if (checked && stepIndex === currentStep) {
-      if (stepIndex === 0) {
-        dispatch(getstartjourney({ bookingId: bookingid }));
-      } else if (stepIndex === 1) {
-        dispatch(getpickup({ bookingId: bookingid }));
-      } else if (stepIndex === 2) {
-        dispatch(getjourneycompleted({ bookingId: bookingid }));
+      try {
+        if (stepIndex === 0) {
+          await dispatch(getstartjourney({ bookingId: bookingid })).unwrap();
+        } else if (stepIndex === 1) {
+          await dispatch(getpickup({ bookingId: bookingid })).unwrap();
+        } else if (stepIndex === 2) {
+          await dispatch(getjourneycompleted({ bookingId: bookingid })).unwrap();
+        }
+        
+        setCurrentStep(stepIndex + 1);
+        toast({
+          title: "Status Updated",
+          description: steps[stepIndex].label,
+        });
+        
+        // Refresh booking data after status update
+        dispatch(getBookingById({ bookingid }));
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to update status",
+          variant: "destructive",
+        });
       }
-      setCurrentStep(stepIndex + 1);
-      toast({
-        title: "Status Updated",
-        description: steps[stepIndex].label,
-      });
     }
   };
 
@@ -69,29 +95,44 @@ export default function UpdateRide() {
     });
   };
 
+  if (!booking) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-emerald-100 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg bg-white rounded-xl shadow-lg p-6 text-center">
+          <p>Loading booking details...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg bg-white rounded-xl shadow-lg p-6 space-y-6">
+      <div className="w-full text-center max-w-lg bg-white rounded-xl shadow-lg p-6 space-y-6">
+        <h1 className="text-3xl font-bold text-foreground font-serif text-taxi-blue">
+              <span className="text-primary text-yellow-600">Brisbane</span> Premium Transfer
+            </h1>
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Update Ride Status</h1>
-          <p className="text-gray-600 mt-2">Track your journey progress</p>
+          <h1 className="text-xl font-bold text-gray-900">Update Ride Status</h1>
+          <p className="text-gray-600 mt-2 text-sm">Track your journey progress</p>
         </div>
 
-        {/* Display ride information */}
         <div className="space-y-4">
           <div className="bg-gray-50 p-4 rounded-lg">
             <Label className="text-gray-500">Booking ID:</Label>
-            <p className="font-medium mt-1">{bookingid || "N/A"}</p>
+            <p className="font-medium mt-1">{booking.id || "N/A"}</p>
           </div>
-          
           <div className="flex justify-between gap-4">
             <div className="bg-gray-50 p-4 rounded-lg flex-1">
               <Label className="text-gray-500">Pickup Location:</Label>
-              <p className="font-medium mt-1">{"N/A"}</p>
+              <p className="font-medium mt-1">
+                {booking.pickupLocation || "N/A"}
+              </p>
             </div>
             <div className="bg-gray-50 p-4 rounded-lg flex-1">
               <Label className="text-gray-500">Drop Location:</Label>
-              <p className="font-medium mt-1">{"N/A"}</p>
+              <p className="font-medium mt-1">
+                {booking.dropLocation || "N/A"}
+              </p>
             </div>
           </div>
         </div>
@@ -112,19 +153,17 @@ export default function UpdateRide() {
                   }}>
                   <div className="flex-1">
                     <div className="flex items-center space-x-3">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
-                        isCompleted ? 'bg-green-500 text-white' :
-                        isCurrent ? 'bg-blue-500 text-white' :
-                        'bg-gray-300 text-gray-600'
-                      }`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${isCompleted ? 'bg-green-500 text-white' :
+                          isCurrent ? 'bg-blue-500 text-white' :
+                            'bg-gray-300 text-gray-600'
+                        }`}>
                         {index + 1}
                       </div>
                       <div>
-                        <Label className={`text-base font-medium ${
-                          isCompleted ? 'text-green-700' :
-                          isCurrent ? 'text-blue-700' :
-                          'text-gray-500'
-                        }`}>
+                        <Label className={`text-base font-medium ${isCompleted ? 'text-green-700' :
+                            isCurrent ? 'text-blue-700' :
+                              'text-gray-500'
+                          }`}>
                           {step.label}
                         </Label>
                         <p className="text-sm text-gray-500 mt-1">{step.description}</p>
@@ -149,8 +188,8 @@ export default function UpdateRide() {
             <p className="text-sm text-gray-600">
               Current Status: <span className="font-medium">
                 {currentStep === 0 ? "Not Started" :
-                currentStep === steps.length ? "Journey Completed" :
-                steps[currentStep - 1].label}
+                  currentStep === steps.length ? "Journey Completed" :
+                    steps[currentStep - 1].label}
               </span>
             </p>
 
