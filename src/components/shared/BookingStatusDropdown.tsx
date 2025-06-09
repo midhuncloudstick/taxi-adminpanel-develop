@@ -17,12 +17,23 @@ interface BookingStatusDropdownProps {
 const statusOptions = [
   { value: "requested", label: "Requested" },
   { value: "waiting for driver confirmation", label: "Waiting for Driver Confirmation" },
+ 
+  { value: "journey started", label: "Journey Started" },
+  { value: "pickup", label: "Pickup" },
+  { value: "journey completed", label: "Journey Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
+
+const statusOptionss = [
+  { value: "requested", label: "Requested" },
+  { value: "waiting for driver confirmation", label: "Waiting for Driver Confirmation" },
   { value: "assigned driver", label: "Assigned Driver" },
   { value: "journey started", label: "Journey Started" },
   { value: "pickup", label: "Pickup" },
   { value: "journey completed", label: "Journey Completed" },
   { value: "cancelled", label: "Cancelled" },
 ];
+
 
 export function BookingStatusDropdown({
   bookingId,
@@ -101,7 +112,7 @@ dispatch(clearalert(findeindex))
         variant="ghost"
         size="sm"
         className={cn(
-          "px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 group focus:bg-gray-100",
+          "  rounded-full text-xs font-medium flex items-center gap-1 group focus:bg-gray-100",
           getStatusUI(status),
           "cursor-pointer"
         )}
@@ -109,7 +120,7 @@ dispatch(clearalert(findeindex))
         onClick={() => setOpen(o => !o)}
         tabIndex={0}
       >
-        <span>{statusOptions.find(opt => opt.value === status)?.label || status}</span>
+        <span>{statusOptionss.find(opt => opt.value === status)?.label || status}</span>
         {/* <ArrowDown size={14} className="inline ml-1 group-hover:opacity-60" /> */}
       </Button>
       {open && (
