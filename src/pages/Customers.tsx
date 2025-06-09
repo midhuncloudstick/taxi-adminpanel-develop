@@ -31,12 +31,11 @@ export default function Customers() {
     dispatch(listCustomerUsers({ page: current_Page, limit, search: searchQuery }));
   }, [dispatch, current_Page, limit, searchQuery]);
 
-
-useEffect(() => {
-  if (selectedCustomerId) {
-    dispatch(listBookingBycustomerId(Number(selectedCustomerId)));
-  }
-}, [dispatch, selectedCustomerId]);
+  useEffect(() => {
+    if (selectedCustomerId) {
+      dispatch(listBookingBycustomerId(Number(selectedCustomerId)));
+    }
+  }, [dispatch, selectedCustomerId]);
 
   const handlePageChange = async (newPage: number) => {
     try {
@@ -94,40 +93,69 @@ useEffect(() => {
             />
           </div>
           
-          {/* Customers Pagination */}
-          <div className="flex justify-center">
-            <Pagination
-              currentPage={current_Page}
-              itemsPerPage={limit}
-              totalPages={totalPages}
-              onPageChange={handlePageChange}
-            />
+          {/* Updated Pagination Layout */}
+          <div className="flex items-center justify-between">
+            {/* Page info on left */}
+            <div className="text-sm text-gray-600">
+              Page {current_Page} of {totalPages}
+            </div>
+            
+            {/* Navigation buttons on right */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => handlePageChange(Math.max(1, current_Page - 1))}
+                disabled={current_Page === 1}
+                className="px-3 py-1 text-sm rounded-md bg-taxi-teal text-white disabled:bg-gray-200 disabled:text-gray-500"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => handlePageChange(Math.min(totalPages, current_Page + 1))}
+                disabled={current_Page === totalPages}
+                className="px-3 py-1 text-sm rounded-md bg-taxi-teal text-white disabled:bg-gray-200 disabled:text-gray-500"
+              >
+                Next
+              </button>
+            </div>
           </div>
 
           {/* Customer History Section */}
           {selectedCustomerId && (
             <div className="space-y-4">
-              {/* <h3 className="text-lg font-semibold text-taxi-blue">
+              <h3 className="text-lg font-semibold text-taxi-blue">
                 Past Trips for {customerlist.find((c) => c.id === selectedCustomerId)?.username}
-              </h3> */}
+              </h3>
               
-              {/* <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="bg-white rounded-lg shadow overflow-hidden">
                 <CustomersHistoryTable
                   list={historiesofCustomer}
                 />
-              </div> */}
+              </div>
               
               {/* History Pagination - Only show if needed */}
-              {/* {historiesofCustomer?.length > 0 && (
-                <div className="flex justify-center">
-                  <Pagination
-                    currentPage={current_Page}
-                    itemsPerPage={limit}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                  />
+              {historiesofCustomer?.length > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-600">
+                    Page {current_Page} of {totalPages}
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handlePageChange(Math.max(1, current_Page - 1))}
+                      disabled={current_Page === 1}
+                      className="px-3 py-1 text-sm rounded-md bg-taxi-teal text-white disabled:bg-gray-200 disabled:text-gray-500"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => handlePageChange(Math.min(totalPages, current_Page + 1))}
+                      disabled={current_Page === totalPages}
+                      className="px-3 py-1 text-sm rounded-md bg-taxi-teal text-white disabled:bg-gray-200 disabled:text-gray-500"
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
-              )} */}
+              )}
             </div>
           )}
         </div>
