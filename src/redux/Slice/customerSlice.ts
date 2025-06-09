@@ -16,7 +16,7 @@ interface CustomerState {
   selectedCustomers: Customer [];
   loading: boolean;
   error: string | null;
-  page:any;
+  page:number;
  limit:any;
  total_pages:any;
  customerhistory:Booking[]
@@ -200,7 +200,7 @@ const customerSlice = createSlice({
           })
           .addCase(listBookingBycustomerId.fulfilled, (state, action) => {
             state.loading = false;
-            state.customers = action.payload.message;
+            state.customerhistory= action.payload.message;
            
             console.log("action.payload", action.payload);
             state.error = null;

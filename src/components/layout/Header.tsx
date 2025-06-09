@@ -18,17 +18,30 @@ export function Header({ title }: HeaderProps) {
   const [notifOpen, setNotifOpen] = useState(false);
   const [showCarList, setShowCarList] = useState(false);
   const [showDriverList, setShowDriverList] = useState(false);
+  const [carSearchTerm, setCarSearchTerm] = useState("");
+  const [driverSearchTerm, setDriverSearchTerm] = useState("");
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const dispatch = useAppDispatch();
 
   const availablecarslist = useAppSelector((state) => state.fleet.AvailableCars) ?? [];
-  console.log('Available Cars:', availablecarslist);
   const availabledriverslist = useAppSelector((state) => state.driver.AvailableDrivers) ?? [];
-  console.log("AvaliableDrivers", availabledriverslist)
   const upcoming = useAppSelector((state) => state.notification.notification) || [];
-  const playsound = useAppSelector((state) => state.notification.ringnotification)
+  const playsound = useAppSelector((state) => state.notification.ringnotification);
+
+  // Filter cars based on search term
+  const filteredCars = availablecarslist.filter(car => 
+    car.model.toLowerCase().includes(carSearchTerm.toLowerCase()) ||
+    car.plate.toLowerCase().includes(carSearchTerm.toLowerCase())
+  );
+
+  // Filter drivers based on search term
+  const filteredDrivers = availabledriverslist.filter(driver => 
+    driver.name.toLowerCase().includes(driverSearchTerm.toLowerCase()) ||
+    driver.licenceNumber.toLowerCase().includes(driverSearchTerm.toLowerCase())
+  );
+
   useEffect(() => {
     if (playsound) {
       audioRef.current = new Audio('/notification.mp3');
@@ -40,19 +53,14 @@ export function Header({ title }: HeaderProps) {
           audioRef.current = null;
         }, 500);
       }
-
-      dispatch(setnotificationsoundfasle())
+      dispatch(setnotificationsoundfasle());
     }
-
-
-  }, [playsound])
-
+  }, [playsound]);
 
   useEffect(() => {
     dispatch(getAvailableCars());
     dispatch(getAvailableDrivers());
   }, []);
-
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -91,9 +99,19 @@ export function Header({ title }: HeaderProps) {
           {showCarList && (
             <div className="absolute mt-2 border rounded p-4 shadow-lg max-h-60 overflow-y-auto space-y-2 bg-white z-20 w-64">
               <h4 className="font-semibold text-taxi-blue">Available Cars</h4>
+              {/* Car search input */}
+              <div className="mb-2">
+                <Input
+                  type="text"
+                  placeholder="Search cars..."
+                  value={carSearchTerm}
+                  onChange={(e) => setCarSearchTerm(e.target.value)}
+                  className="w-full p-2 text-sm"
+                />
+              </div>
               <ul className="space-y-1">
-                {Array.isArray(availablecarslist) &&
-                  availablecarslist.map((car) => (
+                {filteredCars.length > 0 ? (
+                  filteredCars.map((car) => (
                     <li
                       key={car.id}
                       className="border p-2 rounded hover:bg-gray-100 transition"
@@ -102,7 +120,12 @@ export function Header({ title }: HeaderProps) {
                       <div className="font-medium">{car.model}</div>
                       <div className="text-sm text-gray-500">{car.plate}</div>
                     </li>
-                  ))}
+                  ))
+                ) : (
+                  <li className="p-2 text-center text-gray-500 text-sm">
+                    {carSearchTerm ? 'No matching cars found' : 'No cars available'}
+                  </li>
+                )}
               </ul>
             </div>
           )}
@@ -127,9 +150,19 @@ export function Header({ title }: HeaderProps) {
           {showDriverList && (
             <div className="absolute mt-2 border rounded p-4 shadow-lg max-h-60 overflow-y-auto space-y-2 bg-white z-20 w-64">
               <h4 className="font-semibold text-taxi-blue">Available Drivers</h4>
+              {/* Driver search input */}
+              <div className="mb-2">
+                <Input
+                  type="text"
+                  placeholder="Search drivers..."
+                  value={driverSearchTerm}
+                  onChange={(e) => setDriverSearchTerm(e.target.value)}
+                  className="w-full p-2 text-sm"
+                />
+              </div>
               <ul className="space-y-1">
-                {Array.isArray(availabledriverslist) &&
-                  availabledriverslist.map((driver) => (
+                {filteredDrivers.length > 0 ? (
+                  filteredDrivers.map((driver) => (
                     <li
                       key={driver.id}
                       className="border p-2 rounded hover:bg-gray-100 transition"
@@ -140,7 +173,12 @@ export function Header({ title }: HeaderProps) {
                         Licence: {driver.licenceNumber}
                       </div>
                     </li>
-                  ))}
+                  ))
+                ) : (
+                  <li className="p-2 text-center text-gray-500 text-sm">
+                    {driverSearchTerm ? 'No matching drivers found' : 'No drivers available'}
+                  </li>
+                )}
               </ul>
             </div>
           )}
@@ -149,17 +187,6 @@ export function Header({ title }: HeaderProps) {
 
       {/* Search and Notification Section */}
       <div className="flex items-center gap-4 ml-auto mr-4">
-        {/* <div className={cn("relative flex items-center", "w-full sm:w-auto")}>
-          <Search className="absolute left-3 text-gray-400" size={18} />
-          <Input
-            type="text"
-            placeholder="Search..."
-            value={searchQuery}
-           onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4 py-2 w-full sm:w-64 text-sm bg-slate-50 border-slate-200 focus:ring-taxi-teal"
-          />
-        </div> */}
-
         <div className="relative">
           <Button
             variant="ghost"
@@ -168,13 +195,11 @@ export function Header({ title }: HeaderProps) {
             onClick={() => setNotifOpen((open) => !open)}
           >
             <Bell size={20} />
-            {
-              upcoming && upcoming.length > 0 &&
+            {upcoming && upcoming.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-taxi-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                 {upcoming.length}
               </span>
-            }
-
+            )}
           </Button>
           <UpcomingTripsDropdown open={notifOpen} setopen={setNotifOpen} />
           {notifOpen && (

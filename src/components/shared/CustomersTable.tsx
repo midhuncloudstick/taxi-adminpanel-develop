@@ -24,6 +24,7 @@ export function CustomersTable({ customers, selectedId, onSelect }: CustomersTab
 
   return (
     <div className="overflow-auto rounded-lg shadow bg-white">
+      
       <Table>
         <TableHeader>
           <TableRow>
@@ -33,7 +34,7 @@ export function CustomersTable({ customers, selectedId, onSelect }: CustomersTab
           </TableRow>
         </TableHeader>
         <TableBody>
-          {customers?.map((c) => (
+          {Array.isArray(customers) && customers?.map((c) => (
             <TableRow
               key={c.id}
               data-selected={selectedId === c.id}

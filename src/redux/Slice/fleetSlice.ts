@@ -113,20 +113,16 @@ export const Updatecars = createAsyncThunk(
 
 export const Deletecars = createAsyncThunk(
   "car/delete",
-  async (
-    {carId}: {carId: string},
-  ) => {
+  async ({ carId }: { carId: string }, { rejectWithValue }) => {
     try {
-      // const userId = localStorage.getItem("userid");
       const url = `/api/v1/cars/delete/${carId}`;
       const response = await api.deleteEvents(url);
-      const deleteData = response.data;
-      return deleteData;
+      return response.data;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        return error|| "list view fetching failed";
+        return rejectWithValue(error.response?.data || error.message);
       }
-      return "An unexpected error occurred.";
+      return rejectWithValue("An unexpected error occurred");
     }
   }
 );

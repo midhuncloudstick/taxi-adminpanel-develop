@@ -9,7 +9,7 @@ import { Car,User,VenderDriver,Booking,Driver} from '@/types/form'
 interface FormState {
   loading: boolean;
   error: string | null;
-  updatedData: any;
+  updatedData: Booking[];
   
  
 }

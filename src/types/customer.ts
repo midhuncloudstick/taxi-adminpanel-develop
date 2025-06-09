@@ -2,7 +2,7 @@ export interface Customer{
   id: any;
   firstname: string;
   lastname: string;
-  username: string;
+  username:  | any;
   email: string;
   phone: string;
   password: string;

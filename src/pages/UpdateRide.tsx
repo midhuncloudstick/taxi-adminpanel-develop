@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -7,18 +6,23 @@ import { useToast } from "@/hooks/use-toast";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { getjourneycompleted, getpickup, getstartjourney } from "@/redux/Slice/formSlice";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useAppSelector } from "@/redux/hook";
 
 export default function UpdateRide() {
   const [currentStep, setCurrentStep] = useState(0);
   const { toast } = useToast();
   const dispatch = useDispatch<AppDispatch>();
+  
+  // Get ride details from Redux state
+  const rideDetails = useAppSelector((state) => state.form.updatedData);
+  
+  const { bookingid } = useParams();
 
-
-const { bookingid } = useParams();
-console.log("Booking ID:", bookingid);
-
+  useEffect(() => {
+    // If bookingid is provided in URL, you might want to fetch the details here
+    // For example: dispatch(fetchRideDetails(bookingid));
+  }, [bookingid]);
 
   const steps = [
     { id: 1, label: "Journey Started", description: "Mark when you start the journey" },
@@ -26,10 +30,22 @@ console.log("Booking ID:", bookingid);
     { id: 3, label: "Journey Completed", description: "Mark when journey is finished" }
   ];
 
-const handleStepToggle = (stepIndex: number, checked: boolean) => {
-  if (checked && stepIndex === currentStep) {
-    // Dispatch the correct thunk based on the step
-    if (bookingid) {
+  const handleStepToggle = (stepIndex: number, checked: boolean) => {
+    if (!bookingid) {
+      toast({
+        title: "Error",
+        description: "Booking ID is missing",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Prevent toggling if the step is already completed
+    if (stepIndex < currentStep) {
+      return;
+    }
+
+    if (checked && stepIndex === currentStep) {
       if (stepIndex === 0) {
         dispatch(getstartjourney({ bookingId: bookingid }));
       } else if (stepIndex === 1) {
@@ -37,22 +53,13 @@ const handleStepToggle = (stepIndex: number, checked: boolean) => {
       } else if (stepIndex === 2) {
         dispatch(getjourneycompleted({ bookingId: bookingid }));
       }
+      setCurrentStep(stepIndex + 1);
+      toast({
+        title: "Status Updated",
+        description: steps[stepIndex].label,
+      });
     }
-    // Allow progressing to next step
-    setCurrentStep(stepIndex + 1);
-    toast({
-      title: "Status Updated",
-      description: steps[stepIndex].label,
-    });
-  } else if (!checked && stepIndex === currentStep - 1) {
-    // Allow going back one step
-    setCurrentStep(stepIndex);
-    toast({
-      title: "Status Reverted",
-      description: `Reverted to: ${stepIndex === 0 ? "Not Started" : steps[stepIndex - 1].label}`,
-    });
-  }
-};
+  };
 
   const resetJourney = () => {
     setCurrentStep(0);
@@ -70,32 +77,52 @@ const handleStepToggle = (stepIndex: number, checked: boolean) => {
           <p className="text-gray-600 mt-2">Track your journey progress</p>
         </div>
 
+        {/* Display ride information */}
+        <div className="space-y-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <Label className="text-gray-500">Booking ID:</Label>
+            <p className="font-medium mt-1">{bookingid || "N/A"}</p>
+          </div>
+          
+          <div className="flex justify-between gap-4">
+            <div className="bg-gray-50 p-4 rounded-lg flex-1">
+              <Label className="text-gray-500">Pickup Location:</Label>
+              <p className="font-medium mt-1">{"N/A"}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg flex-1">
+              <Label className="text-gray-500">Drop Location:</Label>
+              <p className="font-medium mt-1">{"N/A"}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Journey steps */}
         <div className="space-y-6">
           {steps.map((step, index) => {
             const isCompleted = index < currentStep;
             const isCurrent = index === currentStep;
-            const isDisabled = index > currentStep;
+            const isDisabled = index > currentStep || isCompleted;
 
             return (
               <div key={step.id} className="space-y-3">
                 <div className="flex items-center justify-between p-4 rounded-lg border-2 transition-colors duration-200"
-                     style={{
-                       borderColor: isCompleted ? '#10b981' : isCurrent ? '#3b82f6' : '#e5e7eb',
-                       backgroundColor: isCompleted ? '#f0fdf4' : isCurrent ? '#eff6ff' : '#f9fafb'
-                     }}>
+                  style={{
+                    borderColor: isCompleted ? '#10b981' : isCurrent ? '#3b82f6' : '#e5e7eb',
+                    backgroundColor: isCompleted ? '#f0fdf4' : isCurrent ? '#eff6ff' : '#f9fafb'
+                  }}>
                   <div className="flex-1">
                     <div className="flex items-center space-x-3">
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold ${
-                        isCompleted ? 'bg-green-500 text-white' : 
-                        isCurrent ? 'bg-blue-500 text-white' : 
+                        isCompleted ? 'bg-green-500 text-white' :
+                        isCurrent ? 'bg-blue-500 text-white' :
                         'bg-gray-300 text-gray-600'
                       }`}>
                         {index + 1}
                       </div>
                       <div>
                         <Label className={`text-base font-medium ${
-                          isCompleted ? 'text-green-700' : 
-                          isCurrent ? 'text-blue-700' : 
+                          isCompleted ? 'text-green-700' :
+                          isCurrent ? 'text-blue-700' :
                           'text-gray-500'
                         }`}>
                           {step.label}
@@ -104,7 +131,7 @@ const handleStepToggle = (stepIndex: number, checked: boolean) => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <Switch
                     checked={isCompleted}
                     onCheckedChange={(checked) => handleStepToggle(index, checked)}
@@ -121,12 +148,12 @@ const handleStepToggle = (stepIndex: number, checked: boolean) => {
           <div className="text-center space-y-2">
             <p className="text-sm text-gray-600">
               Current Status: <span className="font-medium">
-                {currentStep === 0 ? "Not Started" : 
-                 currentStep === steps.length ? "Journey Completed" : 
-                 steps[currentStep - 1].label}
+                {currentStep === 0 ? "Not Started" :
+                currentStep === steps.length ? "Journey Completed" :
+                steps[currentStep - 1].label}
               </span>
             </p>
-            
+
             {currentStep > 0 && (
               <Button
                 onClick={resetJourney}

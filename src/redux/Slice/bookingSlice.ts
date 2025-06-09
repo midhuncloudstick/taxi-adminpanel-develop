@@ -17,7 +17,7 @@ interface BookingState {
   selectedBooking: Booking[] | null;
   loading: boolean;
   error: string | null;
- page:any;
+ page:number;
  limit:any;
  total_pages:any;
  filterstate :{

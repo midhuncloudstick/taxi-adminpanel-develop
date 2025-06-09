@@ -20,7 +20,7 @@ export default function Customers() {
   const current_Page = useAppSelector((state) => state.customer.page || 1);
   const totalPages = useAppSelector((state) => state.customer.total_pages || 1);
   const historiesofCustomer = useAppSelector((state) => state.customer.customerhistory);
-  
+
   const [localPage, setLocalPage] = useState(current_Page);
   const limit = 10;
   const [loading, setLoading] = useState(false);
@@ -28,8 +28,8 @@ export default function Customers() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    dispatch(listCustomerUsers({ page: current_Page, limit, search: searchQuery }));
-  }, [dispatch, current_Page, limit, searchQuery]);
+    dispatch(listCustomerUsers({ page: current_Page, limit, search: search }));
+  }, [dispatch, current_Page, limit, search]);
 
   useEffect(() => {
     if (selectedCustomerId) {
@@ -40,7 +40,7 @@ export default function Customers() {
   const handlePageChange = async (newPage: number) => {
     try {
       setLoading(true);
-      await dispatch(listCustomerUsers({ page: newPage, limit, search: searchQuery }));
+      await dispatch(listCustomerUsers({ page: newPage, limit, search: search }));
       setLocalPage(newPage);
     } catch (error) {
       console.error("Error changing page:", error);
@@ -50,20 +50,10 @@ export default function Customers() {
   };
 
   // Filter customers based on search
-  const filteredCustomers = Array.isArray(customerlist)
-    ? customerlist.filter((c) =>
-      c.username?.toLowerCase().includes(search.toLowerCase()) ||
-      c.email?.toLowerCase().includes(search.toLowerCase()) ||
-      c.phone?.toLowerCase().includes(search.toLowerCase())
-    )
-    : [];
+
+
 
   // Filter bookings for selected customer
-  const filteredBookings = selectedCustomerId
-    ? Array.isArray(allBookings)
-      ? allBookings.filter((booking) => booking.customerId === selectedCustomerId)
-      : []
-    : [];
 
   return (
     <PageContainer title="Customer Management">
@@ -84,23 +74,20 @@ export default function Customers() {
         </div>
 
         <div className="space-y-4">
-          {/* Customers Table */}
+          {/* Customers Table - ALWAYS VISIBLE */}
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <CustomersTable
-              customers={filteredCustomers}
+              customers={customerlist}
               selectedId={selectedCustomerId}
               onSelect={setSelectedCustomerId}
             />
           </div>
-          
-          {/* Updated Pagination Layout */}
+
+          {/* Pagination - ALWAYS VISIBLE */}
           <div className="flex items-center justify-between">
-            {/* Page info on left */}
             <div className="text-sm text-gray-600">
               Page {current_Page} of {totalPages}
             </div>
-            
-            {/* Navigation buttons on right */}
             <div className="flex gap-2">
               <button
                 onClick={() => handlePageChange(Math.max(1, current_Page - 1))}
@@ -119,20 +106,22 @@ export default function Customers() {
             </div>
           </div>
 
-          {/* Customer History Section */}
+          {/* Customer History Section - ONLY VISIBLE WHEN CUSTOMER SELECTED */}
           {selectedCustomerId && (
-            <div className="space-y-4">
+            <div className="space-y-4 mt-6">
               <h3 className="text-lg font-semibold text-taxi-blue">
                 Past Trips for {customerlist.find((c) => c.id === selectedCustomerId)?.username}
               </h3>
-              
+
               <div className="bg-white rounded-lg shadow overflow-hidden">
-                <CustomersHistoryTable
-                  list={historiesofCustomer}
-                />
+                {historiesofCustomer?.length > 0 ? (
+                  <CustomersHistoryTable list={historiesofCustomer} />
+                ) : (
+                  <div className="p-6 text-center text-gray-500">
+                    No past trips found for {selectedCustomerId?.username || 'this customer'}
+                  </div>
+                )}
               </div>
-              
-              {/* History Pagination - Only show if needed */}
               {historiesofCustomer?.length > 0 && (
                 <div className="flex items-center justify-between">
                   <div className="text-sm text-gray-600">
