@@ -60,8 +60,11 @@ export function Sidebar() {
 
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
+
 useEffect(() => {
+  console.log("useeeer",user)
   const storedUser = localStorage.getItem("user");
+  console.log("userrrrr",storedUser)
   if (storedUser) {
     setUser(JSON.parse(storedUser));
   }

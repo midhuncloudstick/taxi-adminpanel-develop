@@ -68,16 +68,19 @@ export const getCars = createAsyncThunk(
     { page, limit , search  }: { page: number; limit: number,search:string}
   ) => {
     try {
-      console.log("seracccch  carsss",search)
-      let url = `/api/v1/cars/list?page=${page}&limit=${limit}`;
-      console.log("searchhhcars",search)
-    if(search){
-    url=`/api/v1/cars/list?page=${page}&limit=${limit}&search=${search}`
-    }
+     
+       const baseUrl = "/api/v1/cars/list";
+        const queryParams = new URLSearchParams();
+    
+    if (search !== undefined && search !== null && search !== "") queryParams.append('search', String(search));
+    if (page !==0) queryParams.append('page', String(page));
+      if (limit !==0 ) queryParams.append('limit', String(limit));
+ 
+      const url = `${baseUrl}?${queryParams.toString()}`;
       
       const response = await api.getEvents(url);
-      const driverData = response.data;
-      return driverData;
+      const carData = response.data;
+      return carData;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
         return error || "Driver details fetching failed";
