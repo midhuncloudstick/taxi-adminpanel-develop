@@ -1,5 +1,7 @@
+import { api } from "@/services/EventServices";
 import { Booking } from "@/types/booking";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import axios from "axios";
 import { stat } from "fs";
 
 export interface Alert {
@@ -28,6 +30,27 @@ const initialState: NotificationState = {
   ringnotification:false,
   alretList:[]
 };
+
+export const notificationRead = createAsyncThunk(
+  "notifictaion/notificationRead",
+  async (
+    id:string,
+  ) => {
+
+    try {
+      const url = `/api/v1/booking/${id}`;
+
+      const response = await api.getEvents(url);
+      const notificationss = response.data;
+      return notificationss;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error || "booking details fetching failed";
+      }
+      return "An unexpected error occurred.";
+    }
+  }
+);
 
 const notificationSlice = createSlice({
   name: "alert",

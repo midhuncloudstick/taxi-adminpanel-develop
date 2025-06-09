@@ -3,14 +3,15 @@ import { useMemo } from "react";
 import { bookings, getCustomerById } from "@/data/mockData";
 import { ArrowUp } from "lucide-react";
 import { Button } from "../ui/button";
-import { useAppSelector } from "@/redux/hook";
+import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { useDispatch } from "react-redux";
-import { setToggleid } from "@/redux/Slice/notificationSlice";
+import { notificationRead, setToggleid } from "@/redux/Slice/notificationSlice";
 import { useNavigate } from "react-router-dom";
 
 // Not using any state for filter here. Shows all upcoming bookings!
 export function UpcomingTripsDropdown({ open,setopen }: { open: boolean ,setopen: React.Dispatch<React.SetStateAction<boolean>>}) {
   const dispatch =useDispatch()
+  const appDispatch = useAppDispatch()
    const navigate =useNavigate()
   // const upcoming = useMemo(
   //   () => bookings.filter(b => b.status === "requested"), []
@@ -20,8 +21,9 @@ export function UpcomingTripsDropdown({ open,setopen }: { open: boolean ,setopen
 
   const upcoming = useAppSelector((state) => state.notification.notification) || [];
 
-const setid =(id:string)=>{
+const setid = async(id:string)=>{
   try {
+    await appDispatch(notificationRead(id))
     dispatch(setToggleid(id))
   } catch (error) {
     console.log('====================================');
