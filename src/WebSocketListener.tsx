@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { updatelist } from "./redux/Slice/bookingSlice";
+import { addAlert } from "./redux/Slice/notificationSlice";
 
-const BookingWebsocket = () => {
+const WebSocketListener = () => {
   const ws = useRef<WebSocket | null>(null);
   const dispatch = useDispatch();
   const reconnectAttempts = useRef(0);
@@ -14,14 +14,14 @@ const BookingWebsocket = () => {
   const connectWebSocket = useCallback(() => {
     // If a connection already exists and is open, no need to reconnect
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
-      console.log("✅ Booking WebSocket already open, skipping reconnection attempt.");
+      console.log("✅ Event WebSocket already open, skipping reconnection attempt.");
       return;
     }
 
-    ws.current = new WebSocket("wss://brisbane.cloudhousetechnologies.com/ws/bookings");
+    ws.current = new WebSocket("wss://brisbane.cloudhousetechnologies.com/ws/events");
 
     ws.current.onopen = () => {
-      console.log("✅ Booking WebSocket connected");
+      console.log("✅ Event WebSocket connected");
       reconnectAttempts.current = 0; // Reset attempts on successful connection
       // Clear any pending reconnect timeouts
       if (reconnectTimeoutId.current) {
@@ -32,32 +32,42 @@ const BookingWebsocket = () => {
 
     ws.current.onmessage = (event) => {
       try {
+        console.log('====================================');
+        console.log("Received Event WebSocket message:", event.data);
+        console.log('====================================');
         const data = JSON.parse(event.data);
-        dispatch(updatelist(data));
+        // Dispatch the alert to Redux
+        if (data.bookings) {
+          dispatch(addAlert(data.bookings));
+        } else {
+          console.warn("⚠️ Received event data without 'bookings' property:", data);
+        }
       } catch (err) {
         console.warn("⚠️ Received non-JSON WebSocket message:", event.data);
+        // Optionally, you could dispatch a generic alert or show a toast for non-JSON messages
+        // toast.warning(`Received unexpected message: ${event.data}`);
       }
     };
 
     ws.current.onerror = (err) => {
-      console.error("❌ Booking WebSocket error:", err);
+      console.error("❌ Event WebSocket error:", err);
       // The 'onclose' event usually follows an 'onerror' event,
       // so reconnection logic is primarily handled in 'onclose'.
     };
 
     ws.current.onclose = () => {
-      console.log("🔌 Booking WebSocket disconnected");
+      console.log("🔌 Event WebSocket disconnected");
 
       if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
         reconnectAttempts.current++;
         // Exponential backoff: delay increases with each attempt
         // Formula: min(1000 * (2^attempt), 30000) - max 30 seconds delay
         const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
-        console.log(`Attempting to reconnect Booking WebSocket in ${delay / 1000} seconds... (Attempt ${reconnectAttempts.current})`);
+        console.log(`Attempting to reconnect Event WebSocket in ${delay / 1000} seconds... (Attempt ${reconnectAttempts.current})`);
         reconnectTimeoutId.current = window.setTimeout(connectWebSocket, delay);
       } else {
-        console.warn("❌ Max reconnect attempts reached for Booking WebSocket. Not attempting to reconnect.");
-        toast.error("Booking WebSocket connection lost. Please refresh the page if issues persist.");
+        console.warn("❌ Max reconnect attempts reached for Event WebSocket. Not attempting to reconnect.");
+        toast.error("Event WebSocket connection lost. Please refresh the page if issues persist.");
       }
     };
   }, [dispatch]); // `dispatch` is stable and doesn't cause re-renders
@@ -81,4 +91,4 @@ const BookingWebsocket = () => {
   return null;
 };
 
-export default BookingWebsocket;
+export default WebSocketListener;

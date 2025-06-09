@@ -362,6 +362,7 @@ export function BookingsTable({
             ))
           ) :
             (Array.isArray(bookinglist) &&
+            bookinglist.length >0 ?
               bookinglist.map((b) => {
                 const customer = getCustomerById(b.customerId);
 
@@ -607,7 +608,18 @@ export function BookingsTable({
                     )}
                   </React.Fragment>
                 );
-              }))}
+              })
+            :  (
+  <TableRow>
+    <TableCell colSpan={12} className="text-center py-8">
+      <div className="flex flex-col items-center justify-center space-y-2">
+        <span className="text-gray-500 text-lg">No items found</span>
+      </div>
+    </TableCell>
+  </TableRow>
+)
+            
+            )}
 
         </TableBody>
       </Table>

@@ -1,6 +1,7 @@
 
 
 import { api } from "@/services/EventServices";
+import { Booking } from "@/types/booking";
 import { BookingHistoryDrivers, Drivers } from "@/types/driver";
 import { Cars } from "@/types/fleet";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -16,11 +17,11 @@ interface DriversState {
   loading: boolean;
   error: string | null;
   AvailableDrivers:Drivers[]
-  page:any;
+  page:number;
   limit:any;
   total_pages:any;
   search :any;
-  bookingHistory:BookingHistoryDrivers[]
+  bookingHistory:Booking[]
 
 
   //   // Define the correct type here

@@ -173,7 +173,7 @@ export function BookingsFilterBar({
             <SelectItem value="all">All Drivers</SelectItem>
             {Array.isArray(driverslist) &&
               driverslist?.map((d) => (
-                <SelectItem value={d.name.toString()} key={d.id}>
+                <SelectItem value={d.id.toString()} key={d.id}>
                   {d.name}
                 </SelectItem>
               ))}
