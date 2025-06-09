@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { updatelist } from "./redux/Slice/bookingSlice";
+import { useAppSelector } from "./redux/hook";
+import { clearalert } from "./redux/Slice/notificationSlice";
 
 const BookingWebsocket = () => {
   const ws = useRef<WebSocket | null>(null);
@@ -9,6 +11,7 @@ const BookingWebsocket = () => {
   const reconnectAttempts = useRef(0);
   const MAX_RECONNECT_ATTEMPTS = 10; // Maximum attempts before giving up
   const reconnectTimeoutId = useRef<number | null>(null); // To store the timeout ID for cleanup
+const alertlist = useAppSelector((state) => state.notification.alretList);
 
   // Function to establish the WebSocket connection
   const connectWebSocket = useCallback(() => {
@@ -34,6 +37,14 @@ const BookingWebsocket = () => {
       try {
         const data = JSON.parse(event.data);
         dispatch(updatelist(data));
+        if(data.status !== "assigned driver"){
+           const alretexit = alertlist.findIndex(d=>d.id == data.id)
+           if(alretexit !=-1 ){
+            dispatch(clearalert(alretexit))
+           }
+        }
+        
+         
       } catch (err) {
         console.warn("⚠️ Received non-JSON WebSocket message:", event.data);
       }

@@ -95,7 +95,7 @@ export function BookingsFilterBar({
         onClick={() => setopen(!open)}
       >
         <span className="flex items-center gap-2">
-          Over Due Booking{" "}
+          Over Due Pickup Time{" "}
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}{" "}
         </span>
         {
@@ -110,9 +110,9 @@ export function BookingsFilterBar({
             <div className=" py-2 border-b font-medium text-taxi-blue flex items-center gap-2 w-full ">
               <ul>
                 {alertlist && alertlist.length == 0 && (
-                  <li className="hover:bg-slate-50 px-4 py-2 border-b last:border-0 transition-all cursor-pointer w-full bg-white">
+                  <li className="hover:bg-slate-50 px-4 py-2 border-b last:border-0 transition-all cursor-pointer w-full bg-white text-sm text-gray-400 font-normal">
                     {" "}
-                    nothing
+                 No  Over Due Pickup Time
                   </li>
                 )}
                 {alertlist &&
