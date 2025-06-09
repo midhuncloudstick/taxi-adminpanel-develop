@@ -170,7 +170,6 @@ export function BookingsTable({
   const toggleRow = (bookingId: string) => {
     dispatch(clearnotification(bookingId));
     setInternalExpandedRows((prev) => ({
-      ...prev,
       [bookingId]: !prev[bookingId],
     }));
   };
@@ -499,7 +498,7 @@ export function BookingsTable({
                     </TableCell>
                     <TableCell>${b.amount.toFixed(2)}</TableCell>
                     <TableCell>
-                      <ChatDialog bookingId={b.id} />
+                      <ChatDialog bookingId={b.id} customer ={b.user_firstname+' '+b.user_lastname} />
                     </TableCell>
                   </TableRow>
                   {expandedRows?.[b.id] && (
