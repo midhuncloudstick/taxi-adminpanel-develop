@@ -33,7 +33,7 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
   const [carToDelete, setCarToDelete] = useState<string | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const Vehicle = useAppSelector((state) => state.fleet.cars)
-  const current_Page = useAppSelector((state) => state.booking.page || 1);
+  const current_Page = useAppSelector((state) => state.fleet.page || 1);
   const totalPages = useAppSelector((state) => state.fleet.total_pages || 1);
   const [localPage, setLocalPage] = useState(current_Page);
   const [searchQuery, setSearchQuery] = useState("");
@@ -76,6 +76,7 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
   }, [dispatch, current_Page, searchQuery, limit]);
 
   const handlePageChange = async (newPage: number) => {
+    console.log("currennnttpageee",current_Page)
     try {
       setLoading(true);
       await dispatch(getCars({ search: searchQuery, page: newPage, limit }));
@@ -99,25 +100,30 @@ export function FleetTable({ onEdit, onDelete }: FleetTableProps) {
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = async () => {
-    if (!carToDelete) return;
+const confirmDelete = async () => {
+  if (!carToDelete) return;
 
-    try {
-      console.log("deletedddddd")
-      await dispatch(Deletecars({ carId: carToDelete })).unwrap();
-      await dispatch(getCars({ page: current_Page, limit, search: searchQuery }));
-
-      setCarsData(carsData.filter((car) => car.id !== carToDelete));
-      onDelete(carToDelete);
-      toast.success("Car deleted successfully");
-    } catch (error) {
-      toast.error("Failed to delete car");
-      console.error("Delete error:", error);
-    } finally {
-      setCarToDelete(null);
-      setIsDeleteDialogOpen(false);
-    }
-  };
+  try {
+    await dispatch(Deletecars({ carId: carToDelete })).unwrap();
+    // Refresh the list after deletion
+    const result = await dispatch(getCars({ 
+      page: current_Page, 
+      limit, 
+      search: searchQuery 
+    })).unwrap();
+    
+    // Update local state if needed
+    setCarsData(result.data); // or whatever your response structure is
+    onDelete(carToDelete);
+    toast.success("Car deleted successfully");
+  } catch (error) {
+    toast.error(error.message || "Failed to delete car");
+    console.error("Delete error:", error);
+  } finally {
+    setCarToDelete(null);
+    setIsDeleteDialogOpen(false);
+  }
+};
 
   return (
     <>
