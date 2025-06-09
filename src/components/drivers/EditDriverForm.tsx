@@ -51,7 +51,7 @@ const cleanPhone = (val: string) => val.replace(/\s+/gu, '');
 const InternalDriverSchema = z.object({
   id: z.number(),
   type: z.literal("internal"),
-  name: z.string().min(8, { message: "Name must be at least 8 characters." }),
+  name: z.string().min(8, ),
   email: z.string().optional(),
   phone: z
     .string()
@@ -68,7 +68,7 @@ const InternalDriverSchema = z.object({
 const ExternalDriverSchema = z.object({
   id: z.number(),
   type: z.literal("external"),
-  name: z.string().min(8, { message: "Name must be at least 8 characters." }),
+  name: z.string().min(8, ),
   email: z.string().email({ message: "Please enter a valid email address." }),
   phone: z
     .string()
@@ -139,9 +139,13 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess, cur
     const [availableCars, setAvailableCars] = useState<Cars[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [photoFile, setPhotoFile] = useState<File | null>(null); 
-    const current_Page = useAppSelector((state) => state.booking.page || 1);
-    const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
+    const current_Page = useAppSelector((state) => state.fleet.page || 1);
+    const totalPages = useAppSelector((state) => state.fleet.total_pages || 1);
     const limit = 10;
+
+    useEffect(()=>{
+        dispatch(getCars({page:current_Page,limit:limit, search:searchQuery}))
+    },[])
 
     useEffect(() => {
       if (Array.isArray(vehicle)) {

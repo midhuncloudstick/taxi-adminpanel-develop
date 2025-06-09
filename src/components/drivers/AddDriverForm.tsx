@@ -31,7 +31,7 @@ const cleanPhone = (val: string) => val.replace(/\s+/gu, '');
 
 const InternalDriverSchema = z.object({
   type: z.literal("internal"),
-  name: z.string().min(8, { message: "Name must be at least 8 characters." }),
+  name: z.string().min(8, ),
   email: z.string().optional(),
   phone: z
     .string()
@@ -48,7 +48,7 @@ const InternalDriverSchema = z.object({
 
 const ExternalDriverSchema = z.object({
   type: z.literal("external"),
-  name: z.string().min(8, { message: "Name must be at least 8 characters." }),
+  name: z.string().min(8, ),
   email: z.string().email({ message: "Please enter a valid email address." }),
   phone: z
     .string()
@@ -81,9 +81,13 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null); 
+  const current_Page = useAppSelector((state) => state.fleet.page || 1);
+  const totalPages = useAppSelector((state) => state.fleet.total_pages || 1);
+  const limit = 10;
+  const [searchQuery , setSearchQuery] = useState("")
 
   useEffect(() => {
-    dispatch(getCars({page: 1, limit: 10, search: ""}));
+    dispatch(getCars({page: current_Page, limit: limit, search: searchQuery}));
   }, [dispatch]);
 
   useEffect(() => {
