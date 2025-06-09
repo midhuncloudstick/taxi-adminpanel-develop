@@ -14,6 +14,6 @@ export interface Cars {
   add_trailer: boolean;
   pricePerKm: number;
   fixedCost: number;
-  status:  "available" | "in-use" | "maintenance";
+  status:  "available" | "in-use" | "maintenance" ;
   created_at:string
 }

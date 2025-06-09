@@ -1,7 +1,8 @@
 
 
 import { api } from "@/services/EventServices";
-import { Drivers } from "@/types/driver";
+import { Booking } from "@/types/booking";
+import { BookingHistoryDrivers, Drivers } from "@/types/driver";
 import { Cars } from "@/types/fleet";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
@@ -10,23 +11,34 @@ import axios from "axios";
 
 
 
-interface CarState {
+interface DriversState {
   drivers: Drivers[];
   selectedDrivers: Drivers | null;
   loading: boolean;
   error: string | null;
   AvailableDrivers:Drivers[]
+  page:number;
+  limit:any;
+  total_pages:any;
+  search :any;
+  bookingHistory:Booking[]
 
 
   //   // Define the correct type here
 }
 
-const initialState: CarState = {
+const initialState: DriversState = {
   drivers: [],
   loading: false,
   error: null,
   selectedDrivers: null,
   AvailableDrivers:null,
+  page:null,
+  limit:null,
+  total_pages:null,
+  search:null,
+  bookingHistory:null,
+
 };
 
 
@@ -59,24 +71,30 @@ export const CreateDrivers = createAsyncThunk(
 export const getDrivers = createAsyncThunk(
   "driver/get",
   async (
-    _,
+    { page, limit , search  }: { page: number; limit: number,search:string}
   ) => {
-
     try {
-      //   const userId = localStorage.getItem("userid");
-      const url = "/api/v1/driver/list";
-
+       const baseUrl = "/api/v1/driver/list";
+      const queryParams = new URLSearchParams();
+if (search !== undefined && search !== null && search !== "") queryParams.append('search', String(search));
+ if (page !==0) queryParams.append('page', String(page));
+      if (limit !==0 ) queryParams.append('limit', String(limit));
+ 
+      const url = `${baseUrl}?${queryParams.toString()}`;
+  
+      
       const response = await api.getEvents(url);
       const driverData = response.data;
       return driverData;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        return error || "driver details fetching failed";
+        return error || "Driver details fetching failed";
       }
       return "An unexpected error occurred.";
     }
   }
 );
+
 
 export const UpdateDrivers = createAsyncThunk(
   "driver/update",
@@ -134,7 +152,27 @@ export const getAvailableDrivers = createAsyncThunk(
 
 
 
+export const gethistoryofdriverId = createAsyncThunk(
+  "driver/history",
+  async (
+    {driverId}:{driverId:number}
+  ) => {
 
+    try {
+      //   const userId = localStorage.getItem("userid");
+      const url = `/api/v1/driver/booking/${driverId}`;
+
+      const response = await api.getEvents(url);
+      const drivershistoryData = response.data;
+      return drivershistoryData;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error || "driver details fetching failed";
+      }
+      return "An unexpected error occurred.";
+    }
+  }
+);
 
 
 
@@ -211,8 +249,9 @@ const driverSlice = createSlice({
       .addCase(getDrivers.fulfilled, (state, action) => {
         state.loading = false;
         state.drivers = action.payload.message;
-
-        console.log("action.payload.driver", action.payload);
+        state.page = action.payload.page;
+        state.total_pages = action.payload.total_pages
+        // console.log("action.payload.driver", action.payload);
         state.error = null;
       })
       .addCase(getDrivers.rejected, (state, action) => {
@@ -245,6 +284,19 @@ const driverSlice = createSlice({
         state.AvailableDrivers = action.payload.drivers;
       })
       .addCase(getAvailableDrivers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      .addCase(gethistoryofdriverId.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+       .addCase(gethistoryofdriverId.fulfilled, (state, action) => {
+        state.loading = false; 
+        state.bookingHistory = action.payload.message;
+      })
+      .addCase(gethistoryofdriverId.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

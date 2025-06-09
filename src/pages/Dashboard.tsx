@@ -38,7 +38,7 @@ export default function Dashboard() {
   const [customerId, setCustomerId] = useState("");
   const [sortKey, setSortKey] = useState<null | string>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-  const [tableBookings, setTableBookings] = useState(bookings);
+
   const [page,setpage] =useState(1)
 
 
@@ -47,25 +47,7 @@ export default function Dashboard() {
 
 
 
-  // Handler to update driver for a booking
-  const handleUpdateDriver = (bookingId: string, driverId: string) => {
-    setTableBookings(prev =>
-      prev.map(b =>
-        b.id === bookingId ? { ...b, driver: driverId } : b
-      )
-    );
-  };
-
-  // Handler to update status for a booking
-  const handleUpdateStatus = (bookingId: string, newStatus: "requested" | "waiting for driver confirmation" | "assigned driver" | "pickup" | "journey started" | "journey completed" | "cancelled"|"all") => {
-    setTableBookings(prev =>
-      prev.map(b =>
-        b.id === bookingId ? { ...b, status: newStatus } : b
-      )
-    );
-  };
-
-  // Filtering logic
+  
 
   // Table column sorting handler
   const handleSort = (column: string) => {
@@ -86,6 +68,9 @@ export default function Dashboard() {
  
 
 useEffect(()=>{
+  console.log('yes');
+  console.log(page);
+  
    dispatch(updatefilterstate({
      page:page,
   customerId:customerId,
@@ -94,6 +79,7 @@ useEffect(()=>{
   status:status
   }))
 },[status, driver, location, customerId,page])
+
   useEffect(() => {
   const controller = new AbortController();
   const delayDebounce = setTimeout(() => {
@@ -104,7 +90,7 @@ useEffect(()=>{
     clearTimeout(delayDebounce);
   };
   
-  }, [dispatch, status, driver, location, customerId])
+  }, [dispatch, status, driver, location, customerId,])
   
 const getlist = async ({ optpage }: { optpage?: number } = {}) => {
   try {
@@ -165,8 +151,8 @@ const getlist = async ({ optpage }: { optpage?: number } = {}) => {
             getlist ={getlist}
             showCustomer
             showDriverSelect
-            onUpdateDriver={handleUpdateDriver}
-            onUpdateStatus={handleUpdateStatus}
+          
+           
             onSort={handleSort}
             sortKey={sortKey}
             sortDirection={sortDirection}

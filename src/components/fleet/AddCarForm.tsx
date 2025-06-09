@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Car as CarIcon, Plus, Upload, X } from "lucide-react";
+import { Car as CarIcon, Loader2, Plus, Upload, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Cars } from "@/types/fleet";
@@ -12,6 +12,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { Textarea } from "../ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useAppSelector } from "@/redux/hook";
 
 interface AddCarFormProps {
   onAddCar: (car: Omit<Cars, "id">) => void;
@@ -25,6 +26,12 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
   const [images, setImages] = useState<string[]>([]); // Store image previews (base64)
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [features, setFeatures] = useState<string[]>([""]);
+  const[loader,setLoader]=useState(false)
+    const current_Page = useAppSelector((state) => state.booking.page || 1);
+    const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
+    const [localPage, setLocalPage] = useState(current_Page);
+    const [searchQuery, setSearchQuery ] = useState("");
+    const limit= 10
   const [CarForm, setCarForm] = useState<Cars>({
     id: "",
     car_images: "",
@@ -45,6 +52,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
 
 const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const files = Array.from(e.target.files || []);
+  setImageFiles(prev => [...prev, ...files])
   const imagePreviews = files.map(file => URL.createObjectURL(file));
   setImages(prev => [...prev, ...imagePreviews]);
 };
@@ -89,8 +97,9 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
 
+    e.preventDefault();
+setLoader(true)
     const formattedFeatures = features
       .filter(f => f.trim() !== "")
       .map(f => ({ feature: f }));
@@ -109,7 +118,7 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
     try {
       await dispatch(CreateCars({ data: formData })).unwrap();
-      await dispatch(getCars());
+      await dispatch(getCars({page:current_Page,limit,search:searchQuery}));
       toast.success("Car created successfully");
 
       onAddCar({
@@ -146,6 +155,9 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         errorMessage = error;
       }
       toast.error(errorMessage);
+    }finally{
+      
+      setLoader(false)
     }
   };
 
@@ -168,18 +180,28 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 
           <div className="relative space-y-2 flex flex-col items-center">
   <div className="flex flex-wrap gap-4 justify-center">
+    {images.length == 0 &&
+   <Avatar className="w-24 h-24 border-2 border-gray-200">
+          <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
+    <Upload className="w-14 h-14" />
+  </AvatarFallback>
+      </Avatar>
+    }
+
+
     {images.map((img, idx) => (
       <div key={idx} className="relative">
-        <Avatar className="w-24 h-24 border-2 border-gray-200">
-          <AvatarImage
-            src={img}
-            alt={`car image ${idx + 1}`}
-            className="w-full h-full object-cover"
-          />
-          <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
-            <Upload className="w-6 h-6" />
-          </AvatarFallback>
-        </Avatar>
+       <Avatar className="w-24 h-24 border-2 border-gray-200">
+  <AvatarImage
+    src={img}
+    alt={`car image ${idx + 1}`}
+    className="w-full h-full object-cover"
+  />
+  <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
+    <Upload className="w-6 h-6" />
+  </AvatarFallback>
+</Avatar>
+
         <button
           type="button"
           className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
@@ -375,12 +397,13 @@ const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                 <SelectItem value="available">Available</SelectItem>
                 <SelectItem value="in-use">In Use</SelectItem>
                 <SelectItem value="maintenance">Maintenance</SelectItem>
+                {/* <SelectItem value="cancelled">Cance</SelectItem> */}
               </SelectContent>
             </Select>
           </div>
 
-          <Button type="submit" className="mt-2 bg-taxi-teal hover:bg-taxi-teal/90">
-            Add Car to Fleet
+          <Button type="submit" disabled={loader} className="mt-2 bg-taxi-teal hover:bg-taxi-teal/90">
+          {loader &&   <span><Loader2 className=" animate-spin" /></span>}   Add Car to Fleet
           </Button>
         </form>
       </DialogContent>

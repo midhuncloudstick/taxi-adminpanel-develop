@@ -1,9 +1,6 @@
-
 import { useEffect, useState } from "react";
 import { PageContainer } from "@/components/layout/PageContainer";
-import { drivers, getBookingsByDriverId, Booking } from "@/data/mockData";
 import { DriversTable } from "@/components/shared/DriversTable";
-import { BookingsTable } from "@/components/shared/BookingsTable";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { AddDriverForm } from "@/components/drivers/AddDriverForm";
@@ -18,26 +15,77 @@ import {
 import { useAppSelector } from "@/redux/hook";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
-import { getDrivers } from "@/redux/Slice/driverSlice";
+import { getDrivers, gethistoryofdriverId } from "@/redux/Slice/driverSlice";
+import { CustomersHistoryTable } from "@/components/shared/CustomersHistoryTable";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Drivers() {
   const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
+  const [selectedDriverName, setSelectedDriverName] = useState("");
   const [isAddDriverOpen, setIsAddDriverOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
-  const drivers = useAppSelector((state) => state.driver.drivers)
-  const dispatch = useDispatch<AppDispatch>()
-  const selectedTrips: Booking[] = selectedDriverId
-    ? getBookingsByDriverId(selectedDriverId.toString())
-    : [];
+  const drivers = useAppSelector((state) => state.driver.drivers);
+  const currentPage = useAppSelector((state) => state.driver.page || 1);
+  const totalPages = useAppSelector((state) => state.driver.total_pages || 1);
+  const [localPage, setLocalPage] = useState(currentPage);
+  const dispatch = useDispatch<AppDispatch>();
+  const limit = 10;
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const driverHistory = useAppSelector((state) => state.driver.bookingHistory);
 
+  const handleDriverClick = (driverId: number, driverName: string) => {
+    setSelectedDriverId(driverId);
+    setSelectedDriverName(driverName);
+    setIsHistoryOpen(true);
+  };
 
   const handleDriverAdded = () => {
     setIsAddDriverOpen(false);
-    // In a real app, we would refetch the drivers list here
+    dispatch(getDrivers({ page: currentPage, limit, search: searchQuery }));
   };
 
+  useEffect(() => {
+    dispatch(getDrivers({ page: localPage, limit, search: searchQuery }));
+  }, [dispatch, localPage, limit, searchQuery]);
 
+  useEffect(() => {
+    if (selectedDriverId && isHistoryOpen) {
+      setLoadingHistory(true);
+      setHistoryError(null);
+      dispatch(gethistoryofdriverId({ driverId: selectedDriverId }))
+        .unwrap()
+        .then((response) => {
+          if (!response.success) {
+            setHistoryError("Failed to fetch booking history");
+          } else if (!response.message || response.message.length === 0) {
+            setHistoryError("No trips found for this driver");
+          }
+        })
+        .catch((error) => {
+          setHistoryError("Failed to load booking history");
+        })
+        .finally(() => setLoadingHistory(false));
+    }
+  }, [dispatch, selectedDriverId, isHistoryOpen]);
 
+  const handlePageChange = (newPage: number) => {
+    setLocalPage(newPage);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    setLocalPage(1);
+  };
 
   return (
     <PageContainer title="Driver Management">
@@ -65,27 +113,51 @@ export default function Drivers() {
             </SheetContent>
           </Sheet>
         </div>
+
         <DriversTable
           drivers={drivers}
           selectedId={selectedDriverId}
-          onSelect={setSelectedDriverId}
-          onEdit={(driver) => {
-          console.log("Editing driver", driver);
+          onSelect={(id) => {
+            const driver = drivers.find(d => d.id === id);
+            if (driver) {
+              handleDriverClick(id, driver.name);
+            }
           }}
+          onEdit={(driver) => console.log("Editing driver", driver)}
+          page={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onSearch={handleSearch}
+          loading={loading}
         />
 
-        {selectedDriverId && (
-          <div>
-            <h3 className="text-lg font-semibold text-taxi-blue mt-8 mb-2">
-              Trip History for {drivers?.find(d => d.id === selectedDriverId)?.name}
-            </h3>
-            <BookingsTable
-             //bookings={selectedTrips} 
-             showCustomer
-             // drivers={drivers} 
-             />
-          </div>
-        )}
+        <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-center text-taxi-blue">
+                Trip History for {selectedDriverName}
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="mt-6">
+              {loadingHistory ? (
+                <div className="space-y-4">
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : historyError ? (
+                <div className="text-red-500 text-center py-8">{historyError}</div>
+              ) : driverHistory && driverHistory.length === 0 ? (
+                <div className="text-gray-500 text-center py-8">
+                  No trips found for this driver
+                </div>
+              ) : (
+                <CustomersHistoryTable list={driverHistory} />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </PageContainer>
   );
