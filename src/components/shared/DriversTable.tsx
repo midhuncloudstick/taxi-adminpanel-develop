@@ -50,7 +50,13 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    setDriversData(driverDatah);
+    console.log('============dddddddddddddddddd========================');
+    console.log('this',driverDatah);
+    console.log('====================================');
+    if(driverDatah && Array.isArray(driverDatah)){
+         setDriversData(driverDatah);
+    }
+ 
   }, [driverDatah]);
 
   useEffect(() => {
@@ -128,26 +134,27 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
           </TableRow>
         </TableHeader>
         <TableBody>
-          {driverData?.map((d) => (
-            <TableRow
+            {driverData && driverData.length > 0 ? (
+            driverData.map((d) => (
+              <TableRow
               key={d.id}
               data-selected={selectedId === d.id}
               onClick={() => onSelect(d.id)}
               className={`cursor-pointer ${selectedId === d.id ? "bg-blue-50" : ""}`}
-            >
+              >
               <TableCell>
                 <Avatar className="h-10 w-10">
-                  {d.photo ? (
-                    <AvatarImage 
-                      src={`https://brisbane.cloudhousetechnologies.com${d.photo}`} 
-                      alt={d.name}
-                      crossOrigin="anonymous"
-                    />
-                  ) : (
-                    <AvatarFallback className="bg-taxi-blue text-white">
-                      <User size={16} />
-                    </AvatarFallback>
-                  )}
+                {d.photo ? (
+                  <AvatarImage 
+                  src={`https://brisbane.cloudhousetechnologies.com${d.photo}`} 
+                  alt={d.name}
+                  crossOrigin="anonymous"
+                  />
+                ) : (
+                  <AvatarFallback className="bg-taxi-blue text-white">
+                  <User size={16} />
+                  </AvatarFallback>
+                )}
                 </Avatar>
               </TableCell>
               <TableCell>{d.name}</TableCell>
@@ -156,24 +163,24 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
               <TableCell>{getCarById(d.carId)?.model || d.carId}</TableCell>
               <TableCell>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs ${
-                    d.status === "active"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
+                className={`px-2 py-1 rounded-full text-xs ${
+                  d.status === "active"
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+                }`}
                 >
-                  {d.status.charAt(0).toUpperCase() + d.status.slice(1)}
+                {d.status.charAt(0).toUpperCase() + d.status.slice(1)}
                 </span>
               </TableCell>
               <TableCell>
                 <span
-                  className={`px-2 py-1 rounded-full text-xs ${
-                    d.type === "internal"
-                      ? "bg-blue-100 text-blue-700"
-                      : "bg-purple-100 text-purple-700"
-                  }`}
+                className={`px-2 py-1 rounded-full text-xs ${
+                  d.type === "internal"
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-purple-100 text-purple-700"
+                }`}
                 >
-                  {d.type.charAt(0).toUpperCase() + d.type.slice(1)}
+                {d.type.charAt(0).toUpperCase() + d.type.slice(1)}
                 </span>
               </TableCell>
               <TableCell className="text-right">
@@ -191,8 +198,15 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
                   </Button>
                 </div>
               </TableCell>
+              </TableRow>
+            ))
+            ) : (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center text-gray-500">
+              No items found
+              </TableCell>
             </TableRow>
-          ))}
+            )}
         </TableBody>
       </Table>
 

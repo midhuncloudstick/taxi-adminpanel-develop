@@ -422,7 +422,7 @@ export function BookingsTable({
                                 </>
                               ) : (
                                 <SelectValue placeholder="Driver">
-                                  {driversFromStore.find(
+                                  {Array.isArray(driversFromStore)&&driversFromStore.find(
                                     (d) =>
                                       d.id?.toString() ===
                                       b.driverId?.toString()
@@ -441,7 +441,7 @@ export function BookingsTable({
                                 value={searchTerm}
                               />
                             </div>
-                            {availableDrivers
+                            {Array.isArray(availableDrivers) &&availableDrivers
                               .filter((d) => d.status === "active")
                               .filter(
                                 (d) =>
