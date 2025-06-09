@@ -26,7 +26,8 @@ interface BookingState {
   location:string,
   driver:string,
   status:string
- }
+ 
+ } ,singleBooking: Booking
 
   //   // Define the correct type here
 }
@@ -45,8 +46,9 @@ const initialState: BookingState = {
   customerId:'',
   location:'',
   driver:'all',
-  status:'all'
-  }
+  status:'all',
+  
+  },singleBooking:null
 };
 
 
@@ -238,6 +240,28 @@ export const getnotification = createAsyncThunk(
 );
 
 
+export const getBookingById = createAsyncThunk(
+  "booking/bookingid",
+  async (
+   {bookingid } :{bookingid:string}
+  ) => {
+
+    try {
+      const url = `/api/v1/booking/${bookingid}/view`;
+
+      const response = await api.getEvents(url);
+      const notificationss = response.data;
+      return notificationss;
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error || "booking details fetching failed";
+      }
+      return "An unexpected error occurred.";
+    }
+  }
+);
+
+
 const bookingSlice = createSlice({
   name: "booking",
   initialState,
@@ -387,6 +411,23 @@ state.filterstate =action.payload
         state.error = null;
       })
       .addCase(sortingInBooking.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+       .addCase(getBookingById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+
+      .addCase(getBookingById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.singleBooking = action.payload.message;
+
+        console.log("action.payload.booking", action.payload);
+        state.error = null;
+      })
+      .addCase(getBookingById.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

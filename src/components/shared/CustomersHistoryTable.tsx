@@ -75,22 +75,22 @@ export function CustomersHistoryTable({
     useEffect(() => {
         const fetchData = async () => {
             // setLoading(true); // ⬅️ start loading
-            await Promise.all([
-                dispatch(sortingInBooking({
-                    search: "",          // or your current search term
-                    customerID: "",      // or current customer id filter
-                    status: "",          // or current status filter
-                    driver: "",          // or current driver filter
-                    bookingId: "",       // or current booking id filter
-                    date: "",            // or current date filter
-                    pickup_time: "",     // or current pickup time filter
-                    page: current_Page,
-                    limit: limit,
-                    // sortBy: sortKey,
-                    // sortOrder: sortDirection,
-                }))
+            // await Promise.all([
+            //     dispatch(sortingInBooking({
+            //         search: "",          // or your current search term
+            //         customerID: "",      // or current customer id filter
+            //         status: "",          // or current status filter
+            //         driver: "",          // or current driver filter
+            //         bookingId: "",       // or current booking id filter
+            //         date: "",            // or current date filter
+            //         pickup_time: "",     // or current pickup time filter
+            //         page: current_Page,
+            //         limit: limit,
+            //         // sortBy: sortKey,
+            //         // sortOrder: sortDirection,
+            //     }))
 
-            ]);
+            // ]);
             setLoading(false); // ⬅️ end loading
         };
 

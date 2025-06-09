@@ -43,8 +43,8 @@ export default function Fleet() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-semibold text-taxi-blue">Fleet Inventory</h2>
-            <p className="text-sm text-gray-500">Manage all vehicles in your taxi fleet</p>
+              <h2 className="text-2xl font-bold text-gray-800">Fleet Management</h2>
+            {/* <p className="text-sm text-gray-500">Manage all vehicles in your taxi fleet</p> */}
           </div>
           <AddCarForm onAddCar={handleAddCar} />
         </div>

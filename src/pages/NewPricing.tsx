@@ -15,6 +15,7 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { getpeakdaypricing, getPricing } from "@/redux/Slice/pricingSlice";
 import { useAppSelector } from "@/redux/hook";
+import { Pricing } from "@/types/pricing";
 
 interface PeakDayPricing {
     distance1: string;
@@ -30,31 +31,31 @@ interface PeakDayPricing {
 export default function NewPricing() {
     const dispatch = useDispatch<AppDispatch>();
     const [peakDays, setPeakDays] = useState<Date[]>([]);
-    const [peakDayPricing, setPeakDayPricing] = useState<PeakDayPricing>({
-        distance1: "0-30",
-        rate1: 100,
-        distance2: "30-60",
-        rate2: 150,
-        distance3: "60-90",
-        rate3: 200,
-        distance4: "90+",
-        rate4: 250
-    });
+    // const [peakDayPricing, setPeakDayPricing] = useState<PeakDayPricing>({
+    //     distance1: "0-30",
+    //     rate1: 100,
+    //     distance2: "30-60",
+    //     rate2: 150,
+    //     distance3: "60-90",
+    //     rate3: 200,
+    //     distance4: "90+",
+    //     rate4: 250
+    // });
     const [isEditingPricing, setIsEditingPricing] = useState(false);
-    const [tempPricing, setTempPricing] = useState<PeakDayPricing>({ ...peakDayPricing });
+    const [tempPricing, setTempPricing] = useState<Pricing>(null);
     const getPrice = useAppSelector((state) => state.pricing.price)
     useEffect(() => {
         dispatch(getPricing())
     }, [])
 
-    const handleSave = () => {
-        const pricingData = {
-            peakDays: peakDays.map(date => format(date, "yyyy-MM-dd")),
-            peakDayPricing
-        };
-        console.log("Saving peak day pricing:", pricingData);
-        toast.success("Pricing updated successfully");
-    };
+    // const handleSave = () => {
+    //     const pricingData = {
+    //         peakDays: peakDays.map(date => format(date, "yyyy-MM-dd")),
+    //         peakDayPricing
+    //     };
+    //     console.log("Saving peak day pricing:", pricingData);
+    //     toast.success("Pricing updated successfully");
+    // };
 
     const addPeakDay = (date: Date) => {
         const exists = peakDays.some(d => isEqual(d, date));
@@ -77,7 +78,7 @@ export default function NewPricing() {
     };
 
     const startEditing = () => {
-        setTempPricing({ ...peakDayPricing });
+        
         setIsEditingPricing(true);
     };
 
@@ -95,7 +96,7 @@ export default function NewPricing() {
             .unwrap()
             .then(() => {
                 toast.success("Pricing updated successfully");
-                setPeakDayPricing({ ...tempPricing });
+              
                 setIsEditingPricing(false);
             })
             .catch(() => {
@@ -106,6 +107,11 @@ export default function NewPricing() {
     const cancelEditing = () => {
         setIsEditingPricing(false);
     };
+    useEffect(()=>{
+        if(getPrice){
+            setTempPricing({...getPrice})
+       } 
+    },[getPrice])
 
     return (
         <PageContainer title="Pricing Management">
@@ -216,7 +222,7 @@ export default function NewPricing() {
                                             <div className="col-span-7">
                                                 <Input
                                                     type="number"
-                                                    value={isEditingPricing ? tempPricing.rate1 : peakDayPricing.rate1}
+                                                    value={isEditingPricing ? tempPricing.rate1 : getPrice.rate1}
                                                     onChange={(e) => handleRateChange('rate1', e.target.value)}
                                                     disabled={!isEditingPricing}
                                                     className={isEditingPricing ? "bg-white" : "bg-gray-50"}
@@ -233,7 +239,7 @@ export default function NewPricing() {
                                             <div className="col-span-7">
                                                 <Input
                                                     type="number"
-                                                    value={isEditingPricing ? tempPricing.rate2 : peakDayPricing.rate2}
+                                                    value={isEditingPricing ? tempPricing.rate2 : getPrice.rate2}
                                                     onChange={(e) => handleRateChange('rate2', e.target.value)}
                                                     disabled={!isEditingPricing}
                                                     className={isEditingPricing ? "bg-white" : "bg-gray-50"}
@@ -250,7 +256,7 @@ export default function NewPricing() {
                                             <div className="col-span-7">
                                                 <Input
                                                     type="number"
-                                                    value={isEditingPricing ? tempPricing.rate3 : peakDayPricing.rate3}
+                                                    value={isEditingPricing ? tempPricing.rate3 : getPrice.rate3}
                                                     onChange={(e) => handleRateChange('rate3', e.target.value)}
                                                     disabled={!isEditingPricing}
                                                     className={isEditingPricing ? "bg-white" : "bg-gray-50"}
@@ -267,7 +273,7 @@ export default function NewPricing() {
                                             <div className="col-span-7">
                                                 <Input
                                                     type="number"
-                                                    value={isEditingPricing ? tempPricing.rate4 : peakDayPricing.rate4}
+                                                    value={isEditingPricing ? tempPricing.rate4 : getPrice.rate4}
                                                     onChange={(e) => handleRateChange('rate4', e.target.value)}
                                                     disabled={!isEditingPricing}
                                                     className={isEditingPricing ? "bg-white" : "bg-gray-50"}

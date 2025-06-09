@@ -128,7 +128,7 @@ const confirmDelete = async () => {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Fleet Management</h2>
+       
         <form onSubmit={handleSearch} className="flex gap-2 items-center">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -163,25 +163,33 @@ const confirmDelete = async () => {
         </TableHeader>
         <TableBody>
           {Array.isArray(Vehicle) &&
-            Vehicle.map((car) => (
-              <TableRow key={car.id}>
-                <TableCell className="font-medium">{car.id}</TableCell>
-                <Avatar className="h-1 w-1">
-                  {Array.isArray(car.car_images) && car.car_images.length > 0 ? (
-                    car.car_images.map((image, index) => (
-                      <AvatarImage
-                        src={`https://brisbane.cloudhousetechnologies.com${image.image_url} `}
-                        crossOrigin="anonymous"
-                        alt={image.Car?.model || `Image ${index + 1}`}
-                        className="h-10 w-10 rounded-full object-cover border-2 border-gray-200 shadow"
-                      />
-                    ))
-                  ) : (
-                    <AvatarFallback className="bg-taxi-blue text-white">
-                      <User size={16} />
-                    </AvatarFallback>
-                  )}
-                </Avatar>
+  Vehicle.map((car) => (
+    <TableRow key={car.id}>
+      <TableCell className="font-medium">{car.id}</TableCell>
+      
+        
+          {Array.isArray(car.car_images) && car.car_images.length > 0 ? (
+   
+              <Avatar  className="h-10 w-10 flex-shrink-0">
+                <AvatarImage
+                  src={`https://brisbane.cloudhousetechnologies.com${car.car_images[0].image_url}`}
+                  crossOrigin="anonymous"
+                  alt={car.model}
+                  className="h-12 w-12 rounded-full object-cover border-2 border-gray-200 shadow"
+                />
+                <AvatarFallback>
+                  {car?.model?.charAt(0) || 'V'}
+                </AvatarFallback>
+              </Avatar>
+            )
+           : (
+            <Avatar className="h-10 w-10">
+              <AvatarFallback className="bg-taxi-blue text-white">
+                <User size={16} />
+              </AvatarFallback>
+            </Avatar>
+          )}
+               
                 <TableCell>{car.model}</TableCell>
                 <TableCell>{car.plate}</TableCell>
                 <TableCell>{getCarTypeBadge(car.type)}</TableCell>

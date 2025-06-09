@@ -172,6 +172,7 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess, cur
             type: driver?.type || "internal",
         },
     });
+const driverType = form.watch("type");
 
     useEffect(() => {
         if (driver && IsOpen) {
@@ -466,41 +467,29 @@ export function EditDriverForm({ driver, IsOpen, onClose, onSave, onSuccess, cur
                             )}
                         />
 
-                        <FormField
-                            control={form.control}
-                            name="type"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Type</FormLabel>
-                                    <FormControl>
-                                        <RadioGroup
-                                            onValueChange={field.onChange}
-                                            value={field.value}
-                                            className="flex flex-row items-center gap-6"
-                                        >
-                                            <FormItem className="flex items-center space-x-2">
-                                                <FormControl>
-                                                    <RadioGroupItem value="internal" id="type-internal" />
-                                                </FormControl>
-                                                <FormLabel htmlFor="type-internal" className="font-normal">
-                                                    Internal
-                                                </FormLabel>
-                                            </FormItem>
-
-                                            <FormItem className="flex items-center space-x-2">
-                                                <FormControl>
-                                                    <RadioGroupItem value="external" id="type-external" />
-                                                </FormControl>
-                                                <FormLabel htmlFor="type-external" className="font-normal">
-                                                    External
-                                                </FormLabel>
-                                            </FormItem>
-                                        </RadioGroup>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                         {driverType === "internal" && (
+            <FormField control={form.control} name="carId" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Assigned Vehicle</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a vehicle" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {availableCars.map((car) => (
+                      <SelectItem key={car.id} value={car.id.toString()}>
+                        {car.model} ({car.plate}) - {car.type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+          )}
+                      
 
                         <div className="flex justify-end space-x-2 pt-4">
                             <Button

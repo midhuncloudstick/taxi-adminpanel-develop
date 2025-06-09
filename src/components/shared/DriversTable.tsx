@@ -99,7 +99,7 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
   return (
     <div className="overflow-auto rounded-lg shadow bg-white">
       <div className="flex justify-between items-center p-4 border-b">
-        <h2 className="text-xl font-semibold">Drivers Management</h2>
+       
        
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -177,7 +177,7 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-center gap-2">
                   <Button
                     variant="ghost"
                     size="icon"

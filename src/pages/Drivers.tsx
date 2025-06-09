@@ -92,8 +92,8 @@ export default function Drivers() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-semibold text-taxi-blue">Drivers</h2>
-            <p className="text-sm text-gray-500">View and manage driver information.</p>
+           <h2 className="text-xl font-semibold">Drivers Management</h2>
+            {/* <p className="text-sm text-gray-500">View and manage driver information.</p> */}
           </div>
           <Sheet open={isAddDriverOpen} onOpenChange={setIsAddDriverOpen}>
             <SheetTrigger asChild>
