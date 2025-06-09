@@ -23,7 +23,15 @@ import WebSocketListener from "./WebSocketListener";
 import NotificationSocket from "./NotificationSocket";
 import WebSocketBookingListener from "./WebsocketBookingListener";
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./components/ui/dialog";
+
+import { useEffect, useState } from "react";
+import { Button } from "./components/ui/button";
+import { WifiOff } from "lucide-react";
+
 const queryClient = new QueryClient();
+
+
 
 const SidebarLayout = () => (
   <div className="flex">
@@ -71,6 +79,30 @@ const AppRoutes = () => {
 };
 
 const App = () => {
+
+const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  useEffect(() => {
+    console.log('====================================');
+    console.log('ddddddddddddddddddddddddddddddddklkkkkkkkkkkk');
+    console.log('====================================');
+    const handleOffline = () => setIsOffline(true);
+    const handleOnline = () => setIsOffline(false);
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, []);
+
+
+
+
+
+
+
+
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
@@ -81,8 +113,39 @@ const App = () => {
           <NotificationSocket />
            <WebSocketListener/>
         
-       
+    <Dialog open={isOffline}>
+  <DialogContent className="sm:max-w-[425px] p-6 rounded-lg border-none shadow-xl">
+    <DialogHeader>
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-red-100 to-red-50">
+        <WifiOff className="h-6 w-6 text-red-500" />
+      </div>
+      <DialogTitle className="text-xl font-semibold text-gray-800 mt-4">
+        You're Offline
+      </DialogTitle>
+    </DialogHeader>
+
+    <div className="mt-2 text-gray-500">
+      <p>Your connection was interrupted. Changes may not be saved.</p>
+    </div>
+
+    <div className="mt-6 flex flex-col space-y-3">
+      <Button
+        onClick={() => window.location.reload()}
+        className="w-full bg-gray-900 hover:bg-gray-800 text-white py-2 px-4 rounded-md transition-colors"
+      >
+        Reconnect
+      </Button>
+    
+    </div>
+
+    <div className="mt-4 text-xs text-gray-400">
+      Last synced: {new Date().toLocaleTimeString()}
+    </div>
+  </DialogContent>
+</Dialog>
           <BrowserRouter>
+          
+
             <AppRoutes />
           </BrowserRouter>
         </TooltipProvider>
