@@ -2,9 +2,21 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Car as CarIcon, Loader2, Plus, Upload, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Cars } from "@/types/fleet";
 import { CreateCars, getCars } from "@/redux/Slice/fleetSlice";
@@ -26,12 +38,12 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
   const [images, setImages] = useState<string[]>([]); // Store image previews (base64)
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [features, setFeatures] = useState<string[]>([""]);
-  const [loader, setLoader] = useState(false)
+  const [loader, setLoader] = useState(false);
   const current_Page = useAppSelector((state) => state.booking.page || 1);
   const totalPages = useAppSelector((state) => state.booking.total_pages || 1);
   const [localPage, setLocalPage] = useState(current_Page);
   const [searchQuery, setSearchQuery] = useState("");
-  const limit = 10
+  const limit = 10;
   const [CarForm, setCarForm] = useState<Cars>({
     id: "",
     car_images: "",
@@ -47,14 +59,30 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
     large_bags: 0,
     add_trailer: false,
     created_at: new Date().toISOString(),
-    features: []
+    features: [],
   });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setImageFiles(prev => [...prev, ...files])
-    const imagePreviews = files.map(file => URL.createObjectURL(file));
-    setImages(prev => [...prev, ...imagePreviews]);
+
+    if (files.length + images.length > 5) {
+      toast.error("Maximum 5 images allowed");
+      return;
+    }
+
+    files.forEach((file) => {
+      // Check if image is landscape
+      const img = new Image();
+      img.onload = () => {
+        if (img.width < img.height) {
+          setImageFiles((prev) => [...prev, file]);
+          setImages((prev) => [...prev, URL.createObjectURL(file)]);
+        } else {
+          toast.error("Please upload portrait-oriented images only");
+        }
+      };
+      img.src = URL.createObjectURL(file);
+    });
   };
 
   const handleRemoveImage = (index: number) => {
@@ -63,21 +91,21 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setCarForm((prevForm) => ({
       ...prevForm,
       [name]:
-        name === "capacity" ||
-          name === "small_bags" ||
-          name === "large_bags"
+        name === "capacity" || name === "small_bags" || name === "large_bags"
           ? parseInt(value)
           : name === "pricePerKm" || name === "fixedCost"
-            ? parseFloat(value)
-            : name === "add_trailer"
-              ? value === "yes"
-              : value,
+          ? parseFloat(value)
+          : name === "add_trailer"
+          ? value === "yes"
+          : value,
     }));
   };
 
@@ -97,16 +125,15 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-
     e.preventDefault();
-    setLoader(true)
+    setLoader(true);
     const formattedFeatures = features
-      .filter(f => f.trim() !== "")
-      .map(f => ({ feature: f }));
+      .filter((f) => f.trim() !== "")
+      .map((f) => ({ feature: f }));
 
     const { id, car_images, ...fieldsToSend } = {
       ...CarForm,
-      features: formattedFeatures
+      features: formattedFeatures,
     };
 
     const formData = new FormData();
@@ -118,12 +145,14 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
 
     try {
       await dispatch(CreateCars({ data: formData })).unwrap();
-      await dispatch(getCars({ page: current_Page, limit, search: searchQuery }));
+      await dispatch(
+        getCars({ page: current_Page, limit, search: searchQuery })
+      );
       toast.success("Car created successfully");
 
       onAddCar({
         ...CarForm,
-        features: features.filter(f => f.trim() !== ""),
+        features: features.filter((f) => f.trim() !== ""),
       });
 
       setCarForm({
@@ -156,11 +185,9 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
       }
       toast.error(errorMessage);
     } finally {
-
-      setLoader(false)
+      setLoader(false);
     }
   };
-
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -169,7 +196,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
           <Plus className="mr-2 h-4 w-4" /> Add New Car
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] max-h-[500px] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CarIcon className="h-5 w-5" />
@@ -177,181 +204,193 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-
-          <div className="relative space-y-2 flex flex-col items-center">
-            <div className="flex flex-wrap gap-4 justify-center">
-              {images.length == 0 &&
-                <Avatar className="w-24 h-24 border-2 border-gray-200">
-                  <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
-                    <Upload className="w-14 h-14" />
-                  </AvatarFallback>
-                </Avatar>
-              }
-
-
+          {/* Image Upload Section */}
+          <div className="space-y-3">
+            <Label>Car Images (Portrait  only)</Label>
+            <div className="flex flex-wrap gap-3">
+              {/* Image previews */}
               {images.map((img, idx) => (
-                <div key={idx} className="relative">
-                  <Avatar className="w-24 h-24 border-2 border-gray-200">
-                    <AvatarImage
+                <div key={idx} className="relative group">
+                  <div className="w-32 h-24 rounded-md overflow-hidden border border-gray-200">
+                    <img
                       src={img}
-                      alt={`car image ${idx + 1}`}
+                      alt={`car preview ${idx + 1}`}
                       className="w-full h-full object-cover"
                     />
-                    <AvatarFallback className="bg-gray-100 text-gray-400 text-xl">
-                      <Upload className="w-6 h-6" />
-                    </AvatarFallback>
-                  </Avatar>
-
+                  </div>
                   <button
                     type="button"
-                    className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100"
+                    className="absolute -top-2 -right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100 transition-opacity opacity-0 group-hover:opacity-100"
                     onClick={() => handleRemoveImage(idx)}
                   >
-                    <X className="w-4 h-4 text-black-500" />
+                    <X className="w-4 h-4 text-red-500" />
                   </button>
                 </div>
               ))}
+
+              {/* Upload button (only show if less than 5 images) */}
+              {images.length < 5 && (
+                <label className="w-32 h-24 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 transition-colors">
+                  <Upload className="w-6 h-6 text-gray-400 mb-1" />
+                  <span className="text-xs text-gray-500">Upload</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    multiple
+                    onChange={handleImageChange}
+                  />
+                </label>
+              )}
+            </div>
+            <p className="text-xs text-gray-500">
+              {images.length}/5 images uploaded • Portrait orientation required
+            </p>
+          </div>
+
+          {/* Form Grid - 2 columns */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Left Column */}
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="model">Car Model</Label>
+                <Input
+                  id="model"
+                  name="model"
+                  placeholder="e.g. Toyota Camry 2023"
+                  value={CarForm.model}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="plate">License Plate</Label>
+                <Input
+                  id="plate"
+                  name="plate"
+                  placeholder="e.g. ABC-123"
+                  value={CarForm.plate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="type">Car Type</Label>
+                <Select
+                  value={CarForm.type}
+                  onValueChange={(value: "sedan" | "suv" | "luxury") =>
+                    setCarForm({ ...CarForm, type: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select car type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="sedan">Sedan</SelectItem>
+                    <SelectItem value="suv">SUV</SelectItem>
+                    <SelectItem value="luxury">Luxury</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="capacity">Passenger Capacity</Label>
+                <Input
+                  id="capacity"
+                  name="capacity"
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={CarForm.capacity === 0 ? "" : CarForm.capacity} // Show empty string when 0
+                  onChange={handleInputChange}
+                  required
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" // Hide arrows
+                />
+              </div>
             </div>
 
-            <label
-              htmlFor="photo-upload"
-              className="cursor-pointer text-taxi-blue hover:text-taxi-teal text-sm underline"
-            >
-              Upload Photos
-            </label>
-            <input
-              id="photo-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              multiple
-              onChange={handleImageChange}
-            />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="model">Car Model</Label>
-            <Input
-              id="model"
-              name="model"
-              placeholder="e.g. Toyota Camry 2023"
-              value={CarForm.model}
-              onChange={handleInputChange}
-              required
-            />
+            {/* Right Column */}
+            <div className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="pricePerKm">Price Per Kilometer ($)</Label>
+                <Input
+                  id="pricePerKm"
+                  name="pricePerKm"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={CarForm.pricePerKm === 0 ? "" : CarForm.pricePerKm}
+                  onChange={handleInputChange}
+                  required
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="fixedCost">Fixed Cost ($)</Label>
+                <Input
+                  id="fixedCost"
+                  name="fixedCost"
+                  type="number"
+                  step="1"
+                  min="0"
+                  value={CarForm.fixedCost === 0 ? "" : CarForm.fixedCost}
+                  onChange={handleInputChange}
+                  required
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="small_bags">Small Luggage</Label>
+                <Input
+                  id="small_bags"
+                  name="small_bags"
+                  type="number"
+                  min="0"
+                  value={CarForm.small_bags === 0 ? "" : CarForm.small_bags}
+                  onChange={handleInputChange}
+                  required
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="large_bags">Large Luggage</Label>
+                <Input
+                  id="large_bags"
+                  name="large_bags"
+                  type="number"
+                  min="0"
+                  value={CarForm.large_bags === 0 ? "" : CarForm.large_bags}
+                  onChange={handleInputChange}
+                  required
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+              </div>
+            </div>
           </div>
 
+          {/* Full-width elements */}
           <div className="grid gap-2">
-            <Label htmlFor="plate">License Plate</Label>
-            <Input
-              id="plate"
-              name="plate"
-              placeholder="e.g. ABC-123"
-              value={CarForm.plate}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="type">Car Type</Label>
+            <Label htmlFor="add_trailer">Trailer Available</Label>
             <Select
-              value={CarForm.type}
-              onValueChange={(value: "sedan" | "suv" | "luxury") =>
-                setCarForm({ ...CarForm, type: value })
-              }
+              value={CarForm.add_trailer ? "yes" : "no"}
+              onValueChange={(value: "yes" | "no") => {
+                setCarForm({ ...CarForm, add_trailer: value === "yes" });
+              }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select car type" />
+                <SelectValue placeholder="Select trailer option" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="sedan">Sedan</SelectItem>
-                <SelectItem value="suv">SUV</SelectItem>
-                <SelectItem value="luxury">Luxury</SelectItem>
+                <SelectItem value="no">No</SelectItem>
+                <SelectItem value="yes">Yes</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="capacity">Passenger Capacity</Label>
-            <Input
-              id="capacity"
-              name="capacity"
-              type="number"
-              min="1"
-              max="12"
-              value={CarForm.capacity}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="pricePerKm">Price Per Kilometer ($)</Label>
-            <Input
-              id="pricePerKm"
-              name="pricePerKm"
-              type="number"
-              step="0.01"
-              min="0"
-              value={CarForm.pricePerKm || 0}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="fixedCost">Fixed Cost ($)</Label>
-            <Input
-              id="fixedCost"
-              name="fixedCost"
-              type="number"
-              step="1"
-              min="0"
-              value={CarForm.fixedCost || 0}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="small_bags">Small Luggage</Label>
-            <Input
-              id="small_bags"
-              name="small_bags"
-              type="number"
-              value={CarForm.small_bags || 0}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="large_bags">Large Luggage</Label>
-            <Input
-              id="large_bags"
-              name="large_bags"
-              type="number"
-              value={CarForm.large_bags || 0}
-              onChange={handleInputChange}
-              required
-            />
-          </div>
-
-          <Label htmlFor="add_trailer">Trailer</Label>
-          <Select
-            value={CarForm.add_trailer ? "yes" : "no"} // Convert boolean to string for select value
-            onValueChange={(value: "yes" | "no") => {
-              setCarForm({ ...CarForm, add_trailer: value === "yes" }); // Convert string back to boolean
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select trailer option" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="no">No</SelectItem>
-              <SelectItem value="yes">Yes</SelectItem>
-            </SelectContent>
-          </Select>
 
           <div className="grid gap-2">
             <Label>Features (Max 6)</Label>
@@ -368,7 +407,7 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
                   <button
                     type="button"
                     onClick={() => handleRemoveFeature(index)}
-                    className="text-black-500 hover:text-black-700"
+                    className="text-gray-500 hover:text-gray-700 transition-colors"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -376,11 +415,11 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
               </div>
             ))}
             {features.length >= 6 && (
-              <p className="text-sm text-muted-foreground">Maximum 6 features reached</p>
+              <p className="text-sm text-muted-foreground">
+                Maximum 6 features reached
+              </p>
             )}
           </div>
-
-
 
           <div className="grid gap-2">
             <Label htmlFor="status">Status</Label>
@@ -397,17 +436,20 @@ export function AddCarForm({ onAddCar }: AddCarFormProps) {
                 <SelectItem value="available">Available</SelectItem>
                 <SelectItem value="in-use">In Use</SelectItem>
                 <SelectItem value="maintenance">Maintenance</SelectItem>
-                {/* <SelectItem value="cancelled">Cance</SelectItem> */}
               </SelectContent>
             </Select>
           </div>
 
-          <Button type="submit" disabled={loader} className="mt-2 bg-taxi-teal hover:bg-taxi-teal/90">
-            {loader && <span><Loader2 className=" animate-spin" /></span>}   Add Car to Fleet
+          <Button
+            type="submit"
+            disabled={loader}
+            className="mt-2 bg-taxi-teal hover:bg-taxi-teal/90 flex gap-2"
+          >
+            {loader && <Loader2 className="h-4 w-4 animate-spin" />}
+            Add Car to Fleet
           </Button>
         </form>
       </DialogContent>
     </Dialog>
-
   );
 }
