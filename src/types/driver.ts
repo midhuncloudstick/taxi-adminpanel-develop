@@ -12,7 +12,7 @@ export interface Drivers {
     rating: number,
     completedTrips:number
     photo?: string,
-    car:Cars[]
+    car:Cars
 
 }
 

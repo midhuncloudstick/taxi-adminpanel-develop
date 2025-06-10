@@ -391,94 +391,128 @@ export function BookingsTable({
                     {showDriverSelect && (
                       <TableCell>
                         <Select
-                          value={b.driverId?.toString() || ""}
-                          onValueChange={async (val) => {
-                            const selectedDriver = driversFromStore.find(
-                              (d) => d.id?.toString() === val
-                            );
-                            if (selectedDriver) {
-                              try {
-                                await assignDriver({
-                                  driverId: selectedDriver.id,
-                                  bookingId: b.id,
-                                  driverType: selectedDriver.type,
-                                });
-                              } catch (error) {
-                                // Reopen dropdown on error
-                                document
-                                  .getElementById(`driver-select-${b.id}`)
-                                  ?.click();
-                              }
-                            }
-                          }}
-                          disabled={loadingDriverBookingId !== null} // Disable all selects when any is loading
-                        >
-                          <SelectTrigger id={`driver-select-${b.id}`}>
-                            <div className="flex items-center  ">
-                              {loadingDriverBookingId === b.id ? (
-                                <>
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                  <span className="text-xs">Assigning...</span>
-                                </>
-                              ) : (
-                                <SelectValue placeholder="Driver">
-                                  {Array.isArray(driversFromStore)&&driversFromStore.find(
-                                    (d) =>
-                                      d.id?.toString() ===
-                                      b.driverId?.toString()
-                                  )?.name || "Select driver"}
-                                </SelectValue>
-                              )}
-                            </div>
-                          </SelectTrigger>
-                          <SelectContent>
-                            {/* Search input and driver list */}
-                            <div className="px-3 pt-2 pb-1 sticky top-0 bg-white z-10">
-                              <Input
-                                placeholder="Search drivers..."
-                                className="w-full"
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                value={searchTerm}
-                              />
-                            </div>
-                            {Array.isArray(availableDrivers) &&availableDrivers
-                              .filter((d) => d.status === "active")
-                              .filter(
-                                (d) =>
-                                  searchTerm === "" ||
-                                  d.name
-                                    .toLowerCase()
-                                    .includes(searchTerm.toLowerCase())
-                              )
-                              .sort((a, b) => (a.type === "internal" ? -1 : 1))
-                              .map((d) => {
-                                const isAvailable = availabledriverslist.some(
-                                  (ad) => ad.id === d.id
-                                );
-                                return (
-                                      <SelectItem key={d.id} value={d.id.toString()}>
-        <div className="flex items-center justify-between w-full px-3 py-2">
-          <div className="flex items-center gap-2">
-            {d.type === "internal" ? (
-              <Car className="h-4 w-4 text-blue-500" />
-            ) : (
-              <Car className="h-4 w-4 text-orange-500" />
-            )}
-            <span className="font-medium ml-2">{d.name}</span>
-             {isAvailable && (
-              
-            <span className="text-[10px] bg-green-100 text-green-800 px-2  rounded-full ml-2">
-              Available
-            </span>
-          )}
-          </div>
-         
-        </div>
-      </SelectItem>
-                                );
-                              })}
-                          </SelectContent>
-                        </Select>
+  value={b.driverId?.toString() || ""}
+  onValueChange={async (val) => {
+    const selectedDriver = driversFromStore.find(
+      (d) => d.id?.toString() === val
+    );
+    if (selectedDriver) {
+      try {
+        await assignDriver({
+          driverId: selectedDriver.id,
+          bookingId: b.id,
+          driverType: selectedDriver.type,
+        });
+      } catch (error) {
+        document.getElementById(`driver-select-${b.id}`)?.click();
+      }
+    }
+  }}
+  disabled={loadingDriverBookingId !== null}
+>
+  <SelectTrigger id={`driver-select-${b.id}`} className="min-w-[200px]">
+    <div className="flex items-center">
+      {loadingDriverBookingId === b.id ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          <span className="text-sm">Assigning...</span>
+        </>
+      ) : (
+        <SelectValue placeholder="Select driver">
+          {Array.isArray(driversFromStore) && driversFromStore.find(
+            (d) => d.id?.toString() === b.driverId?.toString()
+          )?.name || "Select driver"}
+        </SelectValue>
+      )}
+    </div>
+  </SelectTrigger>
+  <SelectContent className="max-h-[400px] overflow-y-auto">
+    {/* Search input */}
+    <div className="px-3 pt-2 pb-1 sticky top-0 bg-background z-10 border-b">
+      <Input
+        placeholder="Search drivers..."
+        className="w-full"
+        onChange={(e) => setSearchTerm(e.target.value)}
+        value={searchTerm}
+      />
+    </div>
+
+    {/* Driver list with sections */}
+    <div className="divide-y">
+      {Array.isArray(availableDrivers) && availableDrivers
+        .filter((d) => d.status === "active")
+        .filter((d) =>
+          searchTerm === "" ||
+          d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          d.id.toString().includes(searchTerm)
+        )
+        .sort((a, b) => (a.type === "internal" ? -1 : 1))
+        .map((d) => {
+          const isAvailable = availabledriverslist.some((ad) => ad.id === d.id);
+          const isAssigned = b.driverId === d.id;
+          
+          return (
+            <SelectItem 
+              key={d.id} 
+              value={d.id.toString()}
+             
+              className="py-2"
+            >
+              <div className="flex items-start gap-3 w-full">
+                {/* Driver type icon */}
+                <div className={`mt-1 p-1 rounded-full ${
+                  d.type === "internal" 
+                    ? "bg-blue-100 text-blue-600" 
+                    : "bg-orange-100 text-orange-600"
+                }`}>
+                  <Car className="h-4 w-4" />
+                </div>
+
+                {/* Driver info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium truncate">{d.name}</span>
+                    {isAssigned && (
+                      <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                        Assigned
+                      </span>
+                    )}
+                    {isAvailable && !isAssigned && (
+                      <span className="text-[9px] bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                        Available
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="text-xs text-muted-foreground mt-1 space-x-2">
+                 
+                    
+                   
+                    {d.car && (
+                      <>
+                        <span>Car :</span>
+                        <span>{d.car.model}</span>
+                        <span>•</span>
+                         <span> Plate :</span>
+                        <span>{d.car.plate}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </SelectItem>
+          );
+        })}
+    </div>
+
+    {/* Empty state */}
+    {availableDrivers.length === 0 && (
+      <div className="py-3 px-4 text-sm text-muted-foreground text-center">
+        No drivers found
+      </div>
+    )}
+  </SelectContent>
+</Select>
                       </TableCell>
                     )}
                     <TableCell>
