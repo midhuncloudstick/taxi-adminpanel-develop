@@ -82,9 +82,6 @@ const App = () => {
 
 const [isOffline, setIsOffline] = useState(!navigator.onLine);
   useEffect(() => {
-    console.log('====================================');
-    console.log('ddddddddddddddddddddddddddddddddklkkkkkkkkkkk');
-    console.log('====================================');
     const handleOffline = () => setIsOffline(true);
     const handleOnline = () => setIsOffline(false);
     window.addEventListener("offline", handleOffline);
