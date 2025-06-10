@@ -47,8 +47,8 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-       <Route path="/send-driverinfo/:bookingId" element={<SendDriverinfo />} />
-          <Route path="/update-ride/:bookingid" element={<UpdateRide />} /> 
+       <Route path="/send-driverinfo/:bookingid" element={<SendDriverinfo />} />
+          <Route path="/update-ride/:bookingid/:driverId" element={<UpdateRide />} /> 
       {!isAuthenticated ? (
         <>
           <Route path="/login" element={<Login />} />
