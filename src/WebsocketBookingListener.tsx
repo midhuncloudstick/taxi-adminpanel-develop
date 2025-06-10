@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { updatelist } from "./redux/Slice/bookingSlice";
 import { useAppSelector } from "./redux/hook";
 import { clearalert } from "./redux/Slice/notificationSlice";
+import { useAuth } from "./hooks/useAuth";
 
 const BookingWebsocket = () => {
   const ws = useRef<WebSocket | null>(null);
@@ -13,8 +14,25 @@ const BookingWebsocket = () => {
   const reconnectTimeoutId = useRef<number | null>(null); // To store the timeout ID for cleanup
 const alertlist = useAppSelector((state) => state.notification.alretList);
 
+  const { isAuthenticated } = useAuth();
+
+
   // Function to establish the WebSocket connection
   const connectWebSocket = useCallback(() => {
+
+
+
+ if (!isAuthenticated) {
+      console.log("🚫 Not authenticated, skipping WebSocket connection attempt.");
+      // Ensure any existing connection is closed if authentication is lost
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        ws.current.close();
+        console.log("🚫 Closing existing WebSocket connection due to deauthentication.");
+      }
+      return;
+    }
+
+
     // If a connection already exists and is open, no need to reconnect
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       console.log("✅ Booking WebSocket already open, skipping reconnection attempt.");
@@ -59,7 +77,7 @@ const alertlist = useAppSelector((state) => state.notification.alretList);
     ws.current.onclose = () => {
       console.log("🔌 Booking WebSocket disconnected");
 
-      if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
+      if (isAuthenticated && reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
         reconnectAttempts.current++;
         // Exponential backoff: delay increases with each attempt
         // Formula: min(1000 * (2^attempt), 30000) - max 30 seconds delay
@@ -71,7 +89,7 @@ const alertlist = useAppSelector((state) => state.notification.alretList);
         toast.error("Booking WebSocket connection lost. Please refresh the page if issues persist.");
       }
     };
-  }, [dispatch]); // `dispatch` is stable and doesn't cause re-renders
+  }, [dispatch,isAuthenticated]); // `dispatch` is stable and doesn't cause re-renders
 
   useEffect(() => {
     // Establish the initial connection when the component mounts

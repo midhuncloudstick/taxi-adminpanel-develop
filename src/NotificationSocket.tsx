@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner"; // Make sure 'sonner' is installed and set up
 import { addNotification } from './redux/Slice/notificationSlice';
+import { useAuth } from "./hooks/useAuth";
 
 const NotificationSocket = () => {
   const ws = useRef<WebSocket | null>(null);
@@ -9,8 +10,24 @@ const NotificationSocket = () => {
   const reconnectAttempts = useRef(0);
   const MAX_RECONNECT_ATTEMPTS = 10;
   const reconnectTimeoutId = useRef<number | null>(null);
+  const { isAuthenticated } = useAuth();
 
+
+  
   const connectWebSocket = useCallback(() => {
+
+
+
+ if (!isAuthenticated) {
+      console.log("🚫 Not authenticated, skipping WebSocket connection attempt.");
+      // Ensure any existing connection is closed if authentication is lost
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        ws.current.close();
+        console.log("🚫 Closing existing WebSocket connection due to deauthentication.");
+      }
+      return;
+    }
+
     if (ws.current && ws.current.readyState === WebSocket.OPEN) {
       console.log("✅ Notification WebSocket already open, skipping reconnection attempt.");
       return;
@@ -44,7 +61,7 @@ const NotificationSocket = () => {
     ws.current.onclose = () => {
       console.log("🔌 Notification WebSocket disconnected");
 
-      if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
+      if (isAuthenticated && reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
         reconnectAttempts.current++;
         const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
         console.log(`Attempting to reconnect Notification WebSocket in ${delay / 1000} seconds... (Attempt ${reconnectAttempts.current})`);
@@ -54,7 +71,7 @@ const NotificationSocket = () => {
         toast.error("Notification WebSocket connection lost. Please refresh the page if issues persist.");
       }
     };
-  }, [dispatch]);
+  }, [dispatch,isAuthenticated]);
 
   useEffect(() => {
     connectWebSocket();

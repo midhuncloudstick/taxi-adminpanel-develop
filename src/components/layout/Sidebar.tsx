@@ -11,12 +11,14 @@ import {
   Mail,
   Menu,
   Settings,
-  User,
+ 
   UserRoundCog,
   Users,
   X
 } from "lucide-react";
 import { toast } from "sonner";
+
+import { Driver } from "@/types/form";
 
 interface SidebarLinkProps {
   icon: React.ElementType;
@@ -58,7 +60,7 @@ export function Sidebar() {
   ];
 
 
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [user, setUser] = useState<{username:string,email:string} | null>(null);
 
 
 useEffect(() => {
@@ -124,7 +126,7 @@ useEffect(() => {
               <span className="text-sm font-medium">BT</span>
             </div>
             <div>
-              <p className="text-sm font-medium">{user?.name}</p>
+              <p className="text-sm font-medium">{user?.username}</p>
               <p className="text-xs text-gray-500">{user?.email}</p>
             </div>
           </div>
