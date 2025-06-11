@@ -262,6 +262,9 @@ export const getBookingById = createAsyncThunk(
 );
 
 
+
+
+
 const bookingSlice = createSlice({
   name: "booking",
   initialState,
@@ -431,6 +434,8 @@ state.filterstate =action.payload
         state.loading = false;
         state.error = action.payload as string;
       })
+
+
   }
 });
 

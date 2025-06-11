@@ -4,6 +4,8 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { stat } from "fs";
 
+
+
 export interface Alert {
   bookingId: string;
   pickupTime: string;
@@ -21,6 +23,8 @@ interface NotificationState {
   toglelistId :string;
   ringnotification:boolean;
   alretList:Booking[];
+  loading:boolean;
+  error: string| null;
 }
 
 const initialState: NotificationState = {
@@ -28,7 +32,9 @@ const initialState: NotificationState = {
   notification: [],
   toglelistId:'',
   ringnotification:false,
-  alretList:[]
+  alretList:[],
+  loading:null,
+  error:null
 };
 
 export const notificationRead = createAsyncThunk(
@@ -51,6 +57,28 @@ export const notificationRead = createAsyncThunk(
     }
   }
 );
+
+
+// export const markAsRead = createAsyncThunk(
+//   "booking/markasread",
+//   async (
+//    bookingid:string , {rejectWithValue}
+//   ) => {
+
+//     try {
+//       const url = `/api/v1/booking/${bookingid}`;
+
+//       const response = await api.getEvents(url);
+//       const markasread = response.data;
+//       return markasread;
+//     } catch (error: unknown) {
+//       if (axios.isAxiosError(error)) {
+//         return error || "booking details fetching failed";
+//       }
+//       return "An unexpected error occurred.";
+//     }
+//   }
+// );
 
 const notificationSlice = createSlice({
   name: "alert",
@@ -111,6 +139,27 @@ const notificationSlice = createSlice({
   }
 }
   },
+
+   extraReducers: (builder) => {
+    builder
+  
+
+      //  .addCase(markAsRead.pending, (state) => {
+      //   state.loading = true;
+      //   state.error = null;
+      // })
+
+      // .addCase(markAsRead.fulfilled, (state, action) => {
+      //   state.loading = false;
+    
+
+      //   state.error = null;
+      // })
+      // .addCase(markAsRead.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = action.payload as string;
+      // })
+  }
 });
 
 export const { addMessage, clearMessages, addNotification ,setToggleid,clearnotification ,setnotificationsoundfasle,addAlert,clearalert} =

@@ -13,7 +13,7 @@ import { getDrivers } from "@/redux/Slice/driverSlice";
 import { setToggleid } from "@/redux/Slice/notificationSlice";
 import { AppDispatch } from "@/redux/store";
 import { ArrowUp, ChevronDown, ChevronUp } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 
 interface BookingsFilterBarProps {
@@ -46,11 +46,12 @@ export function BookingsFilterBar({
 
   const driverslist = useAppSelector((state) => state.driver.drivers);
   const alertlist = useAppSelector((state) => state.notification.alretList);
-  
+  const dropdownRef = useRef(null);
+
   const [open, setopen] = useState(false);
   useEffect(() => {
-    
-    dispatch(getDrivers({page:0,limit:0,search:''}));
+
+    dispatch(getDrivers({ page: 0, limit: 0, search: '' }));
   }, [dispatch]);
 
   const setid = (id: string) => {
@@ -68,14 +69,31 @@ export function BookingsFilterBar({
     }
   };
 
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setopen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   const formatTime = (time: string) => {
-    const localTimeString = time.replace(/Z$/, ""); // removes Z if it's there
+    const localTimeString = time.replace(/Z$/, ""); 
     return new Date(localTimeString).toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
     });
   };
+
+
+
 
   return (
     <div className="flex flex-row justify-between w-full">
@@ -89,56 +107,53 @@ export function BookingsFilterBar({
 
         </SelectContent>
       </Select> */}
-
       <div
-        className=" h-10 w-52  relative bg-white border border-gray-200 flex justify-center items-center cursor-pointer rounded-lg  "
+        className="h-10 w-52 relative bg-white border border-gray-200 flex justify-center items-center cursor-pointer rounded-lg"
         onClick={() => setopen(!open)}
+        ref={dropdownRef}
       >
         <span className="flex items-center gap-2">
           Over Due Pickup Time{" "}
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}{" "}
         </span>
-        {
-          alertlist.length>0 &&
+        {alertlist.length > 0 && (
           <span className="absolute -top-1 -right-1 bg-taxi-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                {alertlist?.length}
-              </span>
-        }
-          
+            {alertlist?.length}
+          </span>
+        )}
+
         {open && (
           <div className="absolute left-0 top-full mt-2 w-48 rounded shadow-lg z-40 bg-white border px-0 py-2 overflow-auto max-h-[360px]">
-            <div className=" py-2 border-b font-medium text-taxi-blue flex items-center gap-2 w-full ">
+            <div className="py-2 border-b font-medium text-taxi-blue flex items-center gap-2 w-full">
               <ul>
-                {alertlist && alertlist.length == 0 && (
+                {alertlist && alertlist.length === 0 && (
                   <li className="hover:bg-slate-50 px-4 py-2 border-b last:border-0 transition-all cursor-pointer w-full bg-white text-sm text-gray-400 font-normal">
-                    {" "}
-                 No  Over Due Pickup Time
+                    No Over Due Pickup Time
                   </li>
                 )}
-                {alertlist &&
-                  alertlist.length > 0 &&
-                  alertlist.map((item) => {
-                    return (
-                      <li
-                        className="hover:bg-slate-50 px-4 py-2 border-b last:border-0 transition-all cursor-pointer w-44 bg-white"
-                        key={item.id}
-                        onClick={() => setid(item.id)}
-                      >
-                        <div>{item.id}</div>
-                        <span className="text-gray-400 text-xs font-normal">
-                          Pickup :
-                        </span>{" "}
-                        <span className="text-red-300 text-xs font-normal">
-                          {formatTime(item.pickupTime)} -{" "}
-                          {new Date(item.pickupTime).toLocaleDateString(
-                            "en-GB",
-                            { day: "2-digit", month: "2-digit" }
-                          )}
-                        </span>
-                      </li>
-                    );
-                  })}
-                {}
+                {alertlist && alertlist.length > 0 && alertlist.map((item) => (
+                  <li
+                    className="hover:bg-slate-50 px-4 py-2 border-b last:border-0 transition-all cursor-pointer w-44 bg-white"
+                    key={item.id}
+                    onClick={(e) => {
+                      e.stopPropagation(); 
+                      setid(item.id);
+                      setopen(false);
+                    }}
+                  >
+                    <div>{item.id}</div>
+                    <span className="text-gray-400 text-xs font-normal">
+                      Pickup :
+                    </span>{" "}
+                    <span className="text-red-300 text-xs font-normal">
+                      {formatTime(item.pickupTime)} -{" "}
+                      {new Date(item.pickupTime).toLocaleDateString("en-GB", {
+                        day: "2-digit",
+                        month: "2-digit"
+                      })}
+                    </span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>

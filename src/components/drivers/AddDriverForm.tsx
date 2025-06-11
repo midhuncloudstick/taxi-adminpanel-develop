@@ -37,7 +37,7 @@ const cleanPhone = (val: string) => val.replace(/\s+/g, "");
 
 const InternalDriverSchema = z.object({
   type: z.literal("internal"),
-  name: z.string().min(8, "Full name must be at least 8 characters"),
+  name: z.string(),
   email: z.string().optional(),
   phone: z
     .string()
@@ -47,14 +47,14 @@ const InternalDriverSchema = z.object({
       message: "Phone must start with country code (e.g., +61411392930)",
     }),
   licenceNumber: z.string().min(5, { message: "Invalid license number" }),
-  carId: z.string().min(1, { message: "Please select a vehicle" }),
+  carId: z.string().min(1, { message: "Please select a vehicle" }), // Required for internal
   status: z.enum(["active", "inactive"]),
   photo: z.string().optional(),
 });
 
 const ExternalDriverSchema = z.object({
   type: z.literal("external"),
-  name: z.string().min(8, "Full name must be at least 8 characters"),
+  name: z.string(),
   email: z.string().email({ message: "Invalid email address" }),
   phone: z
     .string()
@@ -64,7 +64,7 @@ const ExternalDriverSchema = z.object({
       message: "Phone must start with country code (e.g., +61...)",
     }),
   licenceNumber: z.string().optional(),
-  carId: z.string().min(1, { message: "Please select a vehicle" }),
+  carId: z.string().optional(), // Optional for external
   status: z.enum(["active", "inactive"]),
   photo: z.string().optional(),
 });
@@ -98,7 +98,7 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
       email: "",
       phone: "",
       licenceNumber: "",
-      carId: "",
+      carId: undefined, // Initialize as undefined
       status: "active",
       photo: "",
       type: "internal",
@@ -107,9 +107,14 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
 
   const driverType = form.watch("type");
 
+  // Reset carId when switching between internal/external
   useEffect(() => {
-    dispatch(getCars({ page: currentPage, limit, search: "" }));
-  }, [dispatch, currentPage]);
+    form.setValue("carId", undefined);
+  }, [driverType, form]);
+
+  useEffect(() => {
+    dispatch(getCars({ page: 0, limit, search: "" }));
+  }, []);
 
   useEffect(() => {
     if (Array.isArray(vehicle)) {
@@ -160,7 +165,7 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
       if (photoFile) formData.append("photo", photoFile);
 
       await dispatch(CreateDrivers({ data: formData })).unwrap();
-      await dispatch(getDrivers({ page: 1, limit: 10, search: "" }));
+      // await dispatch(getDrivers({ page: 1, limit: 10, search: "" }));
 
       toast.success("Driver added successfully");
       form.reset();
@@ -248,11 +253,12 @@ export function AddDriverForm({ onSuccess }: AddDriverFormProps) {
             </FormItem>
           )} />
 
+          {/* Conditionally render carId field based on driver type */}
           {driverType === "internal" && (
             <FormField control={form.control} name="carId" render={({ field }) => (
               <FormItem>
                 <FormLabel>Assigned Vehicle</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a vehicle" />

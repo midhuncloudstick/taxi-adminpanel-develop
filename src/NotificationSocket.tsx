@@ -12,7 +12,6 @@ const NotificationSocket = () => {
   const reconnectTimeoutId = useRef<number | null>(null);
   const { isAuthenticated } = useAuth();
 
-
   
   const connectWebSocket = useCallback(() => {
 
@@ -34,6 +33,8 @@ const NotificationSocket = () => {
     }
 
     ws.current = new WebSocket("wss://brisbane.cloudhousetechnologies.com/booking/notification");
+
+
 
     ws.current.onopen = () => {
       console.log("✅ Notification WebSocket connected");

@@ -78,7 +78,7 @@ export default function NewPricing() {
     };
 
     const startEditing = () => {
-        
+
         setIsEditingPricing(true);
     };
 
@@ -96,7 +96,7 @@ export default function NewPricing() {
             .unwrap()
             .then(() => {
                 toast.success("Pricing updated successfully");
-              
+
                 setIsEditingPricing(false);
             })
             .catch(() => {
@@ -107,11 +107,17 @@ export default function NewPricing() {
     const cancelEditing = () => {
         setIsEditingPricing(false);
     };
-    useEffect(()=>{
-        if(getPrice){
-            setTempPricing({...getPrice})
-       } 
-    },[getPrice])
+    useEffect(() => {
+        if (getPrice && getPrice.peak_days) {
+            setTempPricing({ ...getPrice });
+
+            setPeakDays([])
+            getPrice.peak_days.forEach(item => {
+                setPeakDays((prev) => [...prev, item.date])
+            })
+        }
+    }, [getPrice]);
+
 
     return (
         <PageContainer title="Pricing Management">
@@ -121,7 +127,7 @@ export default function NewPricing() {
                     <p className="text-sm text-gray-500">Manage rates and fees for your taxi service</p>
                 </div>
                 <div className="space-y-4">
-                    {/* Edit/Save Controls (now outside the card) */}
+                    {/* Edit/Save Controls */}
                     <div className="flex justify-end">
                         {!isEditingPricing ? (
                             <Button
@@ -130,7 +136,7 @@ export default function NewPricing() {
                                 className="text-taxi-teal border-taxi-teal hover:bg-taxi-teal/10 flex items-center gap-1"
                             >
                                 <Edit className="h-4 w-4" />
-                                Edit 
+                                Edit
                             </Button>
                         ) : (
                             <div className="flex gap-2">
@@ -153,61 +159,80 @@ export default function NewPricing() {
                         )}
                     </div>
 
-                    {/* Card content - removed the internal edit button section */}
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-lg">Peak Days Price</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="flex flex-col lg:flex-row gap-6">
-                                {/* Peak Days Selection */}
-                                <div className="pt-4 space-y-2 flex-1">
-                                    <Label>Peak Days</Label>
-                                    <div className="flex-1 border border-gray-300 p-4 rounded-lg">
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    className="w-full justify-start text-left font-normal"
-                                                >
-                                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    <span>Select Peak Days</span>
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto p-0" align="start">
-                                                <Calendar
-                                                    mode="single"
-                                                    onSelect={(date) => {
-                                                        if (date) {
-                                                            addPeakDay(date);
-                                                        }
-                                                    }}
-                                                    className={cn("p-3 pointer-events-auto")}
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-
-                                        <div className="flex flex-wrap gap-2 mt-4">
-                                            {peakDays.length === 0 && (
-                                                <p className="text-sm text-gray-500">No peak days selected</p>
-                                            )}
-
-                                            {peakDays.map((date, index) => (
-                                                <Badge key={index} variant="peakday" className="flex items-center gap-1">
-                                                    {format(date, "MMM d, yyyy")}
+                                {/* Peak Days Selection - Only shown when editing */}
+                                {isEditingPricing ? (
+                                    <div className="pt-4 space-y-2 flex-1">
+                                        <Label>Peak Days</Label>
+                                        <div className="flex-1 border border-gray-300 p-4 rounded-lg">
+                                            <Popover>
+                                                <PopoverTrigger asChild>
                                                     <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-4 w-4 p-0 ml-1"
-                                                        onClick={() => removePeakDay(date)}
+                                                        variant="outline"
+                                                        className="w-full justify-start text-left font-normal"
                                                     >
-                                                        <X className="h-3 w-3" />
+                                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                                        <span>Select Peak Days</span>
                                                     </Button>
-                                                </Badge>
-                                            ))}
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0" align="start">
+                                                    <Calendar
+                                                        mode="single"
+                                                        onSelect={(date) => {
+                                                            if (date) {
+                                                                addPeakDay(date);
+                                                            }
+                                                        }}
+                                                        className={cn("p-3 pointer-events-auto")}
+                                                    />
+                                                </PopoverContent>
+                                            </Popover>
+
+                                            <div className="flex flex-wrap gap-2 mt-4">
+                                                {peakDays.length === 0 && (
+                                                    <p className="text-sm text-gray-500">No peak days selected</p>
+                                                )}
+
+                                                {peakDays.map((date, index) => (
+                                                    <Badge key={index} variant="peakday" className="flex items-center gap-1">
+                                                        {format(date, "MMM d, yyyy")}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-4 w-4 p-0 ml-1"
+                                                            onClick={() => removePeakDay(date)}
+                                                        >
+                                                            <X className="h-3 w-3" />
+                                                        </Button>
+                                                    </Badge>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
+                                ) : (
+                                    // Display only the selected peak days when not editing
+                                    <div className="pt-4 space-y-2 flex-1">
+                                        <Label>Peak Days</Label>
+                                        <div className="flex-1 border border-gray-300 p-4 rounded-lg">
+                                            {peakDays.length === 0 ? (
+                                                <p className="text-sm text-gray-500">No peak days selected</p>
+                                            ) : (
+                                                <div className="flex flex-wrap gap-2">
+                                                    {peakDays.map((date, index) => (
+                                                        <Badge key={index} variant="peakday">
+                                                            {format(date, "MMM d, yyyy")}
+                                                        </Badge>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Peak Day Pricing */}
                                 <div className="pt-4 space-y-2 w-full lg:w-[40%]">
@@ -221,12 +246,12 @@ export default function NewPricing() {
                                             </div>
                                             <div className="col-span-7">
                                                 <Input
-                                                    type="number"
-                                                    value={isEditingPricing ? tempPricing.rate1 : getPrice.rate1}
+                                                    value={isEditingPricing ? tempPricing?.rate1 ?? '' : getPrice?.rate1 ?? ''}
                                                     onChange={(e) => handleRateChange('rate1', e.target.value)}
                                                     disabled={!isEditingPricing}
                                                     className={isEditingPricing ? "bg-white" : "bg-gray-50"}
                                                 />
+
                                             </div>
                                         </div>
 
@@ -238,12 +263,12 @@ export default function NewPricing() {
                                             </div>
                                             <div className="col-span-7">
                                                 <Input
-                                                    type="number"
-                                                    value={isEditingPricing ? tempPricing.rate2 : getPrice.rate2}
-                                                    onChange={(e) => handleRateChange('rate2', e.target.value)}
+                                                    value={isEditingPricing ? tempPricing?.rate2 ?? '' : getPrice?.rate2 ?? ''}
+                                                    onChange={(e) => handleRateChange('rate1', e.target.value)}
                                                     disabled={!isEditingPricing}
                                                     className={isEditingPricing ? "bg-white" : "bg-gray-50"}
                                                 />
+
                                             </div>
                                         </div>
 
@@ -255,12 +280,12 @@ export default function NewPricing() {
                                             </div>
                                             <div className="col-span-7">
                                                 <Input
-                                                    type="number"
-                                                    value={isEditingPricing ? tempPricing.rate3 : getPrice.rate3}
-                                                    onChange={(e) => handleRateChange('rate3', e.target.value)}
+                                                    value={isEditingPricing ? tempPricing?.rate3 ?? '' : getPrice?.rate3 ?? ''}
+                                                    onChange={(e) => handleRateChange('rate1', e.target.value)}
                                                     disabled={!isEditingPricing}
                                                     className={isEditingPricing ? "bg-white" : "bg-gray-50"}
                                                 />
+
                                             </div>
                                         </div>
 
@@ -272,12 +297,12 @@ export default function NewPricing() {
                                             </div>
                                             <div className="col-span-7">
                                                 <Input
-                                                    type="number"
-                                                    value={isEditingPricing ? tempPricing.rate4 : getPrice.rate4}
-                                                    onChange={(e) => handleRateChange('rate4', e.target.value)}
+                                                    value={isEditingPricing ? tempPricing?.rate4 ?? '' : getPrice?.rate4 ?? ''}
+                                                    onChange={(e) => handleRateChange('rate1', e.target.value)}
                                                     disabled={!isEditingPricing}
                                                     className={isEditingPricing ? "bg-white" : "bg-gray-50"}
                                                 />
+
                                             </div>
                                         </div>
                                     </div>
@@ -286,8 +311,6 @@ export default function NewPricing() {
                         </CardContent>
                     </Card>
                 </div>
-
-
             </div>
         </PageContainer>
     );
