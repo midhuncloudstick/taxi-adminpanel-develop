@@ -3,35 +3,36 @@ import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
 
 import fleetReducer from "./Slice/fleetSlice";
-import driverReducer from "./Slice/driverSlice"
-import customerReducer from './Slice/customerSlice'
-import bookingReducer from './Slice/bookingSlice'
-import historyReducer from './Slice/historySlice'
-import formReducer from './Slice/formSlice'
-import messageReducer from './Slice/messageSlice'
-import pricingReducer  from '@/redux/Slice/pricingSlice';
-import notificationReducer from '@/redux/Slice/notificationSlice'
-// Combine all reducers
+import driverReducer from "./Slice/driverSlice";
+import customerReducer from './Slice/customerSlice';
+import bookingReducer from './Slice/bookingSlice';
+import historyReducer from './Slice/historySlice';
+import formReducer from './Slice/formSlice';
+import messageReducer from './Slice/messageSlice';
+import pricingReducer from '@/redux/Slice/pricingSlice';
+import notificationReducer from '@/redux/Slice/notificationSlice';
+
+// Persist config for reducers you want to persist
+const persistConfig = {
+  key: 'root',
+  storage,
+  whitelist: ['fleet', 'driver', 'customer', 'booking', 'form', 'pricing', 'message', 'history'] 
+};
+
+// Create non-persisted root reducer
 const rootReducer = combineReducers({
   fleet: fleetReducer,
   driver: driverReducer,
-  customer:customerReducer,
-  booking:bookingReducer,
-  form:formReducer,
-  pricing:pricingReducer,
-  message:messageReducer,
-  history:historyReducer, 
-
-  notification :notificationReducer
-  // Assuming you have a historyReducer
-  // Add other slices here like `user: userReducer`
+  customer: customerReducer,
+  booking: bookingReducer,
+  form: formReducer,
+  pricing: pricingReducer,
+  message: messageReducer,
+  history: historyReducer,
+  notification: notificationReducer, // not persisted
 });
 
-const persistConfig = {
-  key: "root",
-  storage,
-};
-
+// Apply persistReducer only to selected reducers
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({

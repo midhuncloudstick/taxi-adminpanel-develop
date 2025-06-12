@@ -144,17 +144,19 @@ export function BookingsTable({
           const differnce =
             Number(firstid.split("-")[1]) -
             Number(toggleidfromNotification.split("-")[1]);
+
           const itemsPerPage = 10;
-          const targetPage = Math.floor(differnce / itemsPerPage) + 1;
-          console.log(targetPage, "target page");
-          console.log(targetPage <= 0 ? 1 : targetPage);
+
+
+
+          const expectedpage = Math.floor(differnce / itemsPerPage);
           setDriver("all");
           setCustomerId("");
           setStatus("all");
           setLocation("");
 
-          setpage(targetPage <= 0 ? 1 : targetPage);
-          handlePageChange(targetPage <= 0 ? 1 : targetPage);
+          setpage(current_Page+expectedpage);
+           handlePageChange(current_Page+expectedpage);
         }
 
         toggleRow(toggleidfromNotification);

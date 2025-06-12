@@ -5,7 +5,7 @@ import { ArrowUp } from "lucide-react";
 import { Button } from "../ui/button";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { useDispatch } from "react-redux";
-import { markAsRead, notificationRead, setToggleid } from "@/redux/Slice/notificationSlice";
+import {  notificationRead, setToggleid } from "@/redux/Slice/notificationSlice";
 import { useNavigate } from "react-router-dom";
 
 // Not using any state for filter here. Shows all upcoming bookings!
