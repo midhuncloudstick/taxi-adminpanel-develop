@@ -13,6 +13,7 @@ import { getDrivers } from "@/redux/Slice/driverSlice";
 import { Pagination } from "../ui/paginationNew";
 import { useAppSelector } from "@/redux/hook";
 import { toast } from "sonner";
+import { getCars } from "@/redux/Slice/fleetSlice";
 
 type Drivers = {
   id: number;
@@ -20,13 +21,14 @@ type Drivers = {
   email: string;
   phone: string;
   licenceNumber: string;
-  carId: string;
+  carId: string | any;
   status: "active" | "inactive";
   rating: number;
   completedTrips: number;
   photo?: string;
   car: Cars[];
   type: "internal" | "external";
+  model: any
 };
 
 interface DriversTableProps {
@@ -51,12 +53,12 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
 
   useEffect(() => {
     console.log('============dddddddddddddddddd========================');
-    console.log('this',driverDatah);
+    console.log('this', driverDatah);
     console.log('====================================');
-    if(driverDatah && Array.isArray(driverDatah)){
-         setDriversData(driverDatah);
+    if (driverDatah && Array.isArray(driverDatah)) {
+      setDriversData(driverDatah);
     }
- 
+
   }, [driverDatah]);
 
   useEffect(() => {
@@ -70,12 +72,17 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
   //   setLocalPage(1);
   // };
 
+  const carlist = useAppSelector((state) => state.fleet.cars)
 
-  
-// useEffect(()=>{
-//   dispatch(getBookingsByDriverId({bookingId:string}))
-// })
+  useEffect(() => {
+    dispatch(getCars({ page: current_Page, limit, search: searchQuery }))
+  }, [])
 
+
+
+  const getCarById = (carId) => {
+    return carlist.find((car) => car.id === carId);
+  };
 
   const handleSaveEditedDriver = (editedDriver: Drivers) => {
     setDriversData((prev) =>
@@ -105,19 +112,19 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
   return (
     <div className="overflow-auto rounded-lg shadow bg-white">
       <div className="flex justify-between items-center p-4 border-b">
-       
-       
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search drivers..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-64"
-            />
-          </div>
-         
-        
+
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search drivers..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 w-64"
+          />
+        </div>
+
+
       </div>
 
       <Table>
@@ -134,79 +141,78 @@ export function DriversTable({ drivers, selectedId, onSelect, onEdit }: DriversT
           </TableRow>
         </TableHeader>
         <TableBody>
-            {driverData && driverData.length > 0 ? (
+          {driverData && driverData.length > 0 ? (
             driverData.map((d) => (
               <TableRow
-              key={d.id}
-              data-selected={selectedId === d.id}
-              onClick={() => onSelect(d.id)}
-              className={`cursor-pointer ${selectedId === d.id ? "bg-blue-50" : ""}`}
+                key={d.id}
+                data-selected={selectedId === d.id}
+                onClick={() => onSelect(d.id)}
+                className={`cursor-pointer ${selectedId === d.id ? "bg-blue-50" : ""}`}
               >
-              <TableCell>
-                <Avatar className="h-10 w-10">
-                {d.photo ? (
-                  <AvatarImage 
-                  src={`https://brisbane.cloudhousetechnologies.com${d.photo}`} 
-                  alt={d.name}
-                  crossOrigin="anonymous"
-                  />
-                ) : (
-                  <AvatarFallback className="bg-taxi-blue text-white">
-                  <User size={16} />
-                  </AvatarFallback>
-                )}
-                </Avatar>
-              </TableCell>
-              <TableCell>{d.name}</TableCell>
-              <TableCell>{d.email}</TableCell>
-              <TableCell>{d.phone}</TableCell>
-              <TableCell>{getCarById(d.carId)?.model || d.carId}</TableCell>
-              <TableCell>
-                <span
-                className={`px-2 py-1 rounded-full text-xs ${
-                  d.status === "active"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700"
-                }`}
-                >
-                {d.status.charAt(0).toUpperCase() + d.status.slice(1)}
-                </span>
-              </TableCell>
-              <TableCell>
-                <span
-                className={`px-2 py-1 rounded-full text-xs ${
-                  d.type === "internal"
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-purple-100 text-purple-700"
-                }`}
-                >
-                {d.type.charAt(0).toUpperCase() + d.type.slice(1)}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-taxi-teal hover:text-taxi-teal hover:bg-taxi-teal/10"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleEditClick(d);
-                    }}
+                <TableCell>
+                  <Avatar className="h-10 w-10">
+                    {d.photo ? (
+                      <AvatarImage
+                        src={`https://brisbane.cloudhousetechnologies.com${d.photo}`}
+                        alt={d.name}
+                        crossOrigin="anonymous"
+                      />
+                    ) : (
+                      <AvatarFallback className="bg-taxi-blue text-white">
+                        <User size={16} />
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                </TableCell>
+                <TableCell>{d.name}</TableCell>
+                <TableCell>{d.email}</TableCell>
+                <TableCell>{d.phone}</TableCell>
+                <TableCell>{d.carId} - {getCarById(d.carId)?.model ?? "Unknown Model"}</TableCell>
+
+                <TableCell>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${d.status === "active"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                      }`}
                   >
-                    <Edit size={16} />
-                  </Button>
-                </div>
-              </TableCell>
+                    {d.status.charAt(0).toUpperCase() + d.status.slice(1)}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${d.type === "internal"
+                      ? "bg-blue-100 text-blue-700"
+                      : "bg-purple-100 text-purple-700"
+                      }`}
+                  >
+                    {d.type.charAt(0).toUpperCase() + d.type.slice(1)}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-taxi-teal hover:text-taxi-teal hover:bg-taxi-teal/10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEditClick(d);
+                      }}
+                    >
+                      <Edit size={16} />
+                    </Button>
+                  </div>
+                </TableCell>
               </TableRow>
             ))
-            ) : (
+          ) : (
             <TableRow>
               <TableCell colSpan={8} className="text-center text-gray-500">
-              No items found
+                No items found
               </TableCell>
             </TableRow>
-            )}
+          )}
         </TableBody>
       </Table>
 
