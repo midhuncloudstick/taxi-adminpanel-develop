@@ -43,7 +43,7 @@ const cleanPhone = (val: string) => val.replace(/\s+/gu, '');
 const InternalDriverSchema = z.object({
     id: z.number(),
     type: z.literal("internal"),
-    name: z.string().min(8),
+    name: z.string(),
     email: z.string().optional(),
     phone: z.string().transform(cleanPhone).refine(val => /^\+\d{1,4}\d{6,12}$/.test(val), {
         message: "Phone number must start with country code (e.g., +61411392930)",
@@ -57,7 +57,7 @@ const InternalDriverSchema = z.object({
 const ExternalDriverSchema = z.object({
     id: z.number(),
     type: z.literal("external"),
-    name: z.string().min(8),
+    name: z.string(),
     email: z.string().email({ message: "Please enter a valid email address." }),
     phone: z.string().transform(cleanPhone).refine(val => /^\+\d{1,4}\d{6,12}$/.test(val), {
         message: "Phone number must start with country code (e.g., +61) and be valid.",

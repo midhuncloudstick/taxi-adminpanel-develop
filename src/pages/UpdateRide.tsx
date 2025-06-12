@@ -16,7 +16,8 @@ export default function UpdateRide() {
   const [currentStep, setCurrentStep] = useState(0);
   const { toast } = useToast();
   const dispatch = useDispatch<AppDispatch>();
-  const { bookingid } = useParams<{ bookingid: string }>();
+  const { bookingid ,driverId} = useParams();
+
 
   const booking = useAppSelector((state) => state.booking.singleBooking);
   const [isCancelled, setIsCancelled] = useState(false);
@@ -49,6 +50,7 @@ export default function UpdateRide() {
     { id: 3, label: "Journey Completed", description: "Mark when journey is finished" }
   ];
 
+
   const handleStepToggle = async (stepIndex: number, checked: boolean) => {
     if (!bookingid || isCancelled) return;
 
@@ -60,11 +62,11 @@ export default function UpdateRide() {
     if (checked && stepIndex === currentStep) {
       try {
         if (stepIndex === 0) {
-          await dispatch(getstartjourney({ bookingId: bookingid })).unwrap();
+        await dispatch(getstartjourney({ bookingid, driverId })).unwrap();
         } else if (stepIndex === 1) {
-          await dispatch(getpickup({ bookingId: bookingid })).unwrap();
+          await dispatch(getpickup({ bookingid: bookingid ,driverId})).unwrap();
         } else if (stepIndex === 2) {
-          await dispatch(getjourneycompleted({ bookingId: bookingid })).unwrap();
+          await dispatch(getjourneycompleted({ bookingid: bookingid ,driverId})).unwrap();
         }
 
         setCurrentStep(stepIndex + 1);

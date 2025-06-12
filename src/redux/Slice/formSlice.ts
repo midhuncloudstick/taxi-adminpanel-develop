@@ -31,11 +31,11 @@ const initialState: FormState = {
 export const getstartjourney = createAsyncThunk(
   "form/startjourney",
   async (
-   { bookingId }: { bookingId: string },
+   { bookingid ,driverId}: { bookingid: string , driverId:string },
     { rejectWithValue }
   ) => {
     try {
-     const url = `/api/v1/booking/${bookingId}/status/started`;
+     const url = `/api/v1/booking/${bookingid}/driver/${driverId}/status/started`;
 
       const response = await api.getEvents(url);
 
@@ -49,11 +49,11 @@ export const getstartjourney = createAsyncThunk(
 export const getpickup = createAsyncThunk(
   "form/pickup",
   async (
-   { bookingId }: { bookingId: string },
+   { bookingid ,driverId}: { bookingid: string ,driverId:string},
     { rejectWithValue }
   ) => {
     try {
-     const url = `/api/v1/booking/${bookingId}/status/pickup`;
+     const url = `/api/v1/booking/${bookingid}/driver/${driverId}/status/pickup`;
 
       const response = await api.getEvents(url);
 
@@ -67,11 +67,11 @@ export const getpickup = createAsyncThunk(
 export const getjourneycompleted = createAsyncThunk(
   "form/completed",
   async (
-   { bookingId }: { bookingId: string },
+   { bookingid ,driverId}: { bookingid: string ,driverId:string},
     { rejectWithValue }
   ) => {
     try {
-     const url = `/api/v1/booking/${bookingId}/status/completed`;
+     const url = `/api/v1/booking/${bookingid}/driver/${driverId}/status/completed`;
 
       const response = await api.getEvents(url);
 

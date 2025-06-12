@@ -47,7 +47,6 @@ const initialState: UserState = {
 };
 
 
-
 // Async thunk
 export const CreateUser = createAsyncThunk(
   "user/create",
@@ -80,10 +79,12 @@ export const AdminLogin = createAsyncThunk(
   ) => {
     try {
       const url = "/api/v1/user/admin-login";
-
+    
       const response = await api.postEvents(url, { email, password });
         const data = response.data
         localStorage.setItem('user',JSON.stringify(data.data))
+         localStorage.setItem('token',data.token);
+
       return response.data;
     } catch (error: any) {
       if (axios.isAxiosError(error)) {

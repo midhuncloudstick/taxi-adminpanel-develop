@@ -51,7 +51,7 @@ export default function Drivers() {
 
   const handleDriverAdded = () => {
     setIsAddDriverOpen(false);
-    dispatch(getDrivers({ page: currentPage, limit, search: searchQuery }));
+    dispatch(getDrivers({ page: 1, limit, search: searchQuery }));
   };
 
   useEffect(() => {

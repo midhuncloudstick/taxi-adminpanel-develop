@@ -47,30 +47,30 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-       <Route path="/send-driverinfo/:bookingid" element={<SendDriverinfo />} />
-          <Route path="/update-ride/:bookingid/:driverId" element={<UpdateRide />} /> 
+      <Route path="/send-driverinfo/:bookingid" element={<SendDriverinfo />} />
+      <Route path="/update-ride/:bookingid/:driverId" element={<UpdateRide />} />
       {!isAuthenticated ? (
         <>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          {/* <Route path="*" element={<Navigate to="/login" replace />} /> */}
-                </>
+          <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/" replace />} />
+          <Route path="/signup" element={!isAuthenticated ? <Signup /> : <Navigate to="/" replace />} />
+          <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPassword /> :
+            <Navigate to="/" replace />} />
+        </>
       ) : (
         <Route element={<SidebarLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/fleet" element={<Fleet />} />
           <Route path="/pricing" element={<NewPricing />} />
-           {/* <Route path="/pricing" element={<Pricing />} /> */}
+          {/* <Route path="/pricing" element={<Pricing />} /> */}
           <Route path="/customers" element={<Customers />} />
           <Route path="/drivers" element={<Drivers />} />
           {/* <Route path="/history" element={<History />} /> */}
           <Route path="/message" element={<Message />} />
-          
+
           {/* Redirect / to /login if not authenticated */}
           {/* Redirect /login to / if authenticated */}
           <Route path="/login" element={<Navigate to="/" replace />} />
-          
+
           <Route path="*" element={<NotFound />} />
         </Route>
       )}
@@ -80,7 +80,7 @@ const AppRoutes = () => {
 
 const App = () => {
 
-const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   useEffect(() => {
     const handleOffline = () => setIsOffline(true);
     const handleOnline = () => setIsOffline(false);
@@ -108,40 +108,49 @@ const [isOffline, setIsOffline] = useState(!navigator.onLine);
           <Sonner />
           <WebSocketBookingListener />
           <NotificationSocket />
-           <WebSocketListener/>
-        
-    <Dialog open={isOffline}>
-  <DialogContent className="sm:max-w-[425px] p-6 rounded-lg border-none shadow-xl">
-    <DialogHeader>
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-red-100 to-red-50">
-        <WifiOff className="h-6 w-6 text-red-500" />
-      </div>
-      <DialogTitle className="text-xl font-semibold text-gray-800 mt-4">
-        You're Offline
-      </DialogTitle>
-    </DialogHeader>
+          <WebSocketListener />
 
-    <div className="mt-2 text-gray-500">
-      <p>Your connection was interrupted. Changes may not be saved.</p>
-    </div>
+          <Dialog open={isOffline}>
+            <DialogContent className="sm:max-w-[425px] p-6 rounded-lg border-none shadow-xl">
+              <DialogHeader>
+                {/* <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-red-100 to-red-50">
+                  <WifiOff className="h-6 w-6 text-red-500" />
+                </div> */}
+                <DialogTitle className="text-xl font-semibold text-gray-800 mt-4 text-center">
+                  You're Offline
+                </DialogTitle>
+              </DialogHeader>
 
-    <div className="mt-6 flex flex-col space-y-3">
-      <Button
-        onClick={() => window.location.reload()}
-        className="w-full bg-gray-900 hover:bg-gray-800 text-white py-2 px-4 rounded-md transition-colors"
-      >
-        Reconnect
-      </Button>
-    
-    </div>
+              <div className="mt-2 text-gray-500 text-center">
+                <p>Your connection was interrupted. Changes may not be saved.</p>
+              </div>
 
-    <div className="mt-4 text-xs text-gray-400">
-      Last synced: {new Date().toLocaleTimeString()}
-    </div>
-  </DialogContent>
-</Dialog>
+              <div className="flex justify-center mt-4">
+                <img
+                  src="src/assets/image/car icon minimal.png"
+                  alt="Offline car icon"
+                  className="h-42 w-60 opacity-75"
+
+
+                />
+              </div>
+
+              <div className="mt-6 flex flex-col space-y-3">
+                <Button
+                  onClick={() => window.location.reload()}
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white py-2 px-4 rounded-md transition-colors"
+                >
+                  Reconnect
+                </Button>
+              </div>
+
+              <div className="mt-4 text-xs text-gray-400 text-center">
+                Last synced: {new Date().toLocaleTimeString()}
+              </div>
+            </DialogContent>
+          </Dialog>
           <BrowserRouter>
-          
+
 
             <AppRoutes />
           </BrowserRouter>

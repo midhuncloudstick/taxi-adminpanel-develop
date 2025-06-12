@@ -119,7 +119,7 @@ export default function Customers() {
                   list={historiesofCustomer} />
                 ) : (
                   <div className="p-6 text-center text-gray-500">
-                    {/* No past trips found for {selectedCustomerId?.username || 'this customer'} */}
+                    No past trips found for {selectedCustomerId?.username || 'this customer'}
                   </div>
                 )}
               </div>
