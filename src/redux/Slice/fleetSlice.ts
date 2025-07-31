@@ -133,25 +133,23 @@ export const Deletecars = createAsyncThunk(
 
 export const getAvailableCars = createAsyncThunk(
   "cars/available",
-  async (
-   _,
-  ) => {
-    
+  async (_, { rejectWithValue }) => {
     try {
-    //   const userId = localStorage.getItem("userid");
-    const url = "/api/v1/cars/available";
-
+      const url = "/api/v1/cars/available";
       const response = await api.getEvents(url);
-      const fleetsData = response.data;
-      return fleetsData;
+      return response.data;
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
-        return error|| "car details fetching failed";
+        if (error.response?.status === 401) {
+          return rejectWithValue({ status: 401, error: "Unauthorized" });
+        }
+        return rejectWithValue(error.response?.data || "Fetching cars failed.");
       }
-      return "An unexpected error occurred.";
+      return rejectWithValue("An unexpected error occurred.");
     }
   }
 );
+
 
 
 

@@ -8,6 +8,7 @@ import { getAvailableCars } from "@/redux/Slice/fleetSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hook";
 import { getAvailableDrivers } from "@/redux/Slice/driverSlice";
 import { setnotificationsoundfasle } from "@/redux/Slice/notificationSlice";
+import { useNavigate } from "react-router-dom";
 
 interface HeaderProps {
   title: string;
@@ -24,6 +25,7 @@ export function Header({ title }: HeaderProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 
   const availablecarslist = useAppSelector((state) => state.fleet.AvailableCars) ?? [];
   const availabledriverslist = useAppSelector((state) => state.driver.AvailableDrivers) ?? [];
@@ -57,10 +59,19 @@ export function Header({ title }: HeaderProps) {
     }
   }, [playsound]);
 
+
   useEffect(() => {
-    dispatch(getAvailableCars());
+    dispatch(getAvailableCars())
+      .unwrap()
+      .catch((err: any) => {
+        console.log("Error fetching available cars:", err);
+        if (err?.status === 401) {
+          navigate("/login");
+        }
+      });
+
     dispatch(getAvailableDrivers());
-  }, []);
+  }, [dispatch, navigate]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

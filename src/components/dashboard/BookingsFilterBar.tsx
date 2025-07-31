@@ -116,7 +116,7 @@ export function BookingsFilterBar({
           Over Due Pickup Time{" "}
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}{" "}
         </span>
-        {alertlist.length > 0 && (
+        {alertlist?.length > 0 && (
           <span className="absolute -top-1 -right-1 bg-taxi-red text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
             {alertlist?.length}
           </span>
@@ -126,7 +126,7 @@ export function BookingsFilterBar({
           <div className="absolute left-0 top-full mt-2 w-48 rounded shadow-lg z-40 bg-white border px-0 py-2 overflow-auto max-h-[360px]">
             <div className="py-2 border-b font-medium text-taxi-blue flex items-center gap-2 w-full">
               <ul>
-                {alertlist && alertlist.length === 0 && (
+                {alertlist && alertlist?.length === 0 && (
                   <li className="hover:bg-slate-50 px-4 py-2 border-b last:border-0 transition-all cursor-pointer w-full bg-white text-sm text-gray-400 font-normal">
                     No Over Due Pickup Time
                   </li>
